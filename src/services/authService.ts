@@ -1,5 +1,18 @@
 import api from "./api";
 
+export const isAuthenticated = async (): Promise<string> => {
+  try {
+    const response = await api.get("/users/isAuthenticated");
+    if (response.status === 200) {
+      return response.data;
+    } else {
+      return "";
+    }
+  } catch (error) {
+    return "";
+  }
+};
+
 export const register = async (data: {
   email: string;
   name: string;

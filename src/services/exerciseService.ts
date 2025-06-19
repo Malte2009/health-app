@@ -1,6 +1,24 @@
 import api from "./api";
-import type { createExerciseLogRequest } from "@/types/exerciseType.ts";
+import type {
+  changeExerciseRequest,
+  changeExerciseResponse,
+  createExerciseLogRequest,
+  createExerciseLogResponse,
+} from "@/types/exerciseType.ts";
 
-export const createExerciseLog = async (exercise: createExerciseLogRequest) => {
-  return api.post("/exerciseLogs", exercise);
+export const changeExercise = async (
+  exercise: changeExerciseRequest,
+): Promise<changeExerciseResponse> => {
+  const response = await api.patch(`/exercise/changeExercise/${exercise.id}`, exercise);
+  return response.data;
+};
+export const createExercise = async (
+  exercise: createExerciseLogRequest,
+): Promise<createExerciseLogResponse> => {
+  const response = await api.post("/exercise/createExercise", exercise);
+  return response.data;
+};
+
+export const deleteExerciseRequest = async (id: string): Promise<void> => {
+  await api.delete(`/exercise/deleteExercise/${id}`);
 };

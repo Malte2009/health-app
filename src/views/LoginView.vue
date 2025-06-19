@@ -45,19 +45,18 @@ async function submit() {
   const email = (document.getElementById("email") as HTMLInputElement).value;
   const password = (document.getElementById("password") as HTMLInputElement).value;
 
-  const jwt = await login(email, password);
+  const token = await login(email, password);
 
-  authStore.setToken(jwt);
+  authStore.setToken(token);
 
-  setCookie("jwt", jwt, 1);
+  setCookie("token", token, 1);
 
   await route();
 }
 
 async function route() {
-  const jwt = authStore.token;
-
-  if (jwt) {
+  if (authStore.isAuthenticated) {
+    await router.push({ name: "home" });
   }
 }
 

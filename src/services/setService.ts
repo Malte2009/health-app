@@ -1,6 +1,10 @@
 import api from "./api";
-import type { createSetRequest } from "@/types/setType.ts";
+import type { changeSetRequestType, createSetRequestType } from "@/types/setType.ts";
 
-export const createSet = async (set: createSetRequest) => {
-  return api.post("/sets", set);
+export const changeSetRequest = async (set: changeSetRequestType) => {
+  return api.patch(`/set/changeSet/${set.id}`, set);
+};
+
+export const createSetRequest = async (set: createSetRequestType) => {
+  return api.post("/set/createSet", set);
 };
