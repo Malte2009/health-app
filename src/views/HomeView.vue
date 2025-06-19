@@ -1,7 +1,6 @@
 <template>
   <div class="home">
-    <h1>Welcome to the Home Page</h1>
-    <create-training></create-training>
+    <trainings-view></trainings-view>
   </div>
 </template>
 
@@ -9,7 +8,7 @@
 import { useRouter } from "vue-router";
 import { onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth.ts";
-import CreateTraining from "@/components/Training/createTraining.vue";
+import TrainingsView from "@/views/TrainingsView.vue";
 
 const authStore = useAuthStore();
 const router = useRouter();

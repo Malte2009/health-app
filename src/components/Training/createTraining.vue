@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth.ts";
-import type { createTrainingLogRequest } from "@/types/trainingType.ts";
+import type { createTrainingLogRequestType } from "@/types/trainingType.ts";
 import { createTrainingLog } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/training.ts";
 
@@ -62,7 +62,7 @@ async function submit() {
   const trainingDate = (document.getElementById("trainingDate") as HTMLInputElement).value;
   const trainingTime = (document.getElementById("trainingTime") as HTMLInputElement).value;
 
-  const trainingData: createTrainingLogRequest = {
+  const trainingData: createTrainingLogRequestType = {
     type: trainingType,
     duration: parseInt(trainingDuration, 10),
     avgHeartRate: parseInt(averageHeartRate, 10),

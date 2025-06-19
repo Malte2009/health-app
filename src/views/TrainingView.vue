@@ -92,7 +92,7 @@ import { onMounted, ref } from "vue";
 import AddExercise from "@/components/Exercise/AddExercise.vue";
 import AddSet from "@/components/Set/AddSet.vue";
 import ChangeSet from "@/components/Set/ChangeSet.vue";
-import type { getTrainingResponse } from "@/types/trainingType.ts";
+import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { getTrainingById } from "@/services/trainingService.ts";
 import { deleteExerciseRequest } from "@/services/exerciseService.ts";
 
@@ -111,7 +111,7 @@ const changeSetCon = ref(false);
 const selectedExerciseId = ref<string>("");
 const selectedSetId = ref<string>("");
 
-function getSetRangeFromLongestExercise(training: getTrainingResponse): number[] {
+function getSetRangeFromLongestExercise(training: getTrainingResponseType): number[] {
   if (!training.exercises || training.exercises.length === 0) return [];
 
   let maxSetCount = 0;

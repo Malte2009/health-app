@@ -1,9 +1,9 @@
 import { defineStore } from "pinia";
-import type { getTrainingResponse } from "@/types/trainingType.ts";
+import type { getTrainingResponseType } from "@/types/trainingType.ts";
 
 export const useTrainingStore = defineStore("trainingStore", {
   state: () => ({
-    trainings: [] as getTrainingResponse[],
+    trainings: [] as getTrainingResponseType[],
     currentTraining: "",
   }),
   getters: {
@@ -14,7 +14,7 @@ export const useTrainingStore = defineStore("trainingStore", {
     },
   },
   actions: {
-    changeTraining(trainingId: string, training: getTrainingResponse) {
+    changeTraining(trainingId: string, training: getTrainingResponseType) {
       const index = this.trainings.findIndex((t) => t.id === trainingId);
       if (index !== -1) {
         this.trainings[index] = training;
@@ -22,7 +22,7 @@ export const useTrainingStore = defineStore("trainingStore", {
         console.warn(`Training with ID ${trainingId} not found.`);
       }
     },
-    addTraining(training: getTrainingResponse) {
+    addTraining(training: getTrainingResponseType) {
       this.trainings.push(training);
     },
     setCurrentTraining(trainingId: string) {

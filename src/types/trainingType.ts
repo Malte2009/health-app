@@ -1,10 +1,10 @@
-export type updateTrainingLogRequest = {
+export type updateTrainingLogRequestType = {
   avgHeartRate: number;
   duration: number;
   notes?: string;
 };
 
-export type createTrainingLogRequest = {
+export type createTrainingLogRequestType = {
   type: string;
   avgHeartRate?: number;
   duration?: number;
@@ -13,7 +13,7 @@ export type createTrainingLogRequest = {
   time?: string;
 };
 
-export type createTrainingResponse = {
+export type createTrainingResponseType = {
   id: string;
   userID: string;
   date: string;
@@ -26,7 +26,7 @@ export type createTrainingResponse = {
   avgHeartRate: number | null;
 };
 
-export type getTrainingResponse = {
+export type getTrainingResponseType = {
   exercises: ({
     sets: {
       date: string | null;
