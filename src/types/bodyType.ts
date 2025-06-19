@@ -1,4 +1,3 @@
-
 export type createBodyLogRequest = {
   weight: number;
   height: number;
@@ -6,4 +5,4 @@ export type createBodyLogRequest = {
   bodyFatPercentage?: number;
   muscleMass?: number;
   waterMass?: number;
-}
+};
