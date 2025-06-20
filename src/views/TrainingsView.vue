@@ -27,8 +27,18 @@
           <td>{{ training.caloriesBurned }}</td>
           <td>{{ training.notes }}</td>
           <td>
-            <button @click="router.push({ name: 'training', params: { id: training.id } })">
+            <button
+              class="button"
+              @click="router.push({ name: 'training', params: { id: training.id } })"
+            >
               View
+            </button>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="9">
+            <button class="button" @click="router.push({ name: 'create-training' })">
+              Create New Training
             </button>
           </td>
         </tr>
@@ -82,5 +92,47 @@ onMounted(async () => {
   padding: 10px;
   border: 1px solid var(--border);
   background-color: var(--bg-surface-secondary);
+}
+
+.button {
+  background-color: var(--primary);
+  color: var(--text-main);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
+  box-shadow: 0 2px 5px rgba(0, 191, 174, 0.2);
+}
+
+.button:hover {
+  background-color: #00a495; /* etwas dunklerer Ton von --primary */
+}
+
+.button:active {
+  transform: scale(0.97);
+}
+
+.button-secondary {
+  background-color: var(--bg-surface-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.button-secondary:hover {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.button-danger {
+  background-color: var(--danger);
+  color: var(--text-main);
+}
+
+.button-danger:hover {
+  background-color: #e0556f;
 }
 </style>
