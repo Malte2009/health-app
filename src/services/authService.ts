@@ -17,7 +17,8 @@ export const register = async (data: {
   email: string;
   name: string;
   password: string;
-  birthYear: number;
+  birthYear: string;
+  gender: string
 }): Promise<string> => {
   return api.post("/users/register", data);
 };

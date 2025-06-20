@@ -21,8 +21,8 @@
           <div>
             <table class="exercise-table">
               <tr>
-                <th>Übungen</th>
-                <th v-for="sets in getSetRangeFromLongestExercise(training)" :key="sets">Satz {{ sets }}</th>
+                <th>Exercises</th>
+                <th v-for="sets in getSetRangeFromLongestExercise(training)" :key="sets">Set {{ sets }}</th>
               </tr>
               <tr v-for="exercise in training.exercises" :key="exercise.id">
                 <td @contextmenu="exerciseContextMenu($event, exercise.id)">{{ exercise.name }}</td>
@@ -35,12 +35,14 @@
                   v-for="set in exercise.sets"
                   :key="set.id"
                 >
-                  {{ set.reps }} Wdh. | {{ set.weight }} kg | {{ set.type }}
+                  {{ set.reps }} Wdh. | {{ set.weight }} kg
                 </td>
                 <td @click="addSetToExercise(exercise.id)" class="add-Button">+</td>
               </tr>
               <tr>
-                <td @click="addExerciseToTraining(trainingsId)" colspan="100%" class="add-Button">+</td>
+                <td colspan="100%">
+                  <button class="add-Exercise-Button" @click="addExerciseToTraining(trainingsId)">Add Exercise</button>
+                </td>
               </tr>
             </table>
           </div>
@@ -83,6 +85,7 @@ import ChangeSet from "@/components/Set/ChangeSet.vue";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { getTrainingById } from "@/services/trainingService.ts";
 import { deleteExerciseRequest } from "@/services/exerciseService.ts";
+import { deleteSetRequest } from "@/services/setService.ts";
 
 const authStore = useAuthStore();
 const trainingStore = useTrainingStore();
@@ -188,7 +191,7 @@ async function deleteExercise() {
 }
 
 async function deleteSet() {
-  //TODO: Implement logic to delete the set
+  await deleteSetRequest(selectedSetId.value);
   selectedSetId.value = "";
   const menu = document.querySelector(".set-context-menu") as HTMLDivElement;
   if (menu) {
@@ -352,5 +355,20 @@ onMounted(async () => {
   padding: 10px;
   margin: 0;
   cursor: pointer;
+}
+
+.add-Exercise-Button {
+  background-color: var(--primary);
+  color: var(--text-main);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.add-Exercise-Button:hover {
+  background-color: #00a495;
 }
 </style>

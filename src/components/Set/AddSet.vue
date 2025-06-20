@@ -1,18 +1,19 @@
 <template>
   <div class="add-set">
-    <div @click="$emit('close')" class="close">x</div>
     <div class="container">
+      <div @click="$emit('close')" class="close">x</div>
       <h1>Add Set</h1>
       <div class="inputs">
         <select id="type-selection" @change="checkInput()">
           <option value="" disabled selected>Select Type</option>
-          <option value="work">Workset</option>
-          <option value="warumup">Warmupset</option>
+          <option value="work">Work</option>
+          <option value="warmup">Warmup</option>
           <option value="Custom">Custom</option>
         </select>
         <input placeholder="Type" id="type" name="type" type="text" v-if="customInput" @keydown.enter="changeFocus('reps')" />
         <input placeholder="Repetitions" id="reps" name="reps" type="number" @keydown.enter="changeFocus('weight')" />
         <input placeholder="Weight (kg)" id="weight" name="weight" type="number" @keydown.enter="submit()" />
+        <button class="button" @click="submit">Submit</button>
       </div>
     </div>
   </div>
@@ -22,6 +23,7 @@
 import type { createSetRequestType } from "@/types/setType.ts";
 import { createSetRequest } from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
+import type { AxiosError } from "axios";
 
 const emit = defineEmits(["close", "reload"]);
 
@@ -40,18 +42,63 @@ function checkInput() {
 async function submit() {
   const reps = parseInt((document.getElementById("reps") as HTMLInputElement).value);
   const weight = parseFloat((document.getElementById("weight") as HTMLInputElement).value);
+  const type = (document.getElementById("type-selection") as HTMLInputElement).value;
 
   const setData: createSetRequestType = {
+    type,
     reps,
     weight,
     exerciseId: props.exerciseId,
   };
 
-  await createSetRequest(setData);
+  try {
+    await createSetRequest(setData);
+  } catch (error) {
+    if (error as AxiosError) {
+      handleError(error as AxiosError);
+      return;
+    }
+  }
 
   emit("close");
 
   emit("reload");
+}
+
+function handleError(error: AxiosError) {
+  if (error?.response?.data) {
+    console.log(error.response.data);
+
+    switch (error.response.data) {
+      case "Invalid type":
+        const typeInput = document.getElementById("type-selection") as HTMLInputElement;
+
+        typeInput.style.borderColor = "var(--danger)";
+
+        typeInput.addEventListener("focus", () => {
+          typeInput.style.borderColor = "var(--border)";
+        });
+        break;
+      case "Invalid reps (1-100)":
+        const repsInput = document.getElementById("reps") as HTMLInputElement;
+
+        repsInput.style.borderColor = "var(--danger)";
+
+        repsInput.addEventListener("keydown", () => {
+          repsInput.style.borderColor = "var(--border)";
+        });
+        break;
+      case "Invalid weight (0-1000 kg)":
+        const weightInput = document.getElementById("weight") as HTMLInputElement;
+
+        weightInput.style.borderColor = "var(--danger)";
+
+        weightInput.addEventListener("keydown", () => {
+          weightInput.style.borderColor = "var(--border)";
+        });
+        break;
+    }
+  }
 }
 
 function changeFocus(elementId: string) {
@@ -81,9 +128,8 @@ onMounted(() => {
   cursor: pointer;
   color: var(--danger);
   font-weight: bold;
-  position: absolute;
-  top: 10px;
-  right: 10px;
+  text-align: right;
+  width: 100%;
 }
 
 .inputs {
@@ -96,5 +142,53 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.container input {
+  background-color: var(--bg-surface-secondary);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.container select {
+  background-color: var(--bg-surface-secondary);
+  color: var(--text-main);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 40px 10px 16px;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px 0 rgba(60, 60, 100, 0.06);
+  cursor: pointer;
+  min-width: 180px;
+  font-weight: 500;
+  position: relative;
+}
+
+.container input:focus,
+.container select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(0, 191, 174, 0.2);
+}
+
+.button {
+  background-color: var(--primary);
+  color: var(--text-main);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.button:hover {
+  background-color: #00a495;
 }
 </style>

@@ -17,7 +17,7 @@
         type="password"
       />
       <input @click="submit()" value="Login" class="btn" type="submit" />
-      <p>No account? <a @click="router.push('signup')">Sign up</a></p>
+      <p>No account? <a @click="router.push('register')">Sign up</a></p>
     </div>
   </div>
 </template>

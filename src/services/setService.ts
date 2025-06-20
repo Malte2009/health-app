@@ -8,3 +8,7 @@ export const changeSetRequest = async (set: changeSetRequestType) => {
 export const createSetRequest = async (set: createSetRequestType) => {
   return api.post("/set/createSet", set);
 };
+
+export const deleteSetRequest = async (setId: string) => {
+  return api.delete(`/set/deleteSet/${setId}`);
+};

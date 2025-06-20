@@ -50,6 +50,7 @@ import { useAuthStore } from "@/stores/auth.ts";
 import { useTrainingStore } from "@/stores/training.ts";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { deleteTrainingRequest, getTrainings } from "@/services/trainingService.ts";
+import { isAuthenticated } from "@/services/authService.ts";
 
 const authStore = useAuthStore();
 const trainingStore = useTrainingStore();
@@ -68,13 +69,12 @@ async function deleteTraining(id: string) {
 }
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
+  console.log(!await isAuthenticated());
+  if (!await isAuthenticated()) {
     await router.push({ name: "login" });
   } else {
     trainings.value = await getTrainings();
   }
-
-  console.log(trainings);
 });
 </script>
 
