@@ -5,12 +5,12 @@
       <div class="board">
         <h2>Training Overview</h2>
         <div v-if="training">
-          <p>Type: {{ training.type }}</p>
-          <p>Duration: {{ training.durationMinutes }} minutes</p>
-          <p>Average Heart Rate: {{ training.avgHeartRate }} bpm</p>
+          <p class="focused">Type: {{ training.type }}</p>
+          <p class="focused">Duration: {{ training.durationMinutes }} minutes</p>
+          <p class="focused">Average Heart Rate: {{ training.avgHeartRate }} bpm</p>
+          <p class="focused">Calories Burned: {{ training.caloriesBurned }}</p>
           <p>Date: {{ training.date }}</p>
           <p>Time: {{ training.time }}</p>
-          <p>Calories Burned: {{ training.caloriesBurned }}</p>
           <p>Notes: {{ training.notes }}</p>
         </div>
       </div>
@@ -22,25 +22,25 @@
             <table class="exercise-table">
               <tr>
                 <th>Übungen</th>
-                <th v-for="sets in getSetRangeFromLongestExercise(training)" :key="sets">
-                  Satz {{ sets }}
-                </th>
+                <th v-for="sets in getSetRangeFromLongestExercise(training)" :key="sets">Satz {{ sets }}</th>
               </tr>
               <tr v-for="exercise in training.exercises" :key="exercise.id">
                 <td @contextmenu="exerciseContextMenu($event, exercise.id)">{{ exercise.name }}</td>
                 <td
+                  :class="{
+                    work: set.type === 'work',
+                    warmup: set.type === 'warmup',
+                  }"
                   @contextmenu="setContextMenu($event, set.id)"
                   v-for="set in exercise.sets"
                   :key="set.id"
                 >
-                  {{ set.reps }} Wdh. | {{ set.weight }} kg
+                  {{ set.reps }} Wdh. | {{ set.weight }} kg | {{ set.type }}
                 </td>
                 <td @click="addSetToExercise(exercise.id)" class="add-Button">+</td>
               </tr>
               <tr>
-                <td @click="addExerciseToTraining(trainingsId)" colspan="100%" class="add-Button">
-                  +
-                </td>
+                <td @click="addExerciseToTraining(trainingsId)" colspan="100%" class="add-Button">+</td>
               </tr>
             </table>
           </div>
@@ -49,27 +49,15 @@
     </div>
 
     <div v-if="addExercise" class="add-Exercise">
-      <AddExercise
-        @reload="reloadTraining()"
-        @close="addExercise = false"
-        :trainingId="trainingsId"
-      ></AddExercise>
+      <AddExercise @reload="reloadTraining()" @close="addExercise = false" :trainingId="trainingsId"></AddExercise>
     </div>
 
     <div v-if="addSet" class="add-Set">
-      <AddSet
-        @reload="reloadTraining()"
-        @close="addSet = false"
-        :exerciseId="selectedExerciseId"
-      ></AddSet>
+      <AddSet @reload="reloadTraining()" @close="addSet = false" :exerciseId="selectedExerciseId"></AddSet>
     </div>
 
     <div v-if="changeSetCon" class="change-Set">
-      <ChangeSet
-        @reload="reloadTraining()"
-        @close="changeSetCon = false"
-        :setId="selectedSetId"
-      ></ChangeSet>
+      <ChangeSet @reload="reloadTraining()" @close="changeSetCon = false" :setId="selectedSetId"></ChangeSet>
     </div>
 
     <div @focusout="closeExerciseContextMenu()" class="exercise-context-menu" tabindex="-1">
@@ -241,6 +229,16 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.work {
+  color: var(--color-set-work);
+}
+
+.warmup {
+  color: var(--color-set-warmup);
+}
+.focused {
+  font-weight: bold;
+}
 .training {
   display: flex;
   flex-direction: row;

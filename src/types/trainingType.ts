@@ -29,6 +29,7 @@ export type createTrainingResponseType = {
 export type getTrainingResponseType = {
   exercises: ({
     sets: {
+      type: string;
       date: string | null;
       userId: string;
       id: string;

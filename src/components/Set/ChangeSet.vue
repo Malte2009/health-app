@@ -4,20 +4,15 @@
     <div class="container">
       <h1>Add Set</h1>
       <div class="inputs">
-        <input
-          placeholder="Repetitions"
-          id="reps"
-          name="reps"
-          type="number"
-          @keydown.enter="changeFocus('weight')"
-        />
-        <input
-          placeholder="Weight (kg)"
-          id="weight"
-          name="weight"
-          type="number"
-          @keydown.enter="submit()"
-        />
+        <select id="type-selection" @change="checkInput()">
+          <option value="" disabled selected>Select Type</option>
+          <option value="work">Workset</option>
+          <option value="warmup">Warmup</option>
+          <option value="Custom">Custom</option>
+        </select>
+        <input placeholder="Type" id="type" name="type" type="text" v-if="customInput" @keydown.enter="changeFocus('reps')" />
+        <input placeholder="Repetitions" id="reps" name="reps" type="number" @keydown.enter="changeFocus('weight')" />
+        <input placeholder="Weight (kg)" id="weight" name="weight" type="number" @keydown.enter="submit()" />
       </div>
     </div>
   </div>
@@ -25,7 +20,7 @@
 
 <script setup lang="ts">
 import { changeSetRequest } from "@/services/setService.ts";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import type { changeSetRequestType } from "@/types/setType.ts";
 
 const emit = defineEmits(["close", "reload"]);
@@ -34,12 +29,24 @@ const props = defineProps<{
   setId: string;
 }>();
 
+const customInput = ref(false);
+
+function checkInput() {
+  const input = document.getElementById("type-selection") as HTMLSelectElement;
+
+  customInput.value = input.value === "Custom";
+}
+
 async function submit() {
   const reps = parseInt((document.getElementById("reps") as HTMLInputElement).value);
   const weight = parseFloat((document.getElementById("weight") as HTMLInputElement).value);
+  const type = customInput.value
+    ? (document.getElementById("type") as HTMLInputElement).value
+    : (document.getElementById("type-selection") as HTMLSelectElement).value;
 
   const setData: changeSetRequestType = {
     id: props.setId,
+    type,
     reps,
     weight,
   };

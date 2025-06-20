@@ -9,6 +9,9 @@
   --border: #393939;
   --danger: #FF647C;
   --success: #2FD572;
+  --color-set-warmup: #38bdf8;
+  --color-set-work: #34d399;
+  --color-set-dropset: #f97316;
 }
 
 @font-face {

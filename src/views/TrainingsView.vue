@@ -27,19 +27,14 @@
           <td>{{ training.caloriesBurned }}</td>
           <td>{{ training.notes }}</td>
           <td>
-            <button
-              class="button"
-              @click="router.push({ name: 'training', params: { id: training.id } })"
-            >
-              View
-            </button>
+            <button class="button button-primary" @click="router.push({ name: 'training', params: { id: training.id } })">View</button>
+            <button class="button button-secondary" @click="router.push({ name: 'editTraining', params: { id: training.id } })">Edit</button>
+            <button class="button button-danger" @click="deleteTraining(training.id)">Delete</button>
           </td>
         </tr>
         <tr>
           <td colspan="9">
-            <button class="button" @click="router.push({ name: 'create-training' })">
-              Create New Training
-            </button>
+            <button class="button" @click="router.push({ name: 'createTraining' })">Create New Training</button>
           </td>
         </tr>
       </tbody>
@@ -54,7 +49,7 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth.ts";
 import { useTrainingStore } from "@/stores/training.ts";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
-import { getTrainings } from "@/services/trainingService.ts";
+import { deleteTrainingRequest, getTrainings } from "@/services/trainingService.ts";
 
 const authStore = useAuthStore();
 const trainingStore = useTrainingStore();
@@ -62,6 +57,15 @@ const trainingStore = useTrainingStore();
 const router = useRouter();
 
 const trainings = ref([] as getTrainingResponseType[]);
+
+async function deleteTraining(id: string) {
+  try {
+    await deleteTrainingRequest(id);
+    trainings.value = trainings.value.filter((training) => training.id !== id);
+  } catch (error) {
+    console.error("Error deleting training:", error);
+  }
+}
 
 onMounted(async () => {
   if (!authStore.isAuthenticated) {
@@ -105,6 +109,10 @@ onMounted(async () => {
   transition:
     background-color 0.2s,
     transform 0.1s;
+  margin: 4px;
+}
+
+.button-primary {
   box-shadow: 0 2px 5px rgba(0, 191, 174, 0.2);
 }
 
@@ -118,6 +126,7 @@ onMounted(async () => {
 
 .button-secondary {
   background-color: var(--bg-surface-secondary);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   color: var(--text-secondary);
   border: 1px solid var(--border);
 }
@@ -129,10 +138,11 @@ onMounted(async () => {
 
 .button-danger {
   background-color: var(--danger);
+  box-shadow: 0 2px 5px rgba(232, 63, 96, 0.2);
   color: var(--text-main);
 }
 
 .button-danger:hover {
-  background-color: #e0556f;
+  background-color: #e83f60;
 }
 </style>
