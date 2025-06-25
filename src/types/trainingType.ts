@@ -11,6 +11,8 @@ export type createTrainingLogRequestType = {
   notes?: string;
   date: string;
   time?: string;
+  pauses?: Number;
+  pausesLength?: Number;
 };
 
 export type createTrainingResponseType = {

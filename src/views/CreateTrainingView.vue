@@ -22,6 +22,14 @@
           type="number"
           min="1"
           max="600"
+          @keydown.enter.prevent="changeFocus('pauses')"
+        />
+        <input placeholder="Pauses (optional)" id="pauses" name="pauses" type="text" @keydown.enter.prevent="changeFocus('pausesLength')" />
+        <input
+          placeholder="Pauses Length (optional)"
+          id="pausesLength"
+          name="pausesLength"
+          type="text"
           @keydown.enter.prevent="changeFocus('trainingTime')"
         />
         <input
@@ -57,6 +65,8 @@ async function submit() {
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
   const trainingDate = (document.getElementById("trainingDate") as HTMLInputElement).value;
   const trainingTime = (document.getElementById("trainingTime") as HTMLInputElement).value;
+  const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value);
+  const pausesLength = parseInt((document.getElementById("pausesLength") as HTMLInputElement).value);
 
   const trainingData: createTrainingLogRequestType = {
     type: trainingType,
@@ -64,6 +74,8 @@ async function submit() {
     avgHeartRate: parseInt(averageHeartRate, 10),
     date: trainingDate,
     time: trainingTime,
+    pauses,
+    pausesLength,
   };
 
   let trainingLog;
