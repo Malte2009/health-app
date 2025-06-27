@@ -1,8 +1,14 @@
+import { getCookie } from "@/utility/cookie";
 import api from "./api";
 
 export const isAuthenticated = async (): Promise<string> => {
+  const token = getCookie("token");
   try {
-    const response = await api.get("/users/isAuthenticated");
+    const response = await api.get("/users/isAuthenticated", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     if (response.status === 200) {
       return response.data;
     } else {
