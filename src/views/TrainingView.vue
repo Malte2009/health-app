@@ -28,8 +28,8 @@
                 <td @contextmenu="exerciseContextMenu($event, exercise.id)">{{ exercise.name }}</td>
                 <td
                   :class="{
-                    work: set.type === 'work',
-                    warmup: set.type === 'warmup',
+                    work: set.type === 'Work',
+                    warmup: set.type === 'Warmup',
                   }"
                   @contextmenu="setContextMenu($event, set.id)"
                   v-for="set in exercise.sets"
