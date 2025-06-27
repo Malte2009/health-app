@@ -24,5 +24,6 @@ export const register = async (data: {
 };
 
 export const login = async (email: string, password: string): Promise<string> => {
-  return api.post("/users/login", { email, password });
+  const response: string = (await api.post("/users/login", { email, password })).data;
+  return response;
 };
