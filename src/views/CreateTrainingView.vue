@@ -4,7 +4,19 @@
 
     <div class="inputs">
       <form id="trainingForm" @submit.prevent="submit">
-        <input placeholder="Training Type" id="trainingType" name="trainingType" type="text" @keydown.enter.prevent="changeFocus('trainingDate')" />
+        <select @change="checkInput()" id="trainingType" name="trainingType" @keydown.enter.prevent="changeFocus('trainingDate')">
+          <option value="" disabled selected>Select Training Type</option>
+          <option v-for="type in trainingTypes" :key="type.type" :value="type.type">{{ type.type }}</option>
+          <option value="Custom">Custom</option>
+        </select>
+        <input
+          v-if="showCustomInput"
+          placeholder="Training Type"
+          id="trainingType"
+          name="trainingType"
+          type="text"
+          @keydown.enter.prevent="changeFocus('trainingDate')"
+        />
         <input id="trainingDate" name="trainingDate" type="date" @keydown.enter.prevent="changeFocus('averageHeartRate')" />
         <input
           placeholder="Average Heart Rate (30 - 220)"
@@ -49,24 +61,45 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth.ts";
-import type { createTrainingLogRequestType } from "@/types/trainingType.ts";
-import { createTrainingLog } from "@/services/trainingService.ts";
+import type { createTrainingLogRequestType, getTrainingTypesResponseType } from "@/types/trainingType.ts";
+import { createTrainingLog, getTrainingTypes } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/training.ts";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 
 const authStore = useAuthStore();
 const trainingStore = useTrainingStore();
 const router = useRouter();
 
+const trainingTypes = ref<getTrainingTypesResponseType>([]);
+const showCustomInput = ref(false);
+
+function checkInput() {
+  const input = document.getElementById("trainingType") as HTMLSelectElement;
+
+  showCustomInput.value = input.value === "Custom";
+
+  if (showCustomInput.value) {
+    const customInput = document.getElementById("trainingType") as HTMLInputElement;
+    customInput.placeholder = "Enter Custom Training Type";
+  } else {
+    const customInput = document.getElementById("trainingType") as HTMLInputElement;
+    customInput.placeholder = "";
+  }
+}
+
 async function submit() {
-  const trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
+  let trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
   const trainingDate = (document.getElementById("trainingDate") as HTMLInputElement).value;
   const trainingTime = (document.getElementById("trainingTime") as HTMLInputElement).value;
   const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value);
   const pausesLength = parseInt((document.getElementById("pausesLength") as HTMLInputElement).value);
+
+  if (showCustomInput.value) {
+    trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
+  }
 
   const trainingData: createTrainingLogRequestType = {
     type: trainingType,
@@ -150,6 +183,17 @@ onMounted(async () => {
   if (!authStore.isAuthenticated) {
     await router.push({ name: "login" });
   }
+
+  try {
+    trainingTypes.value = await getTrainingTypes();
+  } catch (error) {
+    console.error("Failed to fetch training types:", error);
+  }
+
+  const now = new Date();
+  const today = new Date();
+  (document.getElementById("trainingDate") as HTMLInputElement).valueAsDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+  (document.getElementById("trainingTime") as HTMLInputElement).value = now.toTimeString().substring(0, 5);
 });
 </script>
 
@@ -174,6 +218,10 @@ form {
   flex-direction: column;
 }
 
+form select {
+  min-width: 275px !important;
+}
+
 form input,
 form select,
 form button {
@@ -195,7 +243,8 @@ form select:focus {
 form input[type="date"],
 form input[type="time"],
 form input[type="number"],
-form input[type="text"] {
+form input[type="text"],
+form select {
   min-width: 250px;
 }
 
