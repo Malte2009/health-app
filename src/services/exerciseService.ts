@@ -4,17 +4,19 @@ import type {
   changeExerciseResponse,
   createExerciseLogRequest,
   createExerciseLogResponse,
+  getExerciseNamesType,
 } from "@/types/exerciseType.ts";
 
-export const changeExercise = async (
-  exercise: changeExerciseRequest,
-): Promise<changeExerciseResponse> => {
+export const getExerciseNames = async (): Promise<getExerciseNamesType> => {
+  const response = await api.get("/exercise/getExerciseNames");
+  return response.data;
+};
+
+export const changeExercise = async (exercise: changeExerciseRequest): Promise<changeExerciseResponse> => {
   const response = await api.patch(`/exercise/changeExercise/${exercise.id}`, exercise);
   return response.data;
 };
-export const createExercise = async (
-  exercise: createExerciseLogRequest,
-): Promise<createExerciseLogResponse> => {
+export const createExercise = async (exercise: createExerciseLogRequest): Promise<createExerciseLogResponse> => {
   const response = await api.post("/exercise/createExercise", exercise);
   return response.data;
 };

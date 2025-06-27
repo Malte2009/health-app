@@ -2,7 +2,7 @@
   <div class="add-exercise">
     <div class="container">
       <div @click="$emit('close')" class="close">x</div>
-      <h1>Add Exercise</h1>
+      <h1>Change Exercise</h1>
       <div class="inputs">
         <select id="exerciseName" @change="checkInput()">
           <option value="" disabled selected>Select an exercise</option>
@@ -19,14 +19,14 @@
 </template>
 
 <script setup lang="ts">
-import { createExercise, getExerciseNames } from "@/services/exerciseService.ts";
-import type { createExerciseLogRequest, getExerciseNamesType } from "@/types/exerciseType.ts";
+import { changeExercise, getExerciseNames } from "@/services/exerciseService.ts";
+import type { changeExerciseRequest, getExerciseNamesType } from "@/types/exerciseType.ts";
 import { onMounted, ref } from "vue";
 
 const emit = defineEmits(["close", "reload"]);
 
 const props = defineProps<{
-  trainingId: string;
+  exerciseId: string;
 }>();
 
 const exerciseNames = ref<getExerciseNamesType>([]);
@@ -57,12 +57,12 @@ async function submit() {
     return;
   }
 
-  const exerciseData: createExerciseLogRequest = {
+  const exerciseData: changeExerciseRequest = {
+    id: props.exerciseId,
     name: exerciseName,
-    trainingId: props.trainingId,
   };
 
-  await createExercise(exerciseData);
+  await changeExercise(exerciseData);
 
   emit("close");
 

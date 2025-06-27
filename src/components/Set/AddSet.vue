@@ -41,8 +41,11 @@ function checkInput() {
 async function submit() {
   const reps = parseInt((document.getElementById("reps") as HTMLInputElement).value);
   const weight = parseFloat((document.getElementById("weight") as HTMLInputElement).value);
-  const type = (document.getElementById("type-selection") as HTMLInputElement).value;
+  let type = (document.getElementById("type-selection") as HTMLInputElement).value;
 
+  if (customInput.value) {
+    type = (document.getElementById("type") as HTMLInputElement).value;
+  }
   const setData: createSetRequestType = {
     type,
     reps,

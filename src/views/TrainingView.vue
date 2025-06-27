@@ -54,6 +54,10 @@
       <AddExercise @reload="reloadTraining()" @close="addExercise = false" :trainingId="trainingsId"></AddExercise>
     </div>
 
+    <div v-if="changeExerciseCon" class="add-Exercise">
+      <ChangeExercise @reload="reloadTraining()" @close="changeExerciseCon = false" :exerciseId="selectedExerciseId"></ChangeExercise>
+    </div>
+
     <div v-if="addSet" class="add-Set">
       <AddSet @reload="reloadTraining()" @close="addSet = false" :exerciseId="selectedExerciseId"></AddSet>
     </div>
@@ -63,7 +67,7 @@
     </div>
 
     <div @focusout="closeExerciseContextMenu()" class="exercise-context-menu" tabindex="-1">
-      <p>Edit</p>
+      <p @click="changeExercise()">Edit</p>
       <p @click="deleteExercise()">Delete</p>
     </div>
 
@@ -82,6 +86,7 @@ import { onMounted, ref } from "vue";
 import AddExercise from "@/components/Exercise/AddExercise.vue";
 import AddSet from "@/components/Set/AddSet.vue";
 import ChangeSet from "@/components/Set/ChangeSet.vue";
+import ChangeExercise from "@/components/Exercise/ChangeExercise.vue";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { getTrainingById } from "@/services/trainingService.ts";
 import { deleteExerciseRequest } from "@/services/exerciseService.ts";
@@ -96,6 +101,7 @@ const trainingsId = route.params.id as string;
 const training = ref(trainingStore.getTrainingById(trainingsId));
 
 const addExercise = ref(false);
+const changeExerciseCon = ref(false);
 const addSet = ref(false);
 const changeSetCon = ref(false);
 
@@ -165,8 +171,8 @@ function setContextMenu(event: MouseEvent, setId: string) {
 }
 
 async function changeExercise() {
-  //TODO: Implement logic to change the exercise
-  selectedExerciseId.value = "";
+  changeExerciseCon.value = true;
+
   const menu = document.querySelector(".exercise-context-menu") as HTMLDivElement;
   if (menu) {
     menu.style.display = "none";
@@ -365,7 +371,9 @@ onMounted(async () => {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
 }
 
 .add-Exercise-Button:hover {

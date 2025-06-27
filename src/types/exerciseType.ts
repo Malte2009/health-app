@@ -1,3 +1,7 @@
+export type getExerciseNamesType = {
+  name: string;
+}[];
+
 export type createExerciseLogRequest = {
   name: string;
   trainingId: string;
