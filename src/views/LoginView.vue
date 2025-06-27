@@ -2,20 +2,8 @@
   <div class="loginContainer">
     <div class="login">
       <div class="h1">Login</div>
-      <input
-        @keydown.enter="changeFocus('password')"
-        placeholder="Email"
-        id="email"
-        name="email"
-        type="text"
-      />
-      <input
-        @keydown.enter="submit()"
-        placeholder="Password"
-        id="password"
-        name="password"
-        type="password"
-      />
+      <input @keydown.enter="changeFocus('password')" placeholder="Email" id="email" name="email" type="text" />
+      <input @keydown.enter="submit()" placeholder="Password" id="password" name="password" type="password" />
       <input @click="submit()" value="Login" class="btn" type="submit" />
       <p>No account? <a @click="router.push('register')">Sign up</a></p>
     </div>
@@ -28,7 +16,7 @@ import { onMounted } from "vue";
 
 import { useAuthStore } from "@/stores/auth.ts";
 import { setCookie } from "@/utility/cookie.ts";
-import { login, isAuthenticated } from "@/services/authService.ts";
+import { isAuthenticated, login } from "@/services/authService.ts";
 
 const authStore = useAuthStore();
 
@@ -57,6 +45,8 @@ async function submit() {
 async function route() {
   if (await isAuthenticated()) {
     await router.push({ name: "home" });
+  } else {
+    authStore.setToken("");
   }
 }
 

@@ -14,3 +14,18 @@ export type changeSetRequestType = {
   time?: string | null;
   exerciseId?: string;
 };
+
+export type getSetByIdResponseType = {
+  id: string;
+  exerciseId: string;
+  userId: string;
+  type: string | null;
+  date: string;
+  time: string;
+  reps: number;
+  weight: number;
+};
+
+export type getSetTypesResponseType = {
+  type: string | null;
+}[];

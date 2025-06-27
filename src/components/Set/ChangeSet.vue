@@ -5,8 +5,9 @@
       <h1>Edit Set</h1>
       <div class="inputs">
         <select id="type-selection" @change="checkInput()">
-          <option selected value="work">Work</option>
-          <option value="warmup">Warmup</option>
+          <option :selected="setType.type === 'Work'" v-for="setType in setTypes" :key="setType.type" :value="setType.type">
+            {{ setType.type }}
+          </option>
           <option value="Custom">Custom</option>
         </select>
         <input placeholder="Type" id="type" name="type" type="text" v-if="customInput" @keydown.enter="changeFocus('reps')" />
@@ -19,9 +20,9 @@
 </template>
 
 <script setup lang="ts">
-import { changeSetRequest } from "@/services/setService.ts";
+import { changeSetRequest, getSetById, getSetTypes } from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
-import type { changeSetRequestType } from "@/types/setType.ts";
+import type { changeSetRequestType, getSetTypesResponseType } from "@/types/setType.ts";
 import type { AxiosError } from "axios";
 
 const emit = defineEmits(["close", "reload"]);
@@ -29,6 +30,8 @@ const emit = defineEmits(["close", "reload"]);
 const props = defineProps<{
   setId: string;
 }>();
+
+const setTypes = ref<getSetTypesResponseType>([]);
 
 const customInput = ref(false);
 
@@ -109,8 +112,30 @@ function changeFocus(elementId: string) {
   }
 }
 
-onMounted(() => {
+async function loadOldSetData() {
+  const setId = props.setId;
+
+  if (!setId) return;
+
+  try {
+    const setData = await getSetById(setId);
+
+    if (setData) {
+      if (setData.type) {
+        (document.getElementById("type-selection") as HTMLSelectElement).value = setData.type;
+      }
+      (document.getElementById("reps") as HTMLInputElement).value = setData.reps.toString();
+      (document.getElementById("weight") as HTMLInputElement).value = setData.weight.toString();
+    }
+  } catch (error) {
+    console.error("Failed to load set data:", error);
+  }
+}
+
+onMounted(async () => {
   const repsInput = document.getElementById("reps") as HTMLInputElement;
+  setTypes.value = await getSetTypes();
+  await loadOldSetData();
   if (repsInput) {
     repsInput.focus();
   }

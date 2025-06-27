@@ -5,8 +5,9 @@
       <h1>Add Set</h1>
       <div class="inputs">
         <select id="type-selection" @change="checkInput()">
-          <option selected value="work">Work</option>
-          <option value="warmup">Warmup</option>
+          <option :selected="setType.type === 'Work'" v-for="setType in setTypes" :key="setType.type" :value="setType.type">
+            {{ setType.type }}
+          </option>
           <option value="Custom">Custom</option>
         </select>
         <input placeholder="Type" id="type" name="type" type="text" v-if="customInput" @keydown.enter="changeFocus('reps')" />
@@ -19,8 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import type { createSetRequestType } from "@/types/setType.ts";
-import { createSetRequest } from "@/services/setService.ts";
+import type { createSetRequestType, getSetTypesResponseType } from "@/types/setType.ts";
+import { createSetRequest, getSetTypes } from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 
@@ -29,6 +30,8 @@ const emit = defineEmits(["close", "reload"]);
 const props = defineProps<{
   exerciseId: string;
 }>();
+
+const setTypes = ref<getSetTypesResponseType>([]);
 
 const customInput = ref(false);
 
@@ -110,8 +113,9 @@ function changeFocus(elementId: string) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   const repsInput = document.getElementById("reps") as HTMLInputElement;
+  setTypes.value = await getSetTypes();
   if (repsInput) {
     repsInput.focus();
   }

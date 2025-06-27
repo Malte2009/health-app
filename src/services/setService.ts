@@ -1,5 +1,15 @@
 import api from "./api";
-import type { changeSetRequestType, createSetRequestType } from "@/types/setType.ts";
+import type { changeSetRequestType, createSetRequestType, getSetByIdResponseType, getSetTypesResponseType } from "@/types/setType.ts";
+
+export const getSetById = async (id: string): Promise<getSetByIdResponseType> => {
+  const response = await api.get(`/set/getSet/${id}`);
+  return response.data;
+};
+
+export const getSetTypes = async (): Promise<getSetTypesResponseType> => {
+  const response = await api.get("/set/getSetTypes");
+  return response.data;
+};
 
 export const changeSetRequest = async (set: changeSetRequestType) => {
   return api.patch(`/set/changeSet/${set.id}`, set);
