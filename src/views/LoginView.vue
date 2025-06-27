@@ -47,6 +47,8 @@ async function submit() {
 
   const token = await login(email, password);
 
+  console.log("Token received:", token);
+
   authStore.setToken(token);
 
   setCookie("token", token, 1);
