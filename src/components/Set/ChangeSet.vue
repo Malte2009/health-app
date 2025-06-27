@@ -5,8 +5,7 @@
       <h1>Edit Set</h1>
       <div class="inputs">
         <select id="type-selection" @change="checkInput()">
-          <option value="" disabled selected>Select Type</option>
-          <option value="work">Work</option>
+          <option selected value="work">Work</option>
           <option value="warmup">Warmup</option>
           <option value="Custom">Custom</option>
         </select>
@@ -165,7 +164,9 @@ onMounted(() => {
   padding: 10px 40px 10px 16px;
   font-size: 1rem;
   outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
   box-shadow: 0 2px 8px 0 rgba(60, 60, 100, 0.06);
   cursor: pointer;
   min-width: 180px;
@@ -187,7 +188,9 @@ onMounted(() => {
   border-radius: 8px;
   cursor: pointer;
   font-weight: 500;
-  transition: background-color 0.2s, transform 0.1s;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
 }
 
 .button:hover {
