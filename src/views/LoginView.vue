@@ -28,7 +28,7 @@ import { onMounted } from "vue";
 
 import { useAuthStore } from "@/stores/auth.ts";
 import { setCookie } from "@/utility/cookie.ts";
-import { login } from "@/services/authService.ts";
+import { login, isAuthenticated } from "@/services/authService.ts";
 
 const authStore = useAuthStore();
 
@@ -55,7 +55,7 @@ async function submit() {
 }
 
 async function route() {
-  if (authStore.isAuthenticated) {
+  if (await isAuthenticated()) {
     await router.push({ name: "home" });
   }
 }
