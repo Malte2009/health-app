@@ -5,7 +5,7 @@
       <h1>Edit Set</h1>
       <div class="inputs">
         <select id="type-selection" @change="checkInput()">
-          <option :selected="setType.type === 'Work'" v-for="setType in setTypes" :key="setType.type" :value="setType.type">
+          <option :selected="setType.type === 'Work'" v-for="setType in setTypes" :key="setType.type || ''" :value="setType.type">
             {{ setType.type }}
           </option>
           <option value="Custom">Custom</option>
