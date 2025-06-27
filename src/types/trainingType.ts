@@ -28,6 +28,10 @@ export type createTrainingResponseType = {
   avgHeartRate: number | null;
 };
 
+export type getTrainingTypesResponseType = {
+  type: string;
+}[];
+
 export type getTrainingResponseType = {
   exercises: ({
     sets: {

@@ -3,6 +3,7 @@ import type {
   createTrainingLogRequestType,
   createTrainingResponseType,
   getTrainingResponseType,
+  getTrainingTypesResponseType,
   updateTrainingLogRequestType,
 } from "@/types/trainingType.ts";
 
@@ -14,6 +15,11 @@ export const getTrainings = async (): Promise<getTrainingResponseType[]> => {
 
 export const getTrainingById = async (id: string): Promise<getTrainingResponseType | null> => {
   const response = await api.get(`/training/getTraining/${id}`);
+  return response.data;
+};
+
+export const getTrainingTypes = async (): Promise<getTrainingTypesResponseType> => {
+  const response = await api.get("/training/getTrainingTypes");
   return response.data;
 };
 
