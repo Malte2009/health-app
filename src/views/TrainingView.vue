@@ -9,8 +9,7 @@
           <p class="focused">Duration: {{ training.durationMinutes }} minutes</p>
           <p class="focused">Average Heart Rate: {{ training.avgHeartRate }} bpm</p>
           <p class="focused">Calories Burned: {{ training.caloriesBurned }}</p>
-          <p>Date: {{ training.date }}</p>
-          <p>Time: {{ training.time }}</p>
+          <p>Date: {{ getDateString(training.createdAt) }}</p>
           <p>Notes: {{ training.notes }}</p>
         </div>
       </div>
@@ -219,6 +218,12 @@ function closeSetContextMenu() {
   if (menu) {
     menu.style.display = "none";
   }
+}
+
+function getDateString(date: Date): string {
+  return new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "short",
+  }).format(new Date(date));
 }
 
 onMounted(async () => {

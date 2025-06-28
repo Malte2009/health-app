@@ -10,23 +10,23 @@ export type createExerciseLogRequest = {
 export type createExerciseLogResponse = {
   id: string;
   name: string;
-  date: string;
-  time: string;
+  createdAt: Date;
+  changedAt: Date;
   trainingId: string;
 };
 
 export type changeExerciseRequest = {
   id: string;
   name: string;
-  date?: string;
-  time?: string;
+  createdAt: Date;
+  changedAt: Date;
 };
 
 export type changeExerciseResponse = {
   id: string;
   name: string;
   userId: string;
-  date: string;
-  time: string;
+  createdAt: Date;
+  changedAt: Date;
   trainingId: string;
 };

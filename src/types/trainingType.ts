@@ -18,8 +18,8 @@ export type createTrainingLogRequestType = {
 export type createTrainingResponseType = {
   id: string;
   userID: string;
-  date: string;
-  time: string | null;
+  createdAt: Date;
+  changedAt: Date;
   type: string | null;
   score: number | null;
   notes: string | null;
@@ -36,7 +36,8 @@ export type getTrainingResponseType = {
   exercises: ({
     sets: {
       type: string;
-      date: string | null;
+      createdAt: Date;
+      changedAt: Date;
       userId: string;
       id: string;
       weight: number;
@@ -45,17 +46,17 @@ export type getTrainingResponseType = {
       reps: number;
     }[];
   } & {
-    date: string | null;
     id: string;
     name: string;
-    time: string | null;
+    createdAt: Date;
+    changedAt: Date;
     trainingId: string;
   })[];
 } & {
   id: string;
   userId: string;
-  date: string;
-  time: string | null;
+  createdAt: Date;
+  changedAt: Date;
   type: string | null;
   score: number | null;
   notes: string | null;
