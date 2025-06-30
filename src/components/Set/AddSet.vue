@@ -38,8 +38,6 @@ const customInput = ref(false);
 function checkInput() {
   const input = document.getElementById("type-selection") as HTMLSelectElement;
 
-  console.log(input.value);
-
   customInput.value = input.value === "Custom";
 }
 
@@ -80,20 +78,11 @@ function handleError(error: AxiosError) {
       case "Invalid type":
         const typeInput = document.getElementById("type-selection") as HTMLInputElement;
 
-        if (typeInput.value === "Custom") {
-          const customTypeInput = document.getElementById("type") as HTMLInputElement;
-          customTypeInput.style.borderColor = "var(--danger)";
+        typeInput.style.borderColor = "var(--danger)";
 
-          customTypeInput.addEventListener("focus", () => {
-            customTypeInput.style.borderColor = "var(--border)";
-          });
-        } else {
-          typeInput.style.borderColor = "var(--danger)";
-
-          typeInput.addEventListener("focus", () => {
-            typeInput.style.borderColor = "var(--border)";
-          });
-        }
+        typeInput.addEventListener("focus", () => {
+          typeInput.style.borderColor = "var(--border)";
+        });
         break;
       case "Invalid reps (1-100)":
         const repsInput = document.getElementById("reps") as HTMLInputElement;
@@ -124,18 +113,13 @@ function changeFocus(elementId: string) {
   }
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 onMounted(async () => {
-  try {
-    setTypes.value = await getSetTypes();
-  } catch (error) {
-    console.error("Failed to fetch set types:", error);
+  const repsInput = document.getElementById("reps") as HTMLInputElement;
+  setTypes.value = await getSetTypes();
+  if (repsInput) {
+    repsInput.focus();
   }
 
-  await sleep(100);
   checkInput();
 });
 </script>
