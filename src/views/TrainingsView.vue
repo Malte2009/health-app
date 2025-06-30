@@ -46,11 +46,8 @@ import { useRouter } from "vue-router";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { deleteTrainingRequest, getTrainings } from "@/services/trainingService.ts";
 import { isAuthenticated } from "@/services/authService.ts";
-import { useTrainingStore } from "@/stores/training.ts";
 
 const router = useRouter();
-
-const trainingsStore = useTrainingStore();
 
 const trainings = ref([] as getTrainingResponseType[]);
 
@@ -75,7 +72,6 @@ onMounted(async () => {
     await router.push({ name: "login" });
   } else {
     trainings.value = await getTrainings();
-    trainingsStore.setTrainings(trainings.value);
   }
 });
 </script>

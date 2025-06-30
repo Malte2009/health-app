@@ -4,7 +4,7 @@
 
     <div class="inputs">
       <form id="trainingForm" @submit.prevent="submit">
-        <select @change="checkInput()" id="trainingTypeSelect" name="trainingType" @keydown.enter.prevent="changeFocus('trainingDate')">
+        <select @change="checkInput()" id="trainingType" name="trainingType" @keydown.enter.prevent="changeFocus('trainingDate')">
           <option value="" disabled selected>Select Training Type</option>
           <option v-for="type in trainingTypes" :key="type.type" :value="type.type">{{ type.type }}</option>
           <option value="Custom">Custom</option>
@@ -42,9 +42,8 @@
           id="pausesLength"
           name="pausesLength"
           type="text"
-          @keydown.enter.prevent="changeFocus('notes')"
+          @keydown.enter.prevent="changeFocus('trainingTime')"
         />
-        <input placeholder="Notes (optional)" id="notes" name="notes" type="text" @keydown.enter.prevent="changeFocus('trainingTime')" />
         <input
           placeholder="Training Time (HH:MM)"
           id="trainingTime"
@@ -76,13 +75,21 @@ const trainingTypes = ref<getTrainingTypesResponseType>([]);
 const showCustomInput = ref(false);
 
 function checkInput() {
-  const input = document.getElementById("trainingTypeSelect") as HTMLSelectElement;
+  const input = document.getElementById("trainingType") as HTMLSelectElement;
 
   showCustomInput.value = input.value === "Custom";
+
+  if (showCustomInput.value) {
+    const customInput = document.getElementById("trainingType") as HTMLInputElement;
+    customInput.placeholder = "Enter Custom Training Type";
+  } else {
+    const customInput = document.getElementById("trainingType") as HTMLInputElement;
+    customInput.placeholder = "";
+  }
 }
 
 async function submit() {
-  let trainingType = (document.getElementById("trainingTypeSelect") as HTMLInputElement).value;
+  let trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
   const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value);
@@ -92,15 +99,12 @@ async function submit() {
     trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   }
 
-  console.log(trainingType, trainingDuration, averageHeartRate, pauses, pausesLength);
-
   const trainingData: createTrainingLogRequestType = {
     type: trainingType,
     durationMinutes: parseInt(trainingDuration, 10),
     avgHeartRate: parseInt(averageHeartRate, 10),
     pauses,
     pausesLength,
-    notes: (document.getElementById("notes") as HTMLInputElement).value || "",
   };
 
   let trainingLog;
@@ -125,9 +129,7 @@ function handleError(error: AxiosError) {
 
     switch (error.response.data) {
       case "Training type is required":
-        let trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
-
-        if (showCustomInput.value) trainingTypeInput = document.getElementById("trainingTypeSelect") as HTMLInputElement;
+        const trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
 
         trainingTypeInput.style.borderColor = "var(--danger)";
 
