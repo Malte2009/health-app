@@ -19,8 +19,6 @@ export type createExerciseLogResponse = {
 export type changeExerciseRequest = {
   id: string;
   name: string;
-  createdAt: Date;
-  changedAt: Date;
 };
 
 export type changeExerciseOrderRequestType = {

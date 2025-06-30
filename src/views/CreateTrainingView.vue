@@ -103,7 +103,7 @@ async function submit() {
 
   const trainingData: createTrainingLogRequestType = {
     type: trainingType,
-    duration: parseInt(trainingDuration, 10),
+    durationMinutes: parseInt(trainingDuration, 10),
     avgHeartRate: parseInt(averageHeartRate, 10),
     date: trainingDate,
     time: trainingTime,

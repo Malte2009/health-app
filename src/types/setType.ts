@@ -10,8 +10,6 @@ export type changeSetRequestType = {
   type: string;
   reps?: number;
   weight?: number;
-  createdAt: Date;
-  changedAt: Date;
   exerciseId?: string;
 };
 
@@ -20,8 +18,8 @@ export type getSetByIdResponseType = {
   exerciseId: string;
   userId: string;
   type: string | null;
-  createdAt: Date;
-  changedAt: Date;
+  createdAt?: Date;
+  changedAt?: Date;
   reps: number;
   weight: number;
 };

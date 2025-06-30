@@ -40,8 +40,8 @@ export type createTrainingLogRequestType = {
   notes?: string;
   date: string;
   time?: string;
-  pauses?: Number;
-  pausesLength?: Number;
+  pauses?: number;
+  pausesLength?: number;
 };
 
 export type createTrainingResponseType = {

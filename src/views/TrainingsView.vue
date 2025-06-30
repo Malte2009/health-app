@@ -19,8 +19,7 @@
       <tbody>
         <tr v-for="training in trainings" :key="training.id">
           <td>{{ training.id }}</td>
-          <td>{{ training.date }}</td>
-          <td>{{ training.time }}</td>
+          <td>{{ getDateString(training.createdAt) }}</td>
           <td>{{ training.type }}</td>
           <td>{{ training.durationMinutes }}</td>
           <td>{{ training.avgHeartRate }}</td>
@@ -45,15 +44,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-
-import { useAuthStore } from "@/stores/auth.ts";
-import { useTrainingStore } from "@/stores/training.ts";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { deleteTrainingRequest, getTrainings } from "@/services/trainingService.ts";
 import { isAuthenticated } from "@/services/authService.ts";
-
-const authStore = useAuthStore();
-const trainingStore = useTrainingStore();
 
 const router = useRouter();
 
@@ -68,9 +61,15 @@ async function deleteTraining(id: string) {
   }
 }
 
+function getDateString(date: Date): string {
+  return new Intl.DateTimeFormat("de-DE", {
+    dateStyle: "short",
+  }).format(new Date(date));
+}
+
 onMounted(async () => {
-  console.log(!await isAuthenticated());
-  if (!await isAuthenticated()) {
+  console.log(!(await isAuthenticated()));
+  if (!(await isAuthenticated())) {
     await router.push({ name: "login" });
   } else {
     trainings.value = await getTrainings();
