@@ -1,6 +1,6 @@
 <template>
-  <div class="create-training">
-    <h1 class="heading">Create Training</h1>
+  <div class="edit-training">
+    <h1 class="heading">Edit Training</h1>
 
     <div class="inputs">
       <form id="trainingForm" @submit.prevent="submit">
@@ -60,10 +60,10 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth.ts";
-import type { createTrainingLogRequestType, getTrainingTypesResponseType } from "@/types/trainingType.ts";
-import { createTrainingLog, getTrainingTypes } from "@/services/trainingService.ts";
+import type { getTrainingTypesResponseType, updateTrainingLogRequestType } from "@/types/trainingType.ts";
+import { getTrainings, getTrainingTypes, updateTraining } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/training.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
@@ -71,9 +71,36 @@ import type { AxiosError } from "axios";
 const authStore = useAuthStore();
 const trainingStore = useTrainingStore();
 const router = useRouter();
+const route = useRoute();
 
 const trainingTypes = ref<getTrainingTypesResponseType>([]);
 const showCustomInput = ref(false);
+
+const trainingsId = route.params.id as string;
+
+function loadValues() {
+  const trainingTypeSelect = document.getElementById("trainingTypeSelect") as HTMLSelectElement;
+  const trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
+  const trainingDateInput = document.getElementById("trainingDate") as HTMLInputElement;
+  const averageHeartRateInput = document.getElementById("averageHeartRate") as HTMLInputElement;
+  const trainingDurationInput = document.getElementById("trainingDuration") as HTMLInputElement;
+  const notesInput = document.getElementById("notes") as HTMLInputElement;
+
+  const training = trainingStore.getTrainingById(trainingsId);
+
+  if (training) {
+    if (showCustomInput.value) {
+      trainingTypeInput.value = training.type;
+    } else {
+      trainingTypeSelect.value = training.type;
+    }
+
+    trainingDateInput.value = new Date(training.createdAt).toISOString().split("T")[0];
+    averageHeartRateInput.value = training?.avgHeartRate?.toString() || "";
+    trainingDurationInput.value = training?.durationMinutes?.toString() || "";
+    notesInput.value = training.notes || "";
+  }
+}
 
 function checkInput() {
   const input = document.getElementById("trainingTypeSelect") as HTMLSelectElement;
@@ -85,28 +112,22 @@ async function submit() {
   let trainingType = (document.getElementById("trainingTypeSelect") as HTMLInputElement).value;
   const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
-  const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value);
-  const pausesLength = parseInt((document.getElementById("pausesLength") as HTMLInputElement).value);
 
   if (showCustomInput.value) {
     trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   }
 
-  console.log(trainingType, trainingDuration, averageHeartRate, pauses, pausesLength);
-
-  const trainingData: createTrainingLogRequestType = {
+  const trainingData: updateTrainingLogRequestType = {
     type: trainingType,
     durationMinutes: parseInt(trainingDuration, 10),
     avgHeartRate: parseInt(averageHeartRate, 10),
-    pauses,
-    pausesLength,
     notes: (document.getElementById("notes") as HTMLInputElement).value || "",
   };
 
   let trainingLog;
 
   try {
-    trainingLog = await createTrainingLog(trainingData);
+    trainingLog = await updateTraining(trainingsId, trainingData);
   } catch (error) {
     handleError(error as AxiosError);
     return;
@@ -114,9 +135,13 @@ async function submit() {
 
   console.log(trainingLog);
 
-  trainingStore.setCurrentTraining(trainingLog.id);
+  trainingStore.setCurrentTraining(trainingsId);
 
-  await router.push({ name: "training", params: { id: trainingLog.id } });
+  const trainings = await getTrainings();
+
+  trainingStore.setTrainings(trainings);
+
+  await router.push({ name: "training", params: { trainingsId } });
 }
 
 function handleError(error: AxiosError) {
@@ -188,6 +213,8 @@ onMounted(async () => {
   const today = new Date();
   (document.getElementById("trainingDate") as HTMLInputElement).valueAsDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
   (document.getElementById("trainingTime") as HTMLInputElement).value = now.toTimeString().substring(0, 5);
+
+  loadValues();
 });
 </script>
 
