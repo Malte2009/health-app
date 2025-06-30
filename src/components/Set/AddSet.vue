@@ -119,6 +119,8 @@ onMounted(async () => {
   if (repsInput) {
     repsInput.focus();
   }
+
+  checkInput();
 });
 </script>
 
