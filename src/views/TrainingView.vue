@@ -39,7 +39,8 @@
                   @drop="onExerciseDrop(index)"
                   @contextmenu="exerciseContextMenu($event, exercise.id)"
                 >
-                  {{ exercise.name }}
+                  <div>{{ exercise.name }}</div>
+                  <div v-if="exercise.notes">({{ exercise.notes }})</div>
                 </td>
                 <td
                   draggable="true"
@@ -105,7 +106,6 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth.ts";
 import { useTrainingStore } from "@/stores/training.ts";
 import { onMounted, ref } from "vue";
 import AddExercise from "@/components/Exercise/AddExercise.vue";
@@ -117,7 +117,6 @@ import { getTrainingById, updateTraining } from "@/services/trainingService.ts";
 import { deleteExerciseRequest } from "@/services/exerciseService.ts";
 import { deleteSetRequest } from "@/services/setService.ts";
 
-const authStore = useAuthStore();
 const trainingStore = useTrainingStore();
 const router = useRouter();
 const route = useRoute();

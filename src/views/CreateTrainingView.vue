@@ -92,8 +92,6 @@ async function submit() {
   let trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
-  const trainingDate = (document.getElementById("trainingDate") as HTMLInputElement).value;
-  const trainingTime = (document.getElementById("trainingTime") as HTMLInputElement).value;
   const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value);
   const pausesLength = parseInt((document.getElementById("pausesLength") as HTMLInputElement).value);
 
@@ -105,8 +103,6 @@ async function submit() {
     type: trainingType,
     durationMinutes: parseInt(trainingDuration, 10),
     avgHeartRate: parseInt(averageHeartRate, 10),
-    date: trainingDate,
-    time: trainingTime,
     pauses,
     pausesLength,
   };

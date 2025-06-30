@@ -1,3 +1,15 @@
+export type setType = {
+  id: string;
+  userId: string;
+  exerciseId: string;
+  type?: string;
+  createdAt: Date;
+  changedAt?: Date | null;
+  order: number;
+  reps: number;
+  weight: number;
+};
+
 export type createSetRequestType = {
   type: string;
   reps: number;

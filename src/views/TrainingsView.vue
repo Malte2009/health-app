@@ -7,7 +7,6 @@
         <tr>
           <th>Training ID</th>
           <th>Date</th>
-          <th>Time</th>
           <th>Type</th>
           <th>Duration (min)</th>
           <th>Avg Heart Rate (bpm)</th>

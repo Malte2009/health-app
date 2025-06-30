@@ -5,11 +5,17 @@ import type {
   changeExerciseResponse,
   createExerciseLogRequest,
   createExerciseLogResponse,
+  exerciseType,
   getExerciseNamesType,
 } from "@/types/exerciseType.ts";
 
 export const getExerciseNames = async (): Promise<getExerciseNamesType> => {
   const response = await api.get("/exercise/getExerciseNames");
+  return response.data;
+};
+
+export const getExerciseById = async (id: string): Promise<exerciseType | null> => {
+  const response = await api.get(`/exercise/getExercise/${id}`);
   return response.data;
 };
 

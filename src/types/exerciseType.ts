@@ -1,3 +1,18 @@
+import type { setType } from "@/types/setType.ts";
+
+export type exerciseType = {
+  id: string;
+  userId: string;
+  trainingId: string;
+  name: string;
+  createdAt: Date;
+  changedAt?: Date;
+  order: number;
+  notes?: string;
+
+  sets: setType[];
+};
+
 export type getExerciseNamesType = {
   name: string;
 }[];
@@ -5,6 +20,8 @@ export type getExerciseNamesType = {
 export type createExerciseLogRequest = {
   name: string;
   trainingId: string;
+  order: number;
+  notes?: string;
 };
 
 export type createExerciseLogResponse = {
@@ -19,6 +36,7 @@ export type createExerciseLogResponse = {
 export type changeExerciseRequest = {
   id: string;
   name: string;
+  notes?: string;
 };
 
 export type changeExerciseOrderRequestType = {
@@ -26,18 +44,6 @@ export type changeExerciseOrderRequestType = {
 };
 
 export type changeExerciseOrderResponse = {
-  sets: {
-    id: string;
-    userId: string;
-    createdAt: Date;
-    changedAt: Date | null;
-    order: number;
-    type: string | null;
-    weight: number;
-    exerciseId: string;
-    reps: number;
-  }[];
-} & {
   id: string;
   userId: string;
   trainingId: string;
@@ -45,6 +51,8 @@ export type changeExerciseOrderResponse = {
   createdAt: Date;
   changedAt: Date | null;
   order: number;
+
+  sets: setType[];
 };
 
 export type changeExerciseResponse = {
