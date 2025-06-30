@@ -5,10 +5,10 @@
       <div class="board">
         <h2>Training Overview</h2>
         <div v-if="training">
-          <p class="focused">Type: {{ training.type }}</p>
-          <p class="focused">Duration: {{ training.durationMinutes }} minutes</p>
-          <p class="focused">Average Heart Rate: {{ training.avgHeartRate }} bpm</p>
-          <p class="focused">Calories Burned: {{ training.caloriesBurned }}</p>
+          <p class="bold">Type: {{ training.type }}</p>
+          <p class="bold">Duration: {{ training.durationMinutes }} minutes</p>
+          <p class="bold">Average Heart Rate: {{ training.avgHeartRate }} bpm</p>
+          <p class="bold">Calories Burned: {{ training.caloriesBurned }}</p>
           <p>Date: {{ getDateString(training.createdAt) }}</p>
           <p>Notes: {{ training.notes }}</p>
         </div>
@@ -23,15 +23,41 @@
                 <th>Exercises</th>
                 <th v-for="sets in getSetRangeFromLongestExercise(training)" :key="sets">Set {{ sets }}</th>
               </tr>
-              <tr v-for="exercise in training.exercises" :key="exercise.id">
-                <td @contextmenu="exerciseContextMenu($event, exercise.id)">{{ exercise.name }}</td>
+              <tr
+                :class="{ dragging: draggingExerciseIndex === index, focused: currentExerciseIndex === index }"
+                v-for="(exercise, index) in training.exercises"
+                :key="exercise.id"
+              >
                 <td
+                  draggable="true"
+                  @dragstart="onExerciseDragStart(index)"
+                  @dragover.prevent="changeCurrentExerciseIndex(index)"
+                  @dragend="
+                    draggingExerciseIndex = null;
+                    currentExerciseIndex = null;
+                  "
+                  @drop="onExerciseDrop(index)"
+                  @contextmenu="exerciseContextMenu($event, exercise.id)"
+                >
+                  {{ exercise.name }}
+                </td>
+                <td
+                  draggable="true"
+                  @dragstart="onSetDragStart(setIndex, index)"
+                  @dragover.prevent="changeCurrentSetIndex(setIndex, index)"
+                  @dragend="
+                    draggingSetIndex = null;
+                    currentSetIndex = null;
+                  "
+                  @drop="onSetDrop(index, setIndex)"
                   :class="{
                     work: set.type === 'Work',
                     warmup: set.type === 'Warmup',
+                    focused: currentSetIndex?.setIndex === setIndex && currentSetIndex?.index === index,
+                    dragging: draggingSetIndex?.setIndex === setIndex && draggingSetIndex?.index === index,
                   }"
                   @contextmenu="setContextMenu($event, set.id)"
-                  v-for="set in exercise.sets"
+                  v-for="(set, setIndex) in exercise.sets"
                   :key="set.id"
                 >
                   {{ set.reps }} Wdh. | {{ set.weight }} kg
@@ -87,7 +113,7 @@ import AddSet from "@/components/Set/AddSet.vue";
 import ChangeSet from "@/components/Set/ChangeSet.vue";
 import ChangeExercise from "@/components/Exercise/ChangeExercise.vue";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
-import { getTrainingById } from "@/services/trainingService.ts";
+import { getTrainingById, updateTraining } from "@/services/trainingService.ts";
 import { deleteExerciseRequest } from "@/services/exerciseService.ts";
 import { deleteSetRequest } from "@/services/setService.ts";
 
@@ -104,8 +130,95 @@ const changeExerciseCon = ref(false);
 const addSet = ref(false);
 const changeSetCon = ref(false);
 
+const draggingExerciseIndex = ref<number | null>(null);
+const currentExerciseIndex = ref<number | null>(null);
+
+const draggingSetIndex = ref<{ setIndex: number; index: number } | null>(null);
+const currentSetIndex = ref<{ setIndex: number; index: number } | null>(null);
+
 const selectedExerciseId = ref<string>("");
 const selectedSetId = ref<string>("");
+
+function changeCurrentSetIndex(setIndex: number, index: number) {
+  if (draggingExerciseIndex.value != null && currentExerciseIndex.value != null) {
+    currentExerciseIndex.value = index;
+    return;
+  }
+  if (draggingSetIndex.value?.index != index) return;
+  currentSetIndex.value = { setIndex, index };
+}
+
+function changeCurrentExerciseIndex(index: number) {
+  if (draggingSetIndex.value) return;
+
+  currentExerciseIndex.value = index;
+}
+
+function onExerciseDragStart(index: number) {
+  if (draggingSetIndex.value) return;
+  draggingExerciseIndex.value = index;
+}
+
+function onSetDragStart(setIndex: number, index: number) {
+  if (draggingExerciseIndex.value != null && currentExerciseIndex.value != null) {
+    return;
+  }
+  draggingSetIndex.value = { setIndex, index };
+}
+
+function onExerciseDrop(targetIndex: number) {
+  if (draggingExerciseIndex.value === null || draggingExerciseIndex.value === targetIndex) {
+    draggingExerciseIndex.value = null;
+    return;
+  }
+
+  const moved = training.value?.exercises[draggingExerciseIndex.value];
+  if (!moved || !training.value) {
+    draggingExerciseIndex.value = null;
+    return;
+  }
+
+  training.value.exercises.splice(draggingExerciseIndex.value, 1);
+
+  training.value.exercises.splice(targetIndex, 0, moved);
+
+  training.value.exercises.forEach((exercise, index) => {
+    exercise.order = index;
+  });
+
+  trainingStore.changeTraining(trainingsId, training.value);
+
+  updateTraining(trainingsId, training.value);
+
+  draggingExerciseIndex.value = null;
+}
+
+function onSetDrop(targetExerciseIndex: number, targetSetIndex: number) {
+  if (!draggingSetIndex.value || draggingSetIndex.value.setIndex === targetSetIndex) {
+    draggingSetIndex.value = null;
+    return;
+  }
+
+  const moved = training.value?.exercises[targetExerciseIndex].sets[draggingSetIndex.value.setIndex];
+  if (!moved || !training.value) {
+    draggingSetIndex.value = null;
+    return;
+  }
+
+  training.value.exercises[targetExerciseIndex].sets.splice(draggingSetIndex.value.setIndex, 1);
+
+  training.value.exercises[targetExerciseIndex].sets.splice(targetSetIndex, 0, moved);
+
+  trainingStore.changeTraining(trainingsId, training.value);
+
+  training.value.exercises[targetExerciseIndex].sets.forEach((set, index) => {
+    set.order = index;
+  });
+
+  updateTraining(trainingsId, training.value);
+
+  draggingSetIndex.value = null;
+}
 
 function getSetRangeFromLongestExercise(training: getTrainingResponseType): number[] {
   if (!training.exercises || training.exercises.length === 0) return [];
@@ -250,7 +363,7 @@ onMounted(async () => {
 .warmup {
   color: var(--color-set-warmup);
 }
-.focused {
+.bold {
   font-weight: bold;
 }
 .training {
@@ -383,5 +496,15 @@ onMounted(async () => {
 
 .add-Exercise-Button:hover {
   background-color: #00a495;
+}
+
+.dragging {
+  opacity: 0.5;
+  background-color: #222;
+}
+
+.focused {
+  outline: 2px solid var(--primary); /* oder einfach: #00a495 */
+  background-color: #2a2a2a;
 }
 </style>

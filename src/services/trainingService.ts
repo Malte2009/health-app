@@ -24,7 +24,7 @@ export const getTrainingTypes = async (): Promise<getTrainingTypesResponseType> 
 };
 
 export const updateTraining = (id: string, training: updateTrainingLogRequestType) => {
-  return api.patch(`/training/training/${id}`, training);
+  return api.patch(`/training/updateTraining/${id}`, training);
 };
 
 export const createTrainingLog = async (training: createTrainingLogRequestType): Promise<createTrainingResponseType> => {
