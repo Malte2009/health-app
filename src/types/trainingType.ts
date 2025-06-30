@@ -1,16 +1,12 @@
 import type { exerciseType } from "./exerciseType";
 
 export type updateTrainingLogRequestType = {
-  id: string;
-  userId: string;
   type: string;
   score?: number;
   notes?: string;
   caloriesBurned?: number;
   durationMinutes?: number;
   avgHeartRate?: number;
-
-  exercises: exerciseType[];
 };
 
 export type createTrainingLogRequestType = {

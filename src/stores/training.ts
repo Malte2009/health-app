@@ -28,6 +28,9 @@ export const useTrainingStore = defineStore("trainingStore", {
     setCurrentTraining(trainingId: string) {
       this.currentTraining = trainingId;
     },
+    setTrainings(trainings: getTrainingResponseType[]) {
+      this.trainings = trainings;
+    },
     clearTrainings() {
       this.trainings = [];
       this.currentTraining = "";
