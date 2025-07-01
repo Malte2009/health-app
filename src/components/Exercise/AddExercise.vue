@@ -11,7 +11,8 @@
           </option>
           <option value="Custom">Custom</option>
         </select>
-        <input v-if="showCustomInput" id="customName" placeholder="Exercise Name" type="text" @keydown.enter="submit()" />
+        <input v-if="showCustomInput" id="customName" placeholder="Exercise Name" type="text" @keydown.enter="changeFocus('exerciseNotes')" />
+        <input id="exerciseNotes" placeholder="Notes (optional)" type="text" @keydown.enter="submit()" />
         <button class="button" @click="submit">Submit</button>
       </div>
     </div>
@@ -22,6 +23,9 @@
 import { createExercise, getExerciseNames } from "@/services/exerciseService.ts";
 import type { createExerciseLogRequest, getExerciseNamesType } from "@/types/exerciseType.ts";
 import { onMounted, ref } from "vue";
+import { useTrainingStore } from "@/stores/training.ts";
+
+const trainingStore = useTrainingStore();
 
 const emit = defineEmits(["close", "reload"]);
 
@@ -60,6 +64,8 @@ async function submit() {
   const exerciseData: createExerciseLogRequest = {
     name: exerciseName,
     trainingId: props.trainingId,
+    order: trainingStore.getTrainingById(props.trainingId)?.exercises.length || 0,
+    notes: (document.getElementById("exerciseNotes") as HTMLTextAreaElement).value || "",
   };
 
   await createExercise(exerciseData);
@@ -67,6 +73,13 @@ async function submit() {
   emit("close");
 
   emit("reload");
+}
+
+function changeFocus(elementId: string) {
+  const element = document.getElementById(elementId);
+  if (element) {
+    element.focus();
+  }
 }
 
 onMounted(async () => {

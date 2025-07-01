@@ -12,6 +12,7 @@
           <option value="Custom">Custom</option>
         </select>
         <input v-if="showCustomInput" id="customName" placeholder="Exercise Name" type="text" @keydown.enter="submit()" />
+        <input id="exerciseNotes" placeholder="Notes (optional)" type="text" />
         <button class="button" @click="submit">Submit</button>
       </div>
     </div>
@@ -19,11 +20,13 @@
 </template>
 
 <script setup lang="ts">
-import { changeExercise, getExerciseNames } from "@/services/exerciseService.ts";
-import type { changeExerciseRequest, getExerciseNamesType } from "@/types/exerciseType.ts";
+import { changeExercise, getExerciseById, getExerciseNames } from "@/services/exerciseService.ts";
+import type { changeExerciseRequest, exerciseType, getExerciseNamesType } from "@/types/exerciseType.ts";
 import { onMounted, ref } from "vue";
 
 const emit = defineEmits(["close", "reload"]);
+
+const exercise = ref<exerciseType>();
 
 const props = defineProps<{
   exerciseId: string;
@@ -60,6 +63,7 @@ async function submit() {
   const exerciseData: changeExerciseRequest = {
     id: props.exerciseId,
     name: exerciseName,
+    notes: (document.getElementById("exerciseNotes") as HTMLInputElement).value || "",
   };
 
   await changeExercise(exerciseData);
@@ -71,10 +75,21 @@ async function submit() {
 
 onMounted(async () => {
   const exerciseNameInput = document.getElementById("exerciseName") as HTMLInputElement;
+  const exerciseNotes = document.getElementById("exerciseNotes") as HTMLInputElement;
   exerciseNameInput.focus();
 
   try {
     exerciseNames.value = await getExerciseNames();
+
+    const exericse = await getExerciseById(props.exerciseId);
+
+    if (exericse) {
+      exercise.value = exericse;
+      exerciseNameInput.value = exericse.name;
+      exerciseNotes.value = exericse.notes || "";
+    } else {
+      console.error("Exercise not found");
+    }
   } catch (error) {
     console.error("Failed to fetch exercise names:", error);
   }

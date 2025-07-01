@@ -1,3 +1,5 @@
+import type { exerciseType } from "./exerciseType";
+
 export type updateTrainingLogRequestType = {
   exercises: ({
     sets: {
@@ -48,13 +50,13 @@ export type createTrainingResponseType = {
   id: string;
   userID: string;
   createdAt: Date;
-  changedAt: Date;
-  type: string | null;
-  score: number | null;
-  notes: string | null;
-  caloriesBurned: number | null;
-  durationMinutes: number | null;
-  avgHeartRate: number | null;
+  changedAt?: Date;
+  type: string;
+  score?: number;
+  notes?: string;
+  caloriesBurned?: number;
+  durationMinutes?: number;
+  avgHeartRate?: number;
 };
 
 export type getTrainingTypesResponseType = {
@@ -87,11 +89,13 @@ export type getTrainingResponseType = {
   id: string;
   userId: string;
   createdAt: Date;
-  changedAt: Date;
-  type: string | null;
-  score: number | null;
-  notes: string | null;
-  caloriesBurned: number | null;
-  durationMinutes: number | null;
-  avgHeartRate: number | null;
+  changedAt?: Date;
+  type: string;
+  score?: number;
+  notes?: string;
+  caloriesBurned?: number;
+  durationMinutes?: number;
+  avgHeartRate?: number;
+
+  exercises: exerciseType[];
 };
