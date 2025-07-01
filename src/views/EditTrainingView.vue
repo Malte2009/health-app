@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth.ts";
-import type { getTrainingTypesResponseType, updateTrainingLogRequestType } from "@/types/trainingType.ts";
+import type { getTrainingTypesResponseType } from "@/types/trainingType.ts";
 import { getTrainings, getTrainingTypes, updateTraining } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/training.ts";
 import { onMounted, ref } from "vue";
@@ -117,17 +117,22 @@ async function submit() {
     trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   }
 
-  const trainingData: updateTrainingLogRequestType = {
-    type: trainingType,
-    durationMinutes: parseInt(trainingDuration, 10),
-    avgHeartRate: parseInt(averageHeartRate, 10),
-    notes: (document.getElementById("notes") as HTMLInputElement).value || "",
-  };
+  const newTraining = trainingStore.getTrainingById(trainingsId);
+
+  if (!newTraining) {
+    console.error("Training not found");
+    return;
+  }
+
+  newTraining.type = trainingType;
+  newTraining.durationMinutes = parseInt(trainingDuration, 10);
+  newTraining.avgHeartRate = parseInt(averageHeartRate, 10);
+  newTraining.notes = (document.getElementById("notes") as HTMLInputElement).value || "";
 
   let trainingLog;
 
   try {
-    trainingLog = await updateTraining(trainingsId, trainingData);
+    trainingLog = await updateTraining(trainingsId, newTraining);
   } catch (error) {
     handleError(error as AxiosError);
     return;

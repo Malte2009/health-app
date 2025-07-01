@@ -63,8 +63,6 @@ export type changeExerciseOrderResponse = {
   createdAt: Date;
   changedAt: Date | null;
   order: number;
-  changedAt: Date | null;
-  order: number;
 
   sets: setType[];
 };
