@@ -70,7 +70,6 @@ function getDateString(date: Date): string {
 }
 
 onMounted(async () => {
-  console.log(!(await isAuthenticated()));
   if (!(await isAuthenticated())) {
     await router.push({ name: "login" });
   } else {

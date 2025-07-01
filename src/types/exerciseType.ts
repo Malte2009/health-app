@@ -44,11 +44,25 @@ export type changeExerciseOrderRequestType = {
 };
 
 export type changeExerciseOrderResponse = {
+  sets: {
+    id: string;
+    userId: string;
+    createdAt: Date;
+    changedAt: Date | null;
+    order: number;
+    type: string | null;
+    weight: number;
+    exerciseId: string;
+    reps: number;
+  }[];
+} & {
   id: string;
   userId: string;
   trainingId: string;
   name: string;
   createdAt: Date;
+  changedAt: Date | null;
+  order: number;
   changedAt: Date | null;
   order: number;
 

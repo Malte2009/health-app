@@ -91,6 +91,8 @@ onMounted(async () => {
   } catch (error) {
     console.error("Failed to fetch exercise names:", error);
   }
+
+  checkInput();
 });
 </script>
 

@@ -77,11 +77,20 @@ function handleError(error: AxiosError) {
       case "Invalid type":
         const typeInput = document.getElementById("type-selection") as HTMLInputElement;
 
-        typeInput.style.borderColor = "var(--danger)";
+        if (typeInput.value === "Custom") {
+          const customTypeInput = document.getElementById("type") as HTMLInputElement;
+          customTypeInput.style.borderColor = "var(--danger)";
 
-        typeInput.addEventListener("focus", () => {
-          typeInput.style.borderColor = "var(--border)";
-        });
+          customTypeInput.addEventListener("focus", () => {
+            customTypeInput.style.borderColor = "var(--border)";
+          });
+        } else {
+          typeInput.style.borderColor = "var(--danger)";
+
+          typeInput.addEventListener("focus", () => {
+            typeInput.style.borderColor = "var(--border)";
+          });
+        }
         break;
       case "Invalid reps (1-100)":
         const repsInput = document.getElementById("reps") as HTMLInputElement;
@@ -139,6 +148,8 @@ onMounted(async () => {
   if (repsInput) {
     repsInput.focus();
   }
+
+  checkInput();
 });
 </script>
 

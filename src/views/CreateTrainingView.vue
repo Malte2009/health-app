@@ -188,6 +188,8 @@ onMounted(async () => {
   const today = new Date();
   (document.getElementById("trainingDate") as HTMLInputElement).valueAsDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
   (document.getElementById("trainingTime") as HTMLInputElement).value = now.toTimeString().substring(0, 5);
+
+  checkInput();
 });
 </script>
 
