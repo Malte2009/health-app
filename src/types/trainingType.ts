@@ -4,51 +4,51 @@ export type training = {
   id: string;
   userId: string;
   createdAt: Date;
-  changedAt: Date | null;
+  changedAt?: Date;
   type: string;
-  score: number | null;
-  notes: string | null;
-  caloriesBurned: number | null;
-  durationMinutes: number | null;
-  avgHeartRate: number | null;
+  score?: number;
+  notes?: string;
+  caloriesBurned?: number;
+  durationMinutes?: number;
+  avgHeartRate?: number;
 
   exercises: exercise[];
-}
+};
 
 export type updateTrainingLogRequestType = {
   id: string;
   userId: string;
-  type: string | null;
-  score: number | null;
-  notes: string | null;
-  caloriesBurned: number | null;
-  durationMinutes: number | null;
-  avgHeartRate: number | null;
+  type?: string;
+  score?: number;
+  notes?: string;
+  caloriesBurned?: number;
+  durationMinutes?: number;
+  avgHeartRate?: number;
 
   exercises: exercise[];
 };
 
 export type createTrainingLogRequestType = {
   type: string;
-  avgHeartRate: number | null;
-  durationMinutes: number | null;
-  notes: string | null;
-  pauses: number | null;
-  pausesLength: number | null;
+  avgHeartRate?: number;
+  durationMinutes?: number;
+  notes?: string;
+  pauses?: number;
+  pausesLength?: number;
 };
 
 export type createTrainingResponseType = {
-  avgHeartRate: number | null;
+  avgHeartRate?: number;
   id: string;
   createdAt: Date;
-  changedAt: Date | null;
+  changedAt?: Date;
   userId: string;
   type: string;
-  score: number | null;
-  notes: string | null;
-  caloriesBurned: number | null;
-  durationMinutes: number | null;
-}
+  score?: number;
+  notes?: string;
+  caloriesBurned?: number;
+  durationMinutes?: number;
+};
 
 export type getTrainingTypesResponseType = {
   type: string;
@@ -58,13 +58,13 @@ export type getTrainingResponseType = {
   id: string;
   userId: string;
   createdAt: Date;
-  changedAt: Date | null;
+  changedAt?: Date;
   type: string;
-  score: number | null;
-  notes: string | null;
-  caloriesBurned: number | null;
-  durationMinutes: number | null;
-  avgHeartRate: number | null;
+  score?: number;
+  notes?: string;
+  caloriesBurned?: number;
+  durationMinutes?: number;
+  avgHeartRate?: number;
 
   exercises: exercise[];
 };

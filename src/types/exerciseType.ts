@@ -1,16 +1,16 @@
 import type { set } from "@/types/setType.ts";
 
 export type exercise = {
-    id: string;
-    userId: string;
-    trainingId: string;
-    name: string;
-    createdAt: Date;
-    changedAt: Date | null;
-    order: number;
-    notes: string | null;
+  id: string;
+  userId: string;
+  trainingId: string;
+  name: string;
+  createdAt: Date;
+  changedAt: Date | null;
+  order: number;
+  notes: string | null;
 
-    sets: set[];
+  sets: set[];
 };
 
 export type getExerciseNamesType = {
@@ -21,7 +21,7 @@ export type createExerciseLogRequest = {
   name: string;
   trainingId: string;
   order: number;
-  notes: string | null;
+  notes?: string;
 };
 
 export type createExerciseLogResponse = {
@@ -30,16 +30,16 @@ export type createExerciseLogResponse = {
   trainingId: string;
   name: string;
   createdAt: Date;
-  changedAt: Date | null;
+  changedAt?: Date;
   order: number;
-  notes: string | null;
+  notes?: string;
 };
 
 export type changeExerciseRequest = {
   id: string;
-  name: string | null;
-  notes: string | null;
-  order: number | null;
+  name?: string;
+  notes?: string;
+  order?: number;
 };
 
 export type changeExerciseResponse = {
@@ -49,6 +49,6 @@ export type changeExerciseResponse = {
   trainingId: string;
   name: string;
   createdAt: Date;
-  changedAt: Date | null;
-  notes: string | null;
+  changedAt?: Date;
+  notes?: string;
 };

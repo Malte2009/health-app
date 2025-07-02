@@ -1,7 +1,7 @@
 import api from "./api";
-import type { changeSetRequestType, createSetRequestType, getSetByIdResponseType, getSetTypesResponseType } from "@/types/setType.ts";
+import type { changeSetRequestType, createSetRequestType, getSetTypesResponseType, set } from "@/types/setType.ts";
 
-export const getSetById = async (id: string): Promise<getSetByIdResponseType> => {
+export const getSetById = async (id: string): Promise<set> => {
   const response = await api.get(`/set/getSet/${id}`);
   return response.data;
 };

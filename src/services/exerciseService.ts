@@ -1,6 +1,5 @@
 import api from "./api";
 import type {
-  changeExerciseOrderResponse,
   changeExerciseRequest,
   changeExerciseResponse,
   createExerciseLogRequest,
@@ -21,11 +20,6 @@ export const getExerciseById = async (id: string): Promise<exercise | null> => {
 
 export const changeExercise = async (exercise: changeExerciseRequest): Promise<changeExerciseResponse> => {
   const response = await api.patch(`/exercise/changeExercise/${exercise.id}`, exercise);
-  return response.data;
-};
-
-export const changeExerciseOrder = async (id: string, order: number): Promise<changeExerciseOrderResponse> => {
-  const response = await api.patch(`/exercise/changeExerciseOrder/${id}`, { order });
   return response.data;
 };
 

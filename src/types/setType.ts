@@ -1,17 +1,17 @@
 export type set = {
   id: string;
-  type: string | null;
+  type?: string;
   createdAt: Date;
-  changedAt: Date | null;
+  changedAt?: Date;
   order: number;
   reps: number;
   weight: number;
   exerciseId: string;
   userId: string;
-}
+};
 
 export type createSetRequestType = {
-  type: string;
+  type?: string;
   reps: number;
   weight: number;
   exerciseId: string;
@@ -25,5 +25,5 @@ export type changeSetRequestType = {
 };
 
 export type getSetTypesResponseType = {
-  type: string | null;
+  type?: string;
 }[];
