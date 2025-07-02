@@ -1,16 +1,16 @@
-import type { setType } from "@/types/setType.ts";
+import type { set } from "@/types/setType.ts";
 
-export type exerciseType = {
-  id: string;
-  userId: string;
-  trainingId: string;
-  name: string;
-  createdAt: Date;
-  changedAt?: Date;
-  order: number;
-  notes?: string;
+export type exercise = {
+    id: string;
+    userId: string;
+    trainingId: string;
+    name: string;
+    createdAt: Date;
+    changedAt: Date | null;
+    order: number;
+    notes: string | null;
 
-  sets: setType[];
+    sets: set[];
 };
 
 export type getExerciseNamesType = {
@@ -21,41 +21,10 @@ export type createExerciseLogRequest = {
   name: string;
   trainingId: string;
   order: number;
-  notes?: string;
+  notes: string | null;
 };
 
 export type createExerciseLogResponse = {
-  id: string;
-  name: string;
-  createdAt: Date;
-  changedAt: Date;
-  trainingId: string;
-  order: number;
-};
-
-export type changeExerciseRequest = {
-  id: string;
-  name: string;
-  notes?: string;
-};
-
-export type changeExerciseOrderRequestType = {
-  order: number;
-};
-
-export type changeExerciseOrderResponse = {
-  sets: {
-    id: string;
-    userId: string;
-    createdAt: Date;
-    changedAt: Date | null;
-    order: number;
-    type: string | null;
-    weight: number;
-    exerciseId: string;
-    reps: number;
-  }[];
-} & {
   id: string;
   userId: string;
   trainingId: string;
@@ -63,16 +32,23 @@ export type changeExerciseOrderResponse = {
   createdAt: Date;
   changedAt: Date | null;
   order: number;
+  notes: string | null;
+};
 
-  sets: setType[];
+export type changeExerciseRequest = {
+  id: string;
+  name: string | null;
+  notes: string | null;
+  order: number | null;
 };
 
 export type changeExerciseResponse = {
-  id: string;
-  name: string;
-  userId: string;
-  createdAt: Date;
-  changedAt: Date;
-  trainingId: string;
   order: number;
+  id: string;
+  userId: string;
+  trainingId: string;
+  name: string;
+  createdAt: Date;
+  changedAt: Date | null;
+  notes: string | null;
 };

@@ -1,14 +1,14 @@
-export type setType = {
+export type set = {
   id: string;
-  userId: string;
-  exerciseId: string;
-  type?: string;
+  type: string | null;
   createdAt: Date;
-  changedAt?: Date | null;
+  changedAt: Date | null;
   order: number;
   reps: number;
   weight: number;
-};
+  exerciseId: string;
+  userId: string;
+}
 
 export type createSetRequestType = {
   type: string;
@@ -19,21 +19,9 @@ export type createSetRequestType = {
 
 export type changeSetRequestType = {
   id: string;
-  type: string;
+  type?: string;
   reps?: number;
   weight?: number;
-  exerciseId?: string;
-};
-
-export type getSetByIdResponseType = {
-  id: string;
-  exerciseId: string;
-  userId: string;
-  type: string | null;
-  createdAt?: Date;
-  changedAt?: Date;
-  reps: number;
-  weight: number;
 };
 
 export type getSetTypesResponseType = {

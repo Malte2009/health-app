@@ -21,12 +21,12 @@
 
 <script setup lang="ts">
 import { changeExercise, getExerciseById, getExerciseNames } from "@/services/exerciseService.ts";
-import type { changeExerciseRequest, exerciseType, getExerciseNamesType } from "@/types/exerciseType.ts";
+import type { changeExerciseRequest, exercise, getExerciseNamesType } from "@/types/exerciseType.ts";
 import { onMounted, ref } from "vue";
 
 const emit = defineEmits(["close", "reload"]);
 
-const exercise = ref<exerciseType>();
+const exercise = ref<exercise>();
 
 const props = defineProps<{
   exerciseId: string;
