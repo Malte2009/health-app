@@ -100,5 +100,3 @@ The project uses multiple `tsconfig.json` files for different purposes:
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for details.
-
-#
