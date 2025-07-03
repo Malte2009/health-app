@@ -99,7 +99,7 @@
       <p
         @click="
           showConfirmDelete = true;
-          hideContextMenu()();
+          hideContextMenu();
         "
       >
         Delete
@@ -111,7 +111,7 @@
       <p
         @click="
           showConfirmDelete = true;
-          hideContextMenu()();
+          hideContextMenu();
         "
       >
         Delete
