@@ -38,6 +38,7 @@
                   "
                   @drop="onExerciseDrop(index)"
                   @contextmenu="exerciseContextMenu($event, exercise.id)"
+                  @click="handleMobileEdit($event, exercise.id)"
                 >
                   <div>{{ exercise.name }}</div>
                   <div v-if="exercise.notes">({{ exercise.notes }})</div>
@@ -58,6 +59,7 @@
                     dragging: draggingSetIndex?.setIndex === setIndex && draggingSetIndex?.index === index,
                   }"
                   @contextmenu="setContextMenu($event, set.id)"
+                  @click="handleMobileEdit($event, set.id)"
                   v-for="(set, setIndex) in exercise.sets"
                   :key="set.id"
                 >
@@ -117,6 +119,8 @@ import { getTrainingById, updateTraining } from "@/services/trainingService.ts";
 import { deleteExerciseRequest } from "@/services/exerciseService.ts";
 import { deleteSetRequest } from "@/services/setService.ts";
 
+const isMobile = window.innerWidth <= 768;
+
 const trainingStore = useTrainingStore();
 const router = useRouter();
 const route = useRoute();
@@ -137,6 +141,12 @@ const currentSetIndex = ref<{ setIndex: number; index: number } | null>(null);
 
 const selectedExerciseId = ref<string>("");
 const selectedSetId = ref<string>("");
+
+function handleMobileEdit(event: MouseEvent, exerciseId: string) {
+  if (isMobile) {
+    setContextMenu(event, exerciseId);
+  }
+}
 
 function changeCurrentSetIndex(setIndex: number, index: number) {
   if (draggingExerciseIndex.value != null && currentExerciseIndex.value != null) {
@@ -355,6 +365,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+h1 {
+  text-align: center;
+  margin-top: 20px;
+  color: var(--text-main);
+}
 .work {
   color: var(--color-set-work);
 }
@@ -505,5 +520,18 @@ onMounted(async () => {
 .focused {
   outline: 2px solid var(--primary); /* oder einfach: #00a495 */
   background-color: #2a2a2a;
+}
+
+@media (max-width: 768px) {
+  .training {
+    flex-direction: column;
+    width: fit-content;
+    margin: 0 auto;
+    align-items: center;
+  }
+  .board {
+    margin-right: 0;
+    margin-left: 0;
+  }
 }
 </style>

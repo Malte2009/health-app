@@ -9,8 +9,7 @@
 </template>
 
 <script setup lang="ts">
-
-import { useRouter, useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { onMounted } from "vue";
 
 const router = useRouter();
@@ -18,15 +17,13 @@ const route = useRoute();
 
 onMounted(() => {
   console.log(route.name);
-})
-
+});
 </script>
 <style scoped>
-
 .active {
   background: #1c2839 !important;
   color: #90caf9 !important;
-  box-shadow: 0 2px 8px 0 rgba(70,130,230,0.13) !important;
+  box-shadow: 0 2px 8px 0 rgba(70, 130, 230, 0.13) !important;
   /* Optional: Unterstrich als Indikator */
 }
 
@@ -35,18 +32,22 @@ onMounted(() => {
   color: #e0e0e0;
   border: none;
   border-radius: 10px;
-  padding: 10px 28px;
   font-size: 1.08rem;
   font-weight: 600;
   cursor: pointer;
   margin: 0 6px;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    box-shadow 0.18s;
   outline: none;
   position: relative;
+  height: 40px;
+  padding: 0 16px;
 }
 
 .navbar {
-  width: 100%;
+  width: 100vw;
   height: 50px;
   background-color: var(--bg-surface);
   color: var(--text-main);
