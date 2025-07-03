@@ -47,7 +47,7 @@ onMounted(() => {
 }
 
 .navbar {
-  width: 100vw;
+  width: 100%;
   height: 50px;
   background-color: var(--bg-surface);
   color: var(--text-main);
