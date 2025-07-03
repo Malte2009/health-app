@@ -96,7 +96,7 @@ async function submit() {
 
   const trainingData: createTrainingLogRequestType = {
     type: trainingType,
-    durationMinutes: parseInt(trainingDuration, 10),
+    duration: parseInt(trainingDuration, 10),
     avgHeartRate: parseInt(averageHeartRate, 10),
     pauses,
     pausesLength,
@@ -125,9 +125,9 @@ function handleError(error: AxiosError) {
 
     switch (error.response.data) {
       case "Training type is required":
-        let trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
+        let trainingTypeInput = document.getElementById("trainingTypeSelect") as HTMLInputElement;
 
-        if (showCustomInput.value) trainingTypeInput = document.getElementById("trainingTypeSelect") as HTMLInputElement;
+        if (showCustomInput.value) trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
 
         trainingTypeInput.style.borderColor = "var(--danger)";
 

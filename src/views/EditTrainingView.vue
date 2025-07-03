@@ -97,7 +97,7 @@ function loadValues() {
 
     trainingDateInput.value = new Date(training.createdAt).toISOString().split("T")[0];
     averageHeartRateInput.value = training?.avgHeartRate?.toString() || "";
-    trainingDurationInput.value = training?.durationMinutes?.toString() || "";
+    trainingDurationInput.value = training?.duration?.toString() || "";
     notesInput.value = training.notes || "";
   }
 }
@@ -125,7 +125,7 @@ async function submit() {
   }
 
   newTraining.type = trainingType;
-  newTraining.durationMinutes = parseInt(trainingDuration, 10);
+  newTraining.duration = parseInt(trainingDuration, 10);
   newTraining.avgHeartRate = parseInt(averageHeartRate, 10);
   newTraining.notes = (document.getElementById("notes") as HTMLInputElement).value || "";
 

@@ -6,9 +6,9 @@
         <h2>Training Overview</h2>
         <div v-if="training">
           <p class="bold">Type: {{ training.type }}</p>
-          <p class="bold">Duration: {{ training.durationMinutes }} minutes</p>
-          <p class="bold">Average Heart Rate: {{ training.avgHeartRate }} bpm</p>
-          <p class="bold">Calories Burned: {{ training.caloriesBurned }}</p>
+          <p v-if="training.duration" class="bold">Duration: {{ training.duration }} minutes</p>
+          <p v-if="training.avgHeartRate" class="bold">Average Heart Rate: {{ training.avgHeartRate }} bpm</p>
+          <p v-if="training.caloriesBurned" class="bold">Calories Burned: {{ training.caloriesBurned }}</p>
           <p>Date: {{ getDateString(training.createdAt) }}</p>
           <p>Notes: {{ training.notes }}</p>
         </div>

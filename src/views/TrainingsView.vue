@@ -20,10 +20,10 @@
           <td>{{ training.id }}</td>
           <td>{{ getDateString(training.createdAt) }}</td>
           <td>{{ training.type }}</td>
-          <td>{{ training.durationMinutes }}</td>
-          <td>{{ training.avgHeartRate }}</td>
-          <td>{{ training.caloriesBurned }}</td>
-          <td>{{ training.notes }}</td>
+          <td>{{ training.duration || "" }}</td>
+          <td>{{ training.avgHeartRate || "" }}</td>
+          <td>{{ training.caloriesBurned || "" }}</td>
+          <td>{{ training.notes || "" }}</td>
           <td>
             <button class="button button-primary" @click="router.push({ name: 'training', params: { id: training.id } })">View</button>
             <button class="button button-secondary" @click="router.push({ name: 'editTraining', params: { id: training.id } })">Edit</button>

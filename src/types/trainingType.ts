@@ -9,7 +9,7 @@ export type training = {
   score?: number;
   notes?: string;
   caloriesBurned?: number;
-  durationMinutes?: number;
+  duration?: number;
   avgHeartRate?: number;
 
   exercises: exercise[];
@@ -22,7 +22,7 @@ export type updateTrainingLogRequestType = {
   score?: number;
   notes?: string;
   caloriesBurned?: number;
-  durationMinutes?: number;
+  duration?: number;
   avgHeartRate?: number;
 
   exercises: exercise[];
@@ -31,7 +31,7 @@ export type updateTrainingLogRequestType = {
 export type createTrainingLogRequestType = {
   type: string;
   avgHeartRate?: number;
-  durationMinutes?: number;
+  duration?: number;
   notes?: string;
   pauses?: number;
   pausesLength?: number;
@@ -47,7 +47,7 @@ export type createTrainingResponseType = {
   score?: number;
   notes?: string;
   caloriesBurned?: number;
-  durationMinutes?: number;
+  duration?: number;
 };
 
 export type getTrainingTypesResponseType = {
@@ -63,7 +63,7 @@ export type getTrainingResponseType = {
   score?: number;
   notes?: string;
   caloriesBurned?: number;
-  durationMinutes?: number;
+  duration?: number;
   avgHeartRate?: number;
 
   exercises: exercise[];
