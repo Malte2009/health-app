@@ -5,7 +5,7 @@
     <table class="trainings-table">
       <thead>
         <tr>
-          <th>Training ID</th>
+          <th v-if="!isMobile">Training ID</th>
           <th>Date</th>
           <th>Type</th>
           <th>Duration (min)</th>
@@ -17,7 +17,7 @@
       </thead>
       <tbody>
         <tr v-for="training in trainings" :key="training.id">
-          <td>{{ training.id }}</td>
+          <td v-if="!isMobile">{{ training.id }}</td>
           <td>{{ getDateString(training.createdAt) }}</td>
           <td>{{ training.type }}</td>
           <td>{{ training.duration || "" }}</td>
@@ -47,6 +47,8 @@ import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { deleteTrainingRequest, getTrainings } from "@/services/trainingService.ts";
 import { isAuthenticated } from "@/services/authService.ts";
 import { useTrainingStore } from "@/stores/training.ts";
+
+const isMobile = window.innerWidth <= 768;
 
 const router = useRouter();
 
