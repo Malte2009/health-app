@@ -96,12 +96,34 @@
 
     <div @focusout="closeExerciseContextMenu()" class="exercise-context-menu" tabindex="-1">
       <p @click="changeExercise()">Edit</p>
-      <p @click="deleteExercise()">Delete</p>
+      <p
+        @click="
+          showConfirmDelete = true;
+          hideContextMenu();
+        "
+      >
+        Delete
+      </p>
     </div>
 
     <div @focusout="closeSetContextMenu()" class="set-context-menu" tabindex="-1">
       <p @click="changeSet()">Edit</p>
-      <p @click="deleteSet()">Delete</p>
+      <p
+        @click="
+          showConfirmDelete = true;
+          hideContextMenu();
+        "
+      >
+        Delete
+      </p>
+    </div>
+
+    <div v-if="showConfirmDelete" id="confirmDeleteModal" class="modal">
+      <div class="modal-content">
+        <p>Are you sure you want to delete this training?</p>
+        <button class="button button-danger" @click="confirmDelete()">Delete</button>
+        <button class="button button-secondary" @click="cancelDelete()">Cancel</button>
+      </div>
     </div>
   </div>
 </template>
@@ -132,6 +154,7 @@ const addExercise = ref(false);
 const changeExerciseCon = ref(false);
 const addSet = ref(false);
 const changeSetCon = ref(false);
+const showConfirmDelete = ref(false);
 
 const draggingExerciseIndex = ref<number | null>(null);
 const currentExerciseIndex = ref<number | null>(null);
@@ -141,6 +164,23 @@ const currentSetIndex = ref<{ setIndex: number; index: number } | null>(null);
 
 const selectedExerciseId = ref<string>("");
 const selectedSetId = ref<string>("");
+
+function confirmDelete() {
+  if (selectedExerciseId.value) {
+    deleteExercise();
+  } else if (selectedSetId.value) {
+    deleteSet();
+  }
+  showConfirmDelete.value = false;
+  selectedExerciseId.value = "";
+  selectedSetId.value = "";
+}
+
+function cancelDelete() {
+  showConfirmDelete.value = false;
+  selectedExerciseId.value = "";
+  selectedSetId.value = "";
+}
 
 function handleMobileEdit(event: MouseEvent, exerciseId: string) {
   if (isMobile) {
@@ -291,28 +331,37 @@ function setContextMenu(event: MouseEvent, setId: string) {
   }
 }
 
+function hideContextMenu() {
+  const exerciseMenu = document.querySelector(".exercise-context-menu") as HTMLDivElement;
+  const setMenu = document.querySelector(".set-context-menu") as HTMLDivElement;
+
+  if (exerciseMenu) {
+    exerciseMenu.style.display = "none";
+  }
+  if (setMenu) {
+    setMenu.style.display = "none";
+  }
+}
+
 async function changeExercise() {
   changeExerciseCon.value = true;
 
-  const menu = document.querySelector(".exercise-context-menu") as HTMLDivElement;
-  if (menu) {
-    menu.style.display = "none";
-  }
+  hideContextMenu();
 
   await reloadTraining();
 }
 
 async function changeSet() {
   changeSetCon.value = true;
+
+  hideContextMenu();
+
+  await reloadTraining();
 }
 
 async function deleteExercise() {
   await deleteExerciseRequest(selectedExerciseId.value);
   selectedExerciseId.value = "";
-  const menu = document.querySelector(".exercise-context-menu") as HTMLDivElement;
-  if (menu) {
-    menu.style.display = "none";
-  }
 
   await reloadTraining();
 }
@@ -320,10 +369,6 @@ async function deleteExercise() {
 async function deleteSet() {
   await deleteSetRequest(selectedSetId.value);
   selectedSetId.value = "";
-  const menu = document.querySelector(".set-context-menu") as HTMLDivElement;
-  if (menu) {
-    menu.style.display = "none";
-  }
 
   await reloadTraining();
 }
@@ -365,6 +410,60 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.modal-content {
+  background-color: var(--bg-surface);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#confirmDeleteModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button-secondary {
+  background-color: var(--bg-surface-secondary);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.button-secondary:hover {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.button-danger {
+  background-color: var(--danger);
+  box-shadow: 0 2px 5px rgba(232, 63, 96, 0.2);
+  color: var(--text-main);
+}
+
+.button-danger:hover {
+  background-color: #e83f60;
+}
+
+.button {
+  color: var(--text-main);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
+  margin: 4px;
+}
+
 h1 {
   text-align: center;
   margin-top: 20px;
