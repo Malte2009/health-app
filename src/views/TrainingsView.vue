@@ -27,7 +27,15 @@
           <td>
             <button class="button button-primary" @click="router.push({ name: 'training', params: { id: training.id } })">View</button>
             <button class="button button-secondary" @click="router.push({ name: 'editTraining', params: { id: training.id } })">Edit</button>
-            <button class="button button-danger" @click="deleteTraining(training.id)">Delete</button>
+            <button
+              class="button button-danger"
+              @click="
+                showConfirmDelete = true;
+                deleteTrainingId = training.id;
+              "
+            >
+              Delete
+            </button>
           </td>
         </tr>
         <tr>
@@ -37,6 +45,13 @@
         </tr>
       </tbody>
     </table>
+    <div v-if="showConfirmDelete" id="confirmDeleteModal" class="modal">
+      <div class="modal-content">
+        <p>Are you sure you want to delete this training?</p>
+        <button class="button button-danger" @click="confirmDelete(deleteTrainingId)">Delete</button>
+        <button class="button button-secondary" @click="cancelDelete()">Cancel</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -49,20 +64,27 @@ import { isAuthenticated } from "@/services/authService.ts";
 import { useTrainingStore } from "@/stores/training.ts";
 
 const isMobile = window.innerWidth <= 768;
-
+const showConfirmDelete = ref(false);
+const deleteTrainingId = ref<string>("");
 const router = useRouter();
-
 const trainingsStore = useTrainingStore();
-
 const trainings = ref([] as getTrainingResponseType[]);
 
-async function deleteTraining(id: string) {
+async function confirmDelete(id: string) {
   try {
     await deleteTrainingRequest(id);
     trainings.value = trainings.value.filter((training) => training.id !== id);
   } catch (error) {
     console.error("Error deleting training:", error);
   }
+
+  showConfirmDelete.value = false;
+  deleteTrainingId.value = "";
+}
+
+function cancelDelete() {
+  showConfirmDelete.value = false;
+  deleteTrainingId.value = "";
 }
 
 function getDateString(date: Date): string {
@@ -82,6 +104,25 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.modal-content {
+  background-color: var(--bg-surface);
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+#confirmDeleteModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .trainings-table {
   width: fit-content;
   border-collapse: collapse;
