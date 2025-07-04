@@ -5,14 +5,14 @@
       <h1>Edit Set</h1>
       <div class="inputs">
         <select id="type-selection" @change="checkTypeInput()">
-          <option :selected="setType === 'Work'" v-for="setType in setTypes" :key="setType || ''" :value="setType">
+          <option v-for="setType in setTypes" :key="setType || ''" :value="setType">
             {{ setType }}
           </option>
           <option value="Custom">Custom</option>
         </select>
         <input placeholder="Type" id="type" name="type" type="text" v-if="customTypeInput" @keydown.enter="changeFocus('repUnit-selection')" />
         <select id="repUnit-selection" @change="checkSetUnitInput()">
-          <option :selected="setRepUnit === 'Wdh.'" v-for="setRepUnit in setRepUnits" :key="setRepUnit" :value="setRepUnit">
+          <option v-for="setRepUnit in setRepUnits" :key="setRepUnit" :value="setRepUnit">
             {{ setRepUnit }}
           </option>
           <option value="Custom">Custom</option>
@@ -180,6 +180,9 @@ async function loadOldSetData() {
       }
       (document.getElementById("reps") as HTMLInputElement).value = setData.reps.toString();
       (document.getElementById("weight") as HTMLInputElement).value = setData.weight.toString();
+      if (setData.repUnit) {
+        (document.getElementById("repUnit-selection") as HTMLSelectElement).value = setData.repUnit;
+      }
     }
   } catch (error) {
     console.error("Failed to load set data:", error);
