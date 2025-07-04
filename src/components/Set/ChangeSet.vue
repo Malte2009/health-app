@@ -4,13 +4,20 @@
       <div @click="$emit('close')" class="close">x</div>
       <h1>Edit Set</h1>
       <div class="inputs">
-        <select id="type-selection" @change="checkInput()">
-          <option :selected="setType.type === 'Work'" v-for="setType in setTypes" :key="setType.type || ''" :value="setType.type">
-            {{ setType.type }}
+        <select id="type-selection" @change="checkTypeInput()">
+          <option :selected="setType === 'Work'" v-for="setType in setTypes" :key="setType || ''" :value="setType">
+            {{ setType }}
           </option>
           <option value="Custom">Custom</option>
         </select>
-        <input placeholder="Type" id="type" name="type" type="text" v-if="customInput" @keydown.enter="changeFocus('reps')" />
+        <input placeholder="Type" id="type" name="type" type="text" v-if="customTypeInput" @keydown.enter="changeFocus('repUnit-selection')" />
+        <select id="repUnit-selection" @change="checkSetUnitInput()">
+          <option :selected="setRepUnit === 'Wdh.'" v-for="setRepUnit in setRepUnits" :key="setRepUnit" :value="setRepUnit">
+            {{ setRepUnit }}
+          </option>
+          <option value="Custom">Custom</option>
+        </select>
+        <input placeholder="Repetition Unit" id="repUnit" name="repUnit" type="text" v-if="customRepUnitInput" @keydown.enter="changeFocus('reps')" />
         <input placeholder="Repetitions" id="reps" name="reps" type="number" @keydown.enter="changeFocus('weight')" />
         <input placeholder="Weight (kg)" id="weight" name="weight" type="number" @keydown.enter="submit()" />
         <button class="button" @click="submit">Submit</button>
@@ -20,9 +27,9 @@
 </template>
 
 <script setup lang="ts">
-import { changeSetRequest, getSetById, getSetTypes } from "@/services/setService.ts";
+import { changeSetRequest, getSetById, getSetTypes, getSetUnits } from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
-import type { changeSetRequestType, getSetTypesResponseType } from "@/types/setType.ts";
+import type { changeSetRequestType } from "@/types/setType.ts";
 import type { AxiosError } from "axios";
 
 const emit = defineEmits(["close", "reload"]);
@@ -31,28 +38,42 @@ const props = defineProps<{
   setId: string;
 }>();
 
-const setTypes = ref<getSetTypesResponseType>([]);
+const setTypes = ref<string[]>([]);
+const setRepUnits = ref<string[]>([]);
 
-const customInput = ref(false);
+const customTypeInput = ref(false);
+const customRepUnitInput = ref(false);
 
-function checkInput() {
+function checkTypeInput() {
   const input = document.getElementById("type-selection") as HTMLSelectElement;
 
-  customInput.value = input.value === "Custom";
+  customTypeInput.value = input.value === "Custom";
+}
+
+function checkSetUnitInput() {
+  const input = document.getElementById("repUnit-selection") as HTMLSelectElement;
+
+  console.log(input.value);
+
+  customRepUnitInput.value = input.value === "Custom";
 }
 
 async function submit() {
   const reps = parseInt((document.getElementById("reps") as HTMLInputElement).value);
   const weight = parseFloat((document.getElementById("weight") as HTMLInputElement).value);
-  const type = customInput.value
-    ? (document.getElementById("type") as HTMLInputElement).value
-    : (document.getElementById("type-selection") as HTMLSelectElement).value;
+  let type = (document.getElementById("type-selection") as HTMLInputElement).value;
+  let repUnit = (document.getElementById("repUnit-selection") as HTMLInputElement).value;
+
+  if (customTypeInput.value) type = (document.getElementById("type") as HTMLInputElement).value;
+
+  if (customRepUnitInput.value) repUnit = (document.getElementById("repUnit") as HTMLInputElement).value;
 
   const setData: changeSetRequestType = {
     id: props.setId,
     type,
     reps,
     weight,
+    repUnit,
   };
 
   try {
@@ -74,7 +95,9 @@ function handleError(error: AxiosError) {
     console.log(error.response.data);
 
     switch (error.response.data) {
-      case "Invalid type":
+      case "Type must be a string":
+      case "Type must be less than 50 characters":
+      case "Type cannot be empty":
         const typeInput = document.getElementById("type-selection") as HTMLInputElement;
 
         if (typeInput.value === "Custom") {
@@ -92,7 +115,28 @@ function handleError(error: AxiosError) {
           });
         }
         break;
-      case "Invalid reps (1-100)":
+      case "Rep unit cannot be empty":
+      case "Rep unit must be a string":
+      case "Rep unit must be between 1 and 10 characters":
+        const repUnitInput = document.getElementById("repUnit-selection") as HTMLInputElement;
+
+        if (repUnitInput.value === "Custom") {
+          const customRepUnitInput = document.getElementById("repUnit") as HTMLInputElement;
+          customRepUnitInput.style.borderColor = "var(--danger)";
+
+          customRepUnitInput.addEventListener("focus", () => {
+            customRepUnitInput.style.borderColor = "var(--border)";
+          });
+        } else {
+          repUnitInput.style.borderColor = "var(--danger)";
+
+          repUnitInput.addEventListener("focus", () => {
+            repUnitInput.style.borderColor = "var(--border)";
+          });
+        }
+        break;
+      case "Reps must be a number":
+      case "Reps must be between 1 and 1000":
         const repsInput = document.getElementById("reps") as HTMLInputElement;
 
         repsInput.style.borderColor = "var(--danger)";
@@ -102,6 +146,7 @@ function handleError(error: AxiosError) {
         });
         break;
       case "Invalid weight (0-1000 kg)":
+      case "Weight must be a number":
         const weightInput = document.getElementById("weight") as HTMLInputElement;
 
         weightInput.style.borderColor = "var(--danger)";
@@ -141,15 +186,22 @@ async function loadOldSetData() {
   }
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 onMounted(async () => {
   const repsInput = document.getElementById("reps") as HTMLInputElement;
   setTypes.value = await getSetTypes();
+  setRepUnits.value = await getSetUnits();
   await loadOldSetData();
   if (repsInput) {
     repsInput.focus();
   }
 
-  checkInput();
+  await sleep(100);
+  checkSetUnitInput();
+  checkTypeInput();
 });
 </script>
 
