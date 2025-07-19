@@ -6,7 +6,7 @@
       <form id="trainingForm" @submit.prevent="submit">
         <select @change="checkInput()" id="trainingTypeSelect" name="trainingType" @keydown.enter.prevent="changeFocus('trainingDate')">
           <option value="" disabled selected>Select Training Type</option>
-          <option v-for="type in trainingTypes" :key="type.type" :value="type.type">{{ type.type }}</option>
+          <option v-for="type in trainingTypes" :key="type" :value="type">{{ type }}</option>
           <option value="Custom">Custom</option>
         </select>
         <input
@@ -62,18 +62,19 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth.ts";
-import type { getTrainingTypesResponseType } from "@/types/trainingType.ts";
-import { getTrainings, getTrainingTypes, updateTraining } from "@/services/trainingService.ts";
+import { getTrainings, updateTraining } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/training.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
+import { useTypeStore } from "@/stores/type.ts";
 
 const authStore = useAuthStore();
 const trainingStore = useTrainingStore();
+const typeStore = useTypeStore();
 const router = useRouter();
 const route = useRoute();
 
-const trainingTypes = ref<getTrainingTypesResponseType>([]);
+const trainingTypes = ref<string[]>([]);
 const showCustomInput = ref(false);
 
 const trainingsId = route.params.id as string;
@@ -209,7 +210,7 @@ onMounted(async () => {
   }
 
   try {
-    trainingTypes.value = await getTrainingTypes();
+    trainingTypes.value = typeStore.getTrainingTypes;
   } catch (error) {
     console.error("Failed to fetch training types:", error);
   }

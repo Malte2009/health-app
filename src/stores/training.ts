@@ -1,5 +1,7 @@
 import { defineStore } from "pinia";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
+import type { exercise } from "@/types/exerciseType.ts";
+import type { set } from "@/types/setType.ts";
 
 export const useTrainingStore = defineStore("trainingStore", {
   state: () => ({
@@ -12,6 +14,16 @@ export const useTrainingStore = defineStore("trainingStore", {
     getTrainingById: (state) => {
       return (id: string) => state.trainings.find((training) => training.id === id);
     },
+    getExerciseById: (state) => {
+      return (exerciseId: string) => {
+        return state.trainings.flatMap((training) => training.exercises).find((exercise) => exercise.id === exerciseId);
+      };
+    },
+    getSetById: (state) => {
+      return (setId: string) => {
+      return state.trainings.flatMap((training) => training.exercises.flatMap((exercise) => exercise.sets)).find((set) => set.id === setId);
+      }
+    }
   },
   actions: {
     changeTraining(trainingId: string, training: getTrainingResponseType) {
@@ -30,6 +42,72 @@ export const useTrainingStore = defineStore("trainingStore", {
     },
     setTrainings(trainings: getTrainingResponseType[]) {
       this.trainings = trainings;
+    },
+    addExercise(exercise: exercise) {
+      const trainingId = exercise.trainingId;
+      const training = this.trainings.find((t) => t.id === trainingId);
+      if (training) {
+        training.exercises.push(exercise);
+      }
+    },
+    updateExercise(exercise: exercise) {
+      const trainingId = exercise.trainingId;
+      const training = this.trainings.find((t) => t.id === trainingId);
+      if (training) {
+        const index = training.exercises.findIndex((e) => e.id === exercise.id);
+        if (index !== -1) {
+          training.exercises[index] = exercise;
+        } else {
+          console.warn(`Exercise with ID ${exercise.id} not found in training ${trainingId}.`);
+        }
+      } else {
+        console.warn(`Training with ID ${trainingId} not found.`);
+      }
+    },
+    removeExercise(exerciseId: string) {
+      for (const training of this.trainings) {
+        const index = training.exercises.findIndex((e) => e.id === exerciseId);
+        if (index !== -1) {
+          training.exercises.splice(index, 1);
+          return;
+        }
+      }
+      console.warn(`Exercise with ID ${exerciseId} not found in any training.`);
+    },
+    addSet(set: set) {
+      const exerciseId = set.exerciseId;
+      const exercise = this.getExerciseById(exerciseId);
+      if (exercise) {
+        exercise.sets.push(set);
+      } else {
+        console.warn(`Exercise with ID ${exerciseId} not found.`);
+      }
+    },
+    updateSet(set: set) {
+      const exerciseId = set.exerciseId;
+      const exercise = this.getExerciseById(exerciseId);
+      if (exercise) {
+        const index = exercise.sets.findIndex((s) => s.id === set.id);
+        if (index !== -1) {
+          exercise.sets[index] = set;
+        } else {
+          console.warn(`Set with ID ${set.id} not found in exercise ${exerciseId}.`);
+        }
+      } else {
+        console.warn(`Exercise with ID ${exerciseId} not found.`);
+      }
+    },
+    removeSet(setId: string) {
+      for (const training of this.trainings) {
+        for (const exercise of training.exercises) {
+          const index = exercise.sets.findIndex((s) => s.id === setId);
+          if (index !== -1) {
+            exercise.sets.splice(index, 1);
+            return;
+          }
+        }
+      }
+      console.warn(`Set with ID ${setId} not found in any exercise.`);
     },
     clearTrainings() {
       this.trainings = [];

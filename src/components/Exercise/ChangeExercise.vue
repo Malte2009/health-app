@@ -6,8 +6,8 @@
       <div class="inputs">
         <select id="exerciseName" @change="checkInput()">
           <option value="" disabled selected>Select an exercise</option>
-          <option v-for="exercise in exerciseNames" :key="exercise.name" :value="exercise.name">
-            {{ exercise.name }}
+          <option v-for="exercise in typeStore.getExerciseTypes" :key="exercise" :value="exercise">
+            {{ exercise }}
           </option>
           <option value="Custom">Custom</option>
         </select>
@@ -20,9 +20,14 @@
 </template>
 
 <script setup lang="ts">
-import { changeExercise, getExerciseById, getExerciseNames } from "@/services/exerciseService.ts";
-import type { changeExerciseRequest, exercise, getExerciseNamesType } from "@/types/exerciseType.ts";
+import { changeExercise } from "@/services/exerciseService.ts";
+import type { changeExerciseRequest, exercise } from "@/types/exerciseType.ts";
 import { onMounted, ref } from "vue";
+import { useTypeStore } from "@/stores/type.ts";
+import { useTrainingStore } from "@/stores/training.ts";
+
+const typeStore = useTypeStore();
+const trainingStore = useTrainingStore();
 
 const emit = defineEmits(["close", "reload"]);
 
@@ -31,8 +36,6 @@ const exercise = ref<exercise>();
 const props = defineProps<{
   exerciseId: string;
 }>();
-
-const exerciseNames = ref<getExerciseNamesType>([]);
 
 const showCustomInput = ref(false);
 
@@ -66,7 +69,9 @@ async function submit() {
     notes: (document.getElementById("exerciseNotes") as HTMLInputElement).value || "",
   };
 
-  await changeExercise(exerciseData);
+  const changedExercise = await changeExercise(exerciseData);
+
+  trainingStore.updateExercise(changedExercise.trainingId, changedExercise);
 
   emit("close");
 
@@ -79,14 +84,12 @@ onMounted(async () => {
   exerciseNameInput.focus();
 
   try {
-    exerciseNames.value = await getExerciseNames();
+    const oldExercise = trainingStore.getExerciseById(props.exerciseId);
 
-    const exericse = await getExerciseById(props.exerciseId);
-
-    if (exericse) {
-      exercise.value = exericse;
-      exerciseNameInput.value = exericse.name;
-      exerciseNotes.value = exericse.notes || "";
+    if (oldExercise) {
+      exercise.value = oldExercise;
+      exerciseNameInput.value = oldExercise.name;
+      exerciseNotes.value = oldExercise.notes || "";
     } else {
       console.error("Exercise not found");
     }

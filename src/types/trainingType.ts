@@ -15,19 +15,6 @@ export type training = {
   exercises: exercise[];
 };
 
-export type updateTrainingLogRequestType = {
-  id: string;
-  userId: string;
-  type?: string;
-  score?: number;
-  notes?: string;
-  caloriesBurned?: number;
-  duration?: number;
-  avgHeartRate?: number;
-
-  exercises: exercise[];
-};
-
 export type createTrainingLogRequestType = {
   type: string;
   avgHeartRate?: number;
@@ -35,19 +22,6 @@ export type createTrainingLogRequestType = {
   notes?: string;
   pauses?: number;
   pausesLength?: number;
-};
-
-export type createTrainingResponseType = {
-  avgHeartRate?: number;
-  id: string;
-  createdAt: Date;
-  changedAt?: Date;
-  userId: string;
-  type: string;
-  score?: number;
-  notes?: string;
-  caloriesBurned?: number;
-  duration?: number;
 };
 
 export type getTrainingTypesResponseType = {

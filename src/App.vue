@@ -10,9 +10,11 @@ import { onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth.ts";
 import { isAuthenticated } from "@/services/authService.ts";
 import NavBar from "@/components/General/NavBar.vue";
+import { useTypeStore } from "@/stores/type.ts";
 
 const router = useRouter();
 const authStore = useAuthStore();
+const typeStore = useTypeStore();
 
 function setViewport(scale: number) {
   let viewport = document.querySelector('meta[name="viewport"]');
@@ -28,7 +30,7 @@ onMounted(async () => {
   setViewport(window.innerWidth <= 768 ? 0.59 : 1);
   if (token) {
     authStore.setToken(token);
-
+    await typeStore.loadTypes()
     if (router.currentRoute.value.name === "/home") await router.push({ name: "trainings" });
     if (router.currentRoute.value.name === "/") await router.push({ name: "trainings" });
     if (router.currentRoute.value.name === "/login") await router.push({ name: "trainings" });

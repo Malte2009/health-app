@@ -20,18 +20,23 @@
 </template>
 
 <script setup lang="ts">
-import type { createSetRequestType, getSetTypesResponseType } from "@/types/setType.ts";
-import { createSetRequest, getSetTypes } from "@/services/setService.ts";
+import type { createSetRequestType } from "@/types/setType.ts";
+import { createSetRequest } from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
+import { useTypeStore } from "@/stores/type.ts";
+import { useTrainingStore } from "@/stores/training.ts";
 
 const emit = defineEmits(["close", "reload"]);
+
+const typeStore = useTypeStore();
+const trainingStore = useTrainingStore();
 
 const props = defineProps<{
   exerciseId: string;
 }>();
 
-const setTypes = ref<getSetTypesResponseType>([]);
+const setTypes = ref<string[]>([]);
 
 const customInput = ref(false);
 
@@ -59,7 +64,12 @@ async function submit() {
   };
 
   try {
-    await createSetRequest(setData);
+    const newSet = await createSetRequest(setData);
+
+    if (newSet) {
+      console.log(newSet);
+      trainingStore.addSet(newSet);
+    }
   } catch (error) {
     if (error as AxiosError) {
       handleError(error as AxiosError);
@@ -130,7 +140,7 @@ function sleep(ms: number) {
 
 onMounted(async () => {
   try {
-    setTypes.value = await getSetTypes();
+    setTypes.value = typeStore.getSetTypes;
   } catch (error) {
     console.error("Failed to fetch set types:", error);
   }

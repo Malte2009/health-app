@@ -24,7 +24,6 @@ onMounted(() => {
   background: #1c2839 !important;
   color: #90caf9 !important;
   box-shadow: 0 2px 8px 0 rgba(70, 130, 230, 0.13) !important;
-  /* Optional: Unterstrich als Indikator */
 }
 
 .navbar button {

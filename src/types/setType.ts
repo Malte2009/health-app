@@ -23,7 +23,3 @@ export type changeSetRequestType = {
   reps?: number;
   weight?: number;
 };
-
-export type getSetTypesResponseType = {
-  type?: string;
-}[];
