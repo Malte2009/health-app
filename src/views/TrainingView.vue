@@ -38,7 +38,7 @@
                   "
                   @drop="onExerciseDrop(index)"
                   @contextmenu="exerciseContextMenu($event, exercise.id)"
-                  @click="handleMobileEdit($event, exercise.id)"
+                  @click="handleMobileEdit($event, exercise.id, 'exercise')"
                 >
                   <div>{{ exercise.name }}</div>
                   <div v-if="exercise.notes">({{ exercise.notes }})</div>
@@ -59,7 +59,7 @@
                     dragging: draggingSetIndex?.setIndex === setIndex && draggingSetIndex?.index === index,
                   }"
                   @contextmenu="setContextMenu($event, set.id)"
-                  @click="handleMobileEdit($event, set.id)"
+                  @click="handleMobileEdit($event, set.id, 'set')"
                   v-for="(set, setIndex) in exercise.sets"
                   :key="set.id"
                 >
@@ -182,9 +182,13 @@ function cancelDelete() {
   selectedSetId.value = "";
 }
 
-function handleMobileEdit(event: MouseEvent, exerciseId: string) {
+function handleMobileEdit(event: MouseEvent, id: string, type: "exercise" | "set") {
   if (isMobile) {
-    setContextMenu(event, exerciseId);
+    if (type === "exercise") {
+      exerciseContextMenu(event, id);
+    } else if (type === "set") {
+      setContextMenu(event, id);
+    }
   }
 }
 
