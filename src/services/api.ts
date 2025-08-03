@@ -1,7 +1,7 @@
 import { getCookie } from "@/utility/cookie";
 import axios from "axios";
 
-const host = window.location.hostname;
+const host = import.meta.env.VITE_API_HOST;
 
 const api = axios.create({
   baseURL: `${host}`,
