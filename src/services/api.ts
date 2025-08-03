@@ -4,7 +4,7 @@ import axios from "axios";
 const host = window.location.hostname;
 
 const api = axios.create({
-  baseURL: `http://${host}:3000/api`,
+  baseURL: `${host}`,
   withCredentials: true,
   headers: {
     authorization: getCookie("token") || "",
