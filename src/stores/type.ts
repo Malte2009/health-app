@@ -1,18 +1,20 @@
 import { defineStore } from "pinia";
 import { getTrainingTypes } from "@/services/trainingService.ts";
-import { getSetTypes } from "@/services/setService.ts";
+import { getSetTypes, getSetUnits } from "@/services/setService.ts";
 import { getExerciseNames } from "@/services/exerciseService.ts";
 
 export const useTypeStore = defineStore("typeStore", {
   state: () => ({
     trainingTypes: [] as string[],
     setTypes: [] as string[],
-    exerciseTypes: [] as string[]
+    exerciseTypes: [] as string[],
+    setRepUnitTypes: [] as string[],
   }),
   getters: {
     getTrainingTypes: (state) => state.trainingTypes,
     getSetTypes: (state) => state.setTypes,
     getExerciseTypes: (state) => state.exerciseTypes,
+    getSetRepUnitTypes: (state) => state.setRepUnitTypes,
   },
   actions: {
     setTrainingTypes(types: string[]) {
@@ -24,6 +26,9 @@ export const useTypeStore = defineStore("typeStore", {
     setExerciseTypes(types: string[]) {
       this.exerciseTypes = types;
     },
+    setSetUnitTypes(types: string[]) {
+      this.setRepUnitTypes = types;
+    },
     clearTypes() {
       this.trainingTypes = [];
       this.setTypes = [];
@@ -32,7 +37,7 @@ export const useTypeStore = defineStore("typeStore", {
       this.trainingTypes = await getTrainingTypes();
       this.setTypes = await getSetTypes();
       this.exerciseTypes = await getExerciseNames();
-    }
+      this.setRepUnitTypes = await getSetUnits();
+    },
   },
-}
-);
+});

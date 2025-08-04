@@ -70,7 +70,12 @@ async function submit() {
 
   const newExercise = await createExercise(exerciseData);
 
-  trainingStore.addExercise(props.trainingId, newExercise);
+  if (!newExercise) {
+    console.error("Failed to create exercise");
+    return;
+  }
+
+  trainingStore.addExercise(newExercise);
 
   emit("close");
 

@@ -1,10 +1,5 @@
 import api from "./api";
-import type {
-  changeExerciseRequest,
-  changeExerciseResponse,
-  createExerciseLogRequest,
-  exercise,
-} from "@/types/exerciseType.ts";
+import type { changeExerciseRequest, createExerciseLogRequest, exercise } from "@/types/exerciseType.ts";
 
 export const getExerciseNames = async (): Promise<string[]> => {
   const response = await api.get("/exercise/getExerciseNames");
@@ -16,7 +11,7 @@ export const getExerciseById = async (id: string): Promise<exercise | null> => {
   return response.data;
 };
 
-export const changeExercise = async (exercise: changeExerciseRequest): Promise<changeExerciseResponse | null> => {
+export const changeExercise = async (exercise: changeExerciseRequest): Promise<exercise | null> => {
   const response = await api.patch(`/exercise/changeExercise/${exercise.id}`, exercise);
   return response.data;
 };

@@ -71,7 +71,12 @@ async function submit() {
 
   const changedExercise = await changeExercise(exerciseData);
 
-  trainingStore.updateExercise(changedExercise.trainingId, changedExercise);
+  if (!changedExercise) {
+    console.error("Failed to change exercise");
+    return;
+  }
+
+  trainingStore.updateExercise(changedExercise);
 
   emit("close");
 

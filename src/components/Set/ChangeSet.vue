@@ -181,7 +181,7 @@ async function loadOldSetData() {
   if (!setId) return;
 
   try {
-    const setData = trainingStore.getSetById(setId)
+    const setData = trainingStore.getSetById(setId);
 
     if (setData) {
       if (setData.type) {
@@ -205,7 +205,7 @@ function sleep(ms: number) {
 onMounted(async () => {
   const repsInput = document.getElementById("reps") as HTMLInputElement;
   setTypes.value = typeStore.getSetTypes;
-  setRepUnits.value = await getSetUnits();
+  setRepUnits.value = typeStore.getSetRepUnitTypes;
   await loadOldSetData();
   if (repsInput) {
     repsInput.focus();
