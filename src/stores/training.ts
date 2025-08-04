@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import type { exercise } from "@/types/exerciseType.ts";
 import type { set } from "@/types/setType.ts";
+import { getTrainings } from "@/services/trainingService.ts";
 
 export const useTrainingStore = defineStore("trainingStore", {
   state: () => ({
@@ -21,11 +22,20 @@ export const useTrainingStore = defineStore("trainingStore", {
     },
     getSetById: (state) => {
       return (setId: string) => {
-      return state.trainings.flatMap((training) => training.exercises.flatMap((exercise) => exercise.sets)).find((set) => set.id === setId);
-      }
-    }
+        return state.trainings.flatMap((training) => training.exercises.flatMap((exercise) => exercise.sets)).find((set) => set.id === setId);
+      };
+    },
   },
   actions: {
+    async loadTrainings() {
+      const trainings = await getTrainings();
+      this.trainings = trainings;
+      if (trainings.length > 0) {
+        this.currentTraining = trainings[0].id; // Set the first training as current by default
+      } else {
+        this.currentTraining = "";
+      }
+    },
     changeTraining(trainingId: string, training: getTrainingResponseType) {
       const index = this.trainings.findIndex((t) => t.id === trainingId);
       if (index !== -1) {
