@@ -5,7 +5,7 @@
       <h1>Edit Set</h1>
       <div class="inputs">
         <select id="type-selection" @change="checkTypeInput()">
-          <option v-for="setType in setTypes" :key="setType || ''" :value="setType">
+          <option :selected="setType === 'Work'" v-for="setType in setTypes" :key="setType || ''" :value="setType">
             {{ setType }}
           </option>
           <option value="Custom">Custom</option>
@@ -27,12 +27,17 @@
 </template>
 
 <script setup lang="ts">
-import { changeSetRequest, getSetById, getSetTypes, getSetUnits } from "@/services/setService.ts";
+import { changeSetRequest } from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
 import type { changeSetRequestType } from "@/types/setType.ts";
 import type { AxiosError } from "axios";
+import { useTypeStore } from "@/stores/type.ts";
+import { useTrainingStore } from "@/stores/training.ts";
 
 const emit = defineEmits(["close", "reload"]);
+
+const typeStore = useTypeStore();
+const trainingStore = useTrainingStore();
 
 const props = defineProps<{
   setId: string;
@@ -77,7 +82,11 @@ async function submit() {
   };
 
   try {
-    await changeSetRequest(setData);
+    const changedSet = await changeSetRequest(setData);
+
+    if (changedSet) {
+      trainingStore.updateSet(changedSet);
+    }
   } catch (error) {
     if (error as AxiosError) {
       handleError(error as AxiosError);
@@ -172,7 +181,7 @@ async function loadOldSetData() {
   if (!setId) return;
 
   try {
-    const setData = await getSetById(setId);
+    const setData = trainingStore.getSetById(setId)
 
     if (setData) {
       if (setData.type) {
@@ -195,7 +204,7 @@ function sleep(ms: number) {
 
 onMounted(async () => {
   const repsInput = document.getElementById("reps") as HTMLInputElement;
-  setTypes.value = await getSetTypes();
+  setTypes.value = typeStore.getSetTypes;
   setRepUnits.value = await getSetUnits();
   await loadOldSetData();
   if (repsInput) {

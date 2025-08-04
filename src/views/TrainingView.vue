@@ -79,19 +79,19 @@
     </div>
 
     <div v-if="addExercise" class="add-Exercise">
-      <AddExercise @reload="reloadTraining()" @close="addExercise = false" :trainingId="trainingsId"></AddExercise>
+      <AddExercise @close="addExercise = false" :trainingId="trainingsId"></AddExercise>
     </div>
 
     <div v-if="changeExerciseCon" class="add-Exercise">
-      <ChangeExercise @reload="reloadTraining()" @close="changeExerciseCon = false" :exerciseId="editExerciseId"></ChangeExercise>
+      <ChangeExercise @close="changeExerciseCon = false" :exerciseId="editExerciseId"></ChangeExercise>
     </div>
 
     <div v-if="addSet" class="add-Set">
-      <AddSet @reload="reloadTraining()" @close="addSet = false" :exerciseId="selectedExerciseId"></AddSet>
+      <AddSet @close="addSet = false" :exerciseId="selectedExerciseId"></AddSet>
     </div>
 
     <div v-if="changeSetCon" class="change-Set">
-      <ChangeSet @reload="reloadTraining()" @close="changeSetCon = false" :setId="editSetId"></ChangeSet>
+      <ChangeSet @close="changeSetCon = false" :setId="editSetId"></ChangeSet>
     </div>
 
     <div @focusout="closeExerciseContextMenu()" class="exercise-context-menu" tabindex="-1">
@@ -302,14 +302,6 @@ function addExerciseToTraining(trainingId: string) {
   console.log(`Add new exercise to training with ID: ${trainingId}`);
 }
 
-async function reloadTraining() {
-  const newTraining = await getTrainingById(trainingsId);
-
-  if (!newTraining) return;
-  trainingStore.changeTraining(trainingsId, newTraining);
-  training.value = trainingStore.getTrainingById(trainingsId);
-}
-
 function exerciseContextMenu(event: MouseEvent, exerciseId: string) {
   event.preventDefault();
   // Logic to handle context menu for exercise
@@ -354,30 +346,24 @@ async function changeExercise() {
   changeExerciseCon.value = true;
 
   hideContextMenu();
-
-  await reloadTraining();
 }
 
 async function changeSet() {
   changeSetCon.value = true;
 
   hideContextMenu();
-
-  await reloadTraining();
 }
 
 async function deleteExercise() {
+  trainingStore.removeExercise(editExerciseId.value);
   await deleteExerciseRequest(editExerciseId.value);
   editExerciseId.value = "";
-
-  await reloadTraining();
 }
 
 async function deleteSet() {
+  trainingStore.removeSet(editSetId.value);
   await deleteSetRequest(editSetId.value);
   editSetId.value = "";
-
-  await reloadTraining();
 }
 
 function closeExerciseContextMenu() {

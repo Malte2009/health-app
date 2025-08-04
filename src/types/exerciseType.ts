@@ -13,24 +13,9 @@ export type exercise = {
   sets: set[];
 };
 
-export type getExerciseNamesType = {
-  name: string;
-}[];
-
 export type createExerciseLogRequest = {
   name: string;
   trainingId: string;
-  order: number;
-  notes?: string;
-};
-
-export type createExerciseLogResponse = {
-  id: string;
-  userId: string;
-  trainingId: string;
-  name: string;
-  createdAt: Date;
-  changedAt?: Date;
   order: number;
   notes?: string;
 };

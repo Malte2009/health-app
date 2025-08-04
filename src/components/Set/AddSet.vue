@@ -31,8 +31,13 @@ import type { createSetRequestType } from "@/types/setType.ts";
 import { createSetRequest, getSetTypes, getSetUnits } from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
+import { useTypeStore } from "@/stores/type.ts";
+import { useTrainingStore } from "@/stores/training.ts";
 
 const emit = defineEmits(["close", "reload"]);
+
+const typeStore = useTypeStore();
+const trainingStore = useTrainingStore();
 
 const props = defineProps<{
   exerciseId: string;
@@ -78,7 +83,11 @@ async function submit() {
   };
 
   try {
-    await createSetRequest(setData);
+    const newSet = await createSetRequest(setData);
+
+    if (newSet) {
+      trainingStore.addSet(newSet);
+    }
   } catch (error) {
     if (error as AxiosError) {
       handleError(error as AxiosError);
@@ -173,7 +182,7 @@ function sleep(ms: number) {
 
 onMounted(async () => {
   try {
-    setTypes.value = await getSetTypes();
+    setTypes.value = typeStore.getSetTypes;
     setRepUnits.value = await getSetUnits();
   } catch (error) {
     console.error("Failed to fetch set types:", error);

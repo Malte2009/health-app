@@ -6,8 +6,8 @@
       <div class="inputs">
         <select id="exerciseName" @change="checkInput()">
           <option value="" disabled selected>Select an exercise</option>
-          <option v-for="exercise in exerciseNames" :key="exercise.name" :value="exercise.name">
-            {{ exercise.name }}
+          <option v-for="exercise in typeStore.getExerciseTypes" :key="exercise" :value="exercise">
+            {{ exercise }}
           </option>
           <option value="Custom">Custom</option>
         </select>
@@ -20,20 +20,20 @@
 </template>
 
 <script setup lang="ts">
-import { createExercise, getExerciseNames } from "@/services/exerciseService.ts";
-import type { createExerciseLogRequest, getExerciseNamesType } from "@/types/exerciseType.ts";
+import { createExercise } from "@/services/exerciseService.ts";
+import type { createExerciseLogRequest } from "@/types/exerciseType.ts";
 import { onMounted, ref } from "vue";
 import { useTrainingStore } from "@/stores/training.ts";
+import { useTypeStore } from "@/stores/type.ts";
 
 const trainingStore = useTrainingStore();
+const typeStore = useTypeStore();
 
 const emit = defineEmits(["close", "reload"]);
 
 const props = defineProps<{
   trainingId: string;
 }>();
-
-const exerciseNames = ref<getExerciseNamesType>([]);
 
 const showCustomInput = ref(false);
 
@@ -68,7 +68,9 @@ async function submit() {
     notes: (document.getElementById("exerciseNotes") as HTMLTextAreaElement).value || undefined,
   };
 
-  await createExercise(exerciseData);
+  const newExercise = await createExercise(exerciseData);
+
+  trainingStore.addExercise(props.trainingId, newExercise);
 
   emit("close");
 
@@ -85,12 +87,6 @@ function changeFocus(elementId: string) {
 onMounted(async () => {
   const exerciseNameInput = document.getElementById("exerciseName") as HTMLInputElement;
   exerciseNameInput.focus();
-
-  try {
-    exerciseNames.value = await getExerciseNames();
-  } catch (error) {
-    console.error("Failed to fetch exercise names:", error);
-  }
 
   checkInput();
 });

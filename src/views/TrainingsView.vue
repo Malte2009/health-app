@@ -68,9 +68,8 @@ const showConfirmDelete = ref(false);
 const deleteTrainingId = ref<string>("");
 const router = useRouter();
 const trainingsStore = useTrainingStore();
-const trainings = ref([] as getTrainingResponseType[]);
-
 const authStore = useAuthStore();
+const trainings = ref([] as getTrainingResponseType[]);
 
 async function confirmDelete(id: string) {
   try {
@@ -99,8 +98,12 @@ onMounted(async () => {
   if (!authStore.isAuthenticated) {
     await router.push({ name: "login" });
   } else {
-    trainings.value = await getTrainings();
-    trainingsStore.setTrainings(trainings.value);
+    if (trainingsStore.trainings.length > 0) {
+      trainings.value = trainingsStore.trainings;
+    } else {
+      trainings.value = await getTrainings();
+      trainingsStore.setTrainings(trainings.value);
+    }
   }
 });
 </script>
