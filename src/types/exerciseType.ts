@@ -26,14 +26,3 @@ export type changeExerciseRequest = {
   notes?: string;
   order?: number;
 };
-
-export type changeExerciseResponse = {
-  order: number;
-  id: string;
-  userId: string;
-  trainingId: string;
-  name: string;
-  createdAt: Date;
-  changedAt?: Date;
-  notes?: string;
-};

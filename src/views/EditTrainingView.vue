@@ -74,7 +74,6 @@ const trainingsId = route.params.id as string;
 function loadValues() {
   const trainingTypeSelect = document.getElementById("trainingTypeSelect") as HTMLSelectElement;
   const trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
-  const trainingDateInput = document.getElementById("trainingDate") as HTMLInputElement;
   const averageHeartRateInput = document.getElementById("averageHeartRate") as HTMLInputElement;
   const trainingDurationInput = document.getElementById("trainingDuration") as HTMLInputElement;
   const notesInput = document.getElementById("notes") as HTMLInputElement;
@@ -88,7 +87,6 @@ function loadValues() {
       trainingTypeSelect.value = training.type;
     }
 
-    trainingDateInput.value = new Date(training.createdAt).toISOString().split("T")[0];
     averageHeartRateInput.value = training?.avgHeartRate?.toString() || "";
     trainingDurationInput.value = training?.duration?.toString() || "";
     notesInput.value = training.notes || "";
@@ -120,7 +118,7 @@ async function submit() {
   newTraining.type = trainingType;
   newTraining.duration = parseInt(trainingDuration, 10);
   newTraining.avgHeartRate = parseInt(averageHeartRate, 10);
-  newTraining.notes = (document.getElementById("notes") as HTMLInputElement).value || undefined;
+  newTraining.notes = (document.getElementById("notes") as HTMLInputElement).value || "";
 
   let trainingLog;
 
@@ -206,11 +204,6 @@ onMounted(async () => {
   } catch (error) {
     console.error("Failed to fetch training types:", error);
   }
-
-  const now = new Date();
-  const today = new Date();
-  (document.getElementById("trainingDate") as HTMLInputElement).valueAsDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
-  (document.getElementById("trainingTime") as HTMLInputElement).value = now.toTimeString().substring(0, 5);
 
   loadValues();
 });
