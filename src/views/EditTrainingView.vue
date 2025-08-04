@@ -15,9 +15,8 @@
           id="trainingType"
           name="trainingType"
           type="text"
-          @keydown.enter.prevent="changeFocus('trainingDate')"
+          @keydown.enter.prevent="changeFocus('averageHeartRate')"
         />
-        <input id="trainingDate" name="trainingDate" type="date" @keydown.enter.prevent="changeFocus('averageHeartRate')" />
         <input
           placeholder="Average Heart Rate (30 - 220)"
           id="averageHeartRate"
@@ -44,14 +43,7 @@
           type="text"
           @keydown.enter.prevent="changeFocus('notes')"
         />
-        <input placeholder="Notes (optional)" id="notes" name="notes" type="text" @keydown.enter.prevent="changeFocus('trainingTime')" />
-        <input
-          placeholder="Training Time (HH:MM)"
-          id="trainingTime"
-          name="trainingTime"
-          type="text"
-          @keydown.enter.prevent="changeFocus('submitButton')"
-        />
+        <input placeholder="Notes (optional)" id="notes" name="notes" type="text" @keydown.enter.prevent="changeFocus('submitButton')" />
         <button id="submitButton" value="Submit" class="btn" type="submit">Submit</button>
         <br />
       </form>
@@ -128,7 +120,7 @@ async function submit() {
   newTraining.type = trainingType;
   newTraining.duration = parseInt(trainingDuration, 10);
   newTraining.avgHeartRate = parseInt(averageHeartRate, 10);
-  newTraining.notes = (document.getElementById("notes") as HTMLInputElement).value || "";
+  newTraining.notes = (document.getElementById("notes") as HTMLInputElement).value || undefined;
 
   let trainingLog;
 
