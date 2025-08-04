@@ -63,7 +63,7 @@
                   v-for="(set, setIndex) in exercise.sets"
                   :key="set.id"
                 >
-                  {{ set.reps }} Wdh. | {{ set.weight }} kg
+                  {{ set.reps }}{{ set.repUnit }} | {{ set.weight }}kg
                 </td>
                 <td @click="addSetToExercise(exercise.id)" class="add-Button">+</td>
               </tr>
@@ -83,7 +83,7 @@
     </div>
 
     <div v-if="changeExerciseCon" class="add-Exercise">
-      <ChangeExercise @reload="reloadTraining()" @close="changeExerciseCon = false" :exerciseId="selectedExerciseId"></ChangeExercise>
+      <ChangeExercise @reload="reloadTraining()" @close="changeExerciseCon = false" :exerciseId="editExerciseId"></ChangeExercise>
     </div>
 
     <div v-if="addSet" class="add-Set">
@@ -91,7 +91,7 @@
     </div>
 
     <div v-if="changeSetCon" class="change-Set">
-      <ChangeSet @reload="reloadTraining()" @close="changeSetCon = false" :setId="selectedSetId"></ChangeSet>
+      <ChangeSet @reload="reloadTraining()" @close="changeSetCon = false" :setId="editSetId"></ChangeSet>
     </div>
 
     <div @focusout="closeExerciseContextMenu()" class="exercise-context-menu" tabindex="-1">
@@ -165,21 +165,24 @@ const currentSetIndex = ref<{ setIndex: number; index: number } | null>(null);
 const selectedExerciseId = ref<string>("");
 const selectedSetId = ref<string>("");
 
+const editExerciseId = ref<string>("");
+const editSetId = ref<string>("");
+
 function confirmDelete() {
-  if (selectedExerciseId.value) {
+  if (editExerciseId.value) {
     deleteExercise();
-  } else if (selectedSetId.value) {
+  } else if (editSetId.value) {
     deleteSet();
   }
   showConfirmDelete.value = false;
-  selectedExerciseId.value = "";
-  selectedSetId.value = "";
+  editExerciseId.value = "";
+  editSetId.value = "";
 }
 
 function cancelDelete() {
   showConfirmDelete.value = false;
-  selectedExerciseId.value = "";
-  selectedSetId.value = "";
+  editExerciseId.value = "";
+  editSetId.value = "";
 }
 
 function handleMobileEdit(event: MouseEvent, id: string, type: "exercise" | "set") {
@@ -289,8 +292,8 @@ function getSetRangeFromLongestExercise(training: getTrainingResponseType): numb
 }
 
 function addSetToExercise(exerciseId: string) {
-  selectedExerciseId.value = exerciseId;
   addSet.value = true;
+  selectedExerciseId.value = exerciseId;
   console.log(`Add set to exercise with ID: ${exerciseId}`);
 }
 
@@ -310,7 +313,7 @@ async function reloadTraining() {
 function exerciseContextMenu(event: MouseEvent, exerciseId: string) {
   event.preventDefault();
   // Logic to handle context menu for exercise
-  selectedExerciseId.value = exerciseId;
+  editExerciseId.value = exerciseId;
 
   const menu = document.querySelector(".exercise-context-menu") as HTMLDivElement;
   if (menu) {
@@ -324,7 +327,7 @@ function exerciseContextMenu(event: MouseEvent, exerciseId: string) {
 function setContextMenu(event: MouseEvent, setId: string) {
   event.preventDefault();
   // Logic to handle context menu for set
-  selectedSetId.value = setId;
+  editSetId.value = setId;
 
   const menu = document.querySelector(".set-context-menu") as HTMLDivElement;
   if (menu) {
@@ -364,15 +367,15 @@ async function changeSet() {
 }
 
 async function deleteExercise() {
-  await deleteExerciseRequest(selectedExerciseId.value);
-  selectedExerciseId.value = "";
+  await deleteExerciseRequest(editExerciseId.value);
+  editExerciseId.value = "";
 
   await reloadTraining();
 }
 
 async function deleteSet() {
-  await deleteSetRequest(selectedSetId.value);
-  selectedSetId.value = "";
+  await deleteSetRequest(editSetId.value);
+  editSetId.value = "";
 
   await reloadTraining();
 }

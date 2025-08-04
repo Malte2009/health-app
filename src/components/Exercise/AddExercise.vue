@@ -65,7 +65,7 @@ async function submit() {
     name: exerciseName,
     trainingId: props.trainingId,
     order: trainingStore.getTrainingById(props.trainingId)?.exercises.length || 0,
-    notes: (document.getElementById("exerciseNotes") as HTMLTextAreaElement).value || "",
+    notes: (document.getElementById("exerciseNotes") as HTMLTextAreaElement).value || undefined,
   };
 
   await createExercise(exerciseData);
