@@ -38,7 +38,7 @@
                   "
                   @drop="onExerciseDrop(index)"
                   @contextmenu="exerciseContextMenu($event, exercise.id)"
-                  @click="handleMobileEdit($event, exercise.id)"
+                  @click="handleMobileEdit($event, exercise.id, 'exercise')"
                 >
                   <div>{{ exercise.name }}</div>
                   <div v-if="exercise.notes">({{ exercise.notes }})</div>
@@ -59,11 +59,11 @@
                     dragging: draggingSetIndex?.setIndex === setIndex && draggingSetIndex?.index === index,
                   }"
                   @contextmenu="setContextMenu($event, set.id)"
-                  @click="handleMobileEdit($event, set.id)"
+                  @click="handleMobileEdit($event, set.id, 'set')"
                   v-for="(set, setIndex) in exercise.sets"
                   :key="set.id"
                 >
-                  {{ set.reps }} Wdh. | {{ set.weight }} kg
+                  {{ set.reps }}{{ set.repUnit }} | {{ set.weight }}kg
                 </td>
                 <td @click="addSetToExercise(exercise.id)" class="add-Button">+</td>
               </tr>
@@ -83,7 +83,7 @@
     </div>
 
     <div v-if="changeExerciseCon" class="add-Exercise">
-      <ChangeExercise @close="changeExerciseCon = false" :exerciseId="selectedExerciseId"></ChangeExercise>
+      <ChangeExercise @close="changeExerciseCon = false" :exerciseId="editExerciseId"></ChangeExercise>
     </div>
 
     <div v-if="addSet" class="add-Set">
@@ -91,7 +91,7 @@
     </div>
 
     <div v-if="changeSetCon" class="change-Set">
-      <ChangeSet @close="changeSetCon = false" :setId="selectedSetId"></ChangeSet>
+      <ChangeSet @close="changeSetCon = false" :setId="editSetId"></ChangeSet>
     </div>
 
     <div @focusout="closeExerciseContextMenu()" class="exercise-context-menu" tabindex="-1">
@@ -165,26 +165,33 @@ const currentSetIndex = ref<{ setIndex: number; index: number } | null>(null);
 const selectedExerciseId = ref<string>("");
 const selectedSetId = ref<string>("");
 
+const editExerciseId = ref<string>("");
+const editSetId = ref<string>("");
+
 function confirmDelete() {
-  if (selectedExerciseId.value) {
+  if (editExerciseId.value) {
     deleteExercise();
-  } else if (selectedSetId.value) {
+  } else if (editSetId.value) {
     deleteSet();
   }
   showConfirmDelete.value = false;
-  selectedExerciseId.value = "";
-  selectedSetId.value = "";
+  editExerciseId.value = "";
+  editSetId.value = "";
 }
 
 function cancelDelete() {
   showConfirmDelete.value = false;
-  selectedExerciseId.value = "";
-  selectedSetId.value = "";
+  editExerciseId.value = "";
+  editSetId.value = "";
 }
 
-function handleMobileEdit(event: MouseEvent, exerciseId: string) {
+function handleMobileEdit(event: MouseEvent, id: string, type: "exercise" | "set") {
   if (isMobile) {
-    setContextMenu(event, exerciseId);
+    if (type === "exercise") {
+      exerciseContextMenu(event, id);
+    } else if (type === "set") {
+      setContextMenu(event, id);
+    }
   }
 }
 
@@ -285,8 +292,8 @@ function getSetRangeFromLongestExercise(training: getTrainingResponseType): numb
 }
 
 function addSetToExercise(exerciseId: string) {
-  selectedExerciseId.value = exerciseId;
   addSet.value = true;
+  selectedExerciseId.value = exerciseId;
   console.log(`Add set to exercise with ID: ${exerciseId}`);
 }
 
@@ -298,7 +305,7 @@ function addExerciseToTraining(trainingId: string) {
 function exerciseContextMenu(event: MouseEvent, exerciseId: string) {
   event.preventDefault();
   // Logic to handle context menu for exercise
-  selectedExerciseId.value = exerciseId;
+  editExerciseId.value = exerciseId;
 
   const menu = document.querySelector(".exercise-context-menu") as HTMLDivElement;
   if (menu) {
@@ -312,7 +319,7 @@ function exerciseContextMenu(event: MouseEvent, exerciseId: string) {
 function setContextMenu(event: MouseEvent, setId: string) {
   event.preventDefault();
   // Logic to handle context menu for set
-  selectedSetId.value = setId;
+  editSetId.value = setId;
 
   const menu = document.querySelector(".set-context-menu") as HTMLDivElement;
   if (menu) {
@@ -348,15 +355,15 @@ async function changeSet() {
 }
 
 async function deleteExercise() {
-  trainingStore.removeExercise(selectedExerciseId.value);
-  await deleteExerciseRequest(selectedExerciseId.value);
-  selectedExerciseId.value = "";
+  trainingStore.removeExercise(editExerciseId.value);
+  await deleteExerciseRequest(editExerciseId.value);
+  editExerciseId.value = "";
 }
 
 async function deleteSet() {
-  trainingStore.removeSet(selectedSetId.value);
-  await deleteSetRequest(selectedSetId.value);
-  selectedSetId.value = "";
+  trainingStore.removeSet(editSetId.value);
+  await deleteSetRequest(editSetId.value);
+  editSetId.value = "";
 }
 
 function closeExerciseContextMenu() {

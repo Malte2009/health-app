@@ -11,6 +11,11 @@ export const getSetTypes = async (): Promise<string[]> => {
   return response.data;
 };
 
+export const getSetUnits = async (): Promise<string[]> => {
+  const response = await api.get("/set/getSetUnits");
+  return response.data;
+};
+
 export const changeSetRequest = async (set: changeSetRequestType): Promise<set | null> => {
   const response = await api.patch(`/set/changeSet/${set.id}`, set);
   return response.data;

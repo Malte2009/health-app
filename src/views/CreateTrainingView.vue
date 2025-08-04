@@ -101,7 +101,7 @@ async function submit() {
     avgHeartRate: parseInt(averageHeartRate, 10),
     pauses,
     pausesLength,
-    notes: (document.getElementById("notes") as HTMLInputElement).value || "",
+    notes: (document.getElementById("notes") as HTMLInputElement).value || undefined,
   };
 
   let trainingLog;

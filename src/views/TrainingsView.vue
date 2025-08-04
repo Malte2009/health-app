@@ -71,6 +71,8 @@ const trainingsStore = useTrainingStore();
 const authStore = useAuthStore();
 const trainings = ref([] as getTrainingResponseType[]);
 
+const authStore = useAuthStore();
+
 async function confirmDelete(id: string) {
   try {
     await deleteTrainingRequest(id);
