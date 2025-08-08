@@ -16,6 +16,11 @@
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td colspan="9">
+            <button class="button" @click="router.push({ name: 'createTraining' })">Create New Training</button>
+          </td>
+        </tr>
         <tr v-for="training in trainings" :key="training.id">
           <td v-if="!isMobile">{{ training.id }}</td>
           <td>{{ getDateString(training.createdAt) }}</td>
@@ -36,11 +41,6 @@
             >
               Delete
             </button>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="9">
-            <button class="button" @click="router.push({ name: 'createTraining' })">Create New Training</button>
           </td>
         </tr>
       </tbody>
