@@ -58,6 +58,7 @@ async function submit() {
     exercise.addEventListener("focus", () => {
       exercise.style.borderColor = "var(--border)";
     });
+
     return;
   }
 

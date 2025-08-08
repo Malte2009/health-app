@@ -79,19 +79,43 @@
     </div>
 
     <div v-if="addExercise" class="add-Exercise">
-      <AddExercise @close="addExercise = false" :trainingId="trainingsId"></AddExercise>
+      <AddExercise
+        @close="
+          addExercise = false;
+          reloadTrainingFromStore();
+        "
+        :trainingId="trainingsId"
+      ></AddExercise>
     </div>
 
     <div v-if="changeExerciseCon" class="add-Exercise">
-      <ChangeExercise @close="changeExerciseCon = false" :exerciseId="editExerciseId"></ChangeExercise>
+      <ChangeExercise
+        @close="
+          changeExerciseCon = false;
+          reloadTrainingFromStore();
+        "
+        :exerciseId="editExerciseId"
+      ></ChangeExercise>
     </div>
 
     <div v-if="addSet" class="add-Set">
-      <AddSet @close="addSet = false" :exerciseId="selectedExerciseId"></AddSet>
+      <AddSet
+        @close="
+          addSet = false;
+          reloadTrainingFromStore();
+        "
+        :exerciseId="selectedExerciseId"
+      ></AddSet>
     </div>
 
     <div v-if="changeSetCon" class="change-Set">
-      <ChangeSet @close="changeSetCon = false" :setId="editSetId"></ChangeSet>
+      <ChangeSet
+        @close="
+          changeSetCon = false;
+          reloadTrainingFromStore();
+        "
+        :setId="editSetId"
+      ></ChangeSet>
     </div>
 
     <div @focusout="closeExerciseContextMenu()" class="exercise-context-menu" tabindex="-1">
@@ -384,6 +408,13 @@ function getDateString(date: Date): string {
   return new Intl.DateTimeFormat("de-DE", {
     dateStyle: "short",
   }).format(new Date(date));
+}
+
+function reloadTrainingFromStore() {
+  training.value = trainingStore.getTrainingById(trainingsId);
+  if (!training.value) {
+    router.push({ name: "home" });
+  }
 }
 
 onMounted(async () => {
