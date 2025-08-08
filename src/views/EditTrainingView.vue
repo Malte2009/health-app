@@ -15,8 +15,15 @@
           id="trainingType"
           name="trainingType"
           type="text"
-          @keydown.enter.prevent="changeFocus('averageHeartRate')"
+          @keydown.enter.prevent="changeFocus('trainingsMode')"
         />
+        <select id="trainingsMode" name="trainingsMode" @keydown.enter.prevent="changeFocus('averageHeartRate')">
+          <option value="" disabled selected>Select Training Mode</option>
+          <option value="weights_light">Weights Light</option>
+          <option value="weights_mod">Weights Moderate</option>
+          <option value="weights_vig">Weights Heavy</option>
+          <option value="cardio">Cardio</option>
+        </select>
         <input
           placeholder="Average Heart Rate (30 - 220)"
           id="averageHeartRate"
@@ -35,14 +42,8 @@
           max="600"
           @keydown.enter.prevent="changeFocus('pauses')"
         />
-        <input placeholder="Pauses (optional)" id="pauses" name="pauses" type="text" @keydown.enter.prevent="changeFocus('pausesLength')" />
-        <input
-          placeholder="Pauses Length (optional)"
-          id="pausesLength"
-          name="pausesLength"
-          type="text"
-          @keydown.enter.prevent="changeFocus('notes')"
-        />
+        <input placeholder="Pauses (optional)" id="pauses" name="pauses" type="text" @keydown.enter.prevent="changeFocus('pauseLength')" />
+        <input placeholder="Pauses Length (optional)" id="pauseLength" name="pauseLength" type="text" @keydown.enter.prevent="changeFocus('notes')" />
         <input placeholder="Notes (optional)" id="notes" name="notes" type="text" @keydown.enter.prevent="changeFocus('submitButton')" />
         <button id="submitButton" value="Submit" class="btn" type="submit">Submit</button>
         <br />
@@ -73,10 +74,13 @@ const trainingsId = route.params.id as string;
 
 function loadValues() {
   const trainingTypeSelect = document.getElementById("trainingTypeSelect") as HTMLSelectElement;
+  const trainingsModeSelect = document.getElementById("trainingsMode") as HTMLSelectElement;
   const trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
   const averageHeartRateInput = document.getElementById("averageHeartRate") as HTMLInputElement;
   const trainingDurationInput = document.getElementById("trainingDuration") as HTMLInputElement;
   const notesInput = document.getElementById("notes") as HTMLInputElement;
+  const pausesInput = document.getElementById("pauses") as HTMLInputElement;
+  const pauseLengthInput = document.getElementById("pauseLength") as HTMLInputElement;
 
   const training = trainingStore.getTrainingById(trainingsId);
 
@@ -87,9 +91,14 @@ function loadValues() {
       trainingTypeSelect.value = training.type;
     }
 
+    console.log("Training:", training);
+
+    trainingsModeSelect.value = training.mode || "weights_light";
     averageHeartRateInput.value = training?.avgHeartRate?.toString() || "";
     trainingDurationInput.value = training?.duration?.toString() || "";
     notesInput.value = training.notes || "";
+    pausesInput.value = training.pauses?.toString() || "";
+    pauseLengthInput.value = training.pauseLength?.toString() || "";
   }
 }
 
@@ -101,8 +110,11 @@ function checkInput() {
 
 async function submit() {
   let trainingType = (document.getElementById("trainingTypeSelect") as HTMLInputElement).value;
+  const trainingsMode = (document.getElementById("trainingsMode") as HTMLInputElement).value;
   const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
+  const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value) || 0;
+  const pauseLength = parseInt((document.getElementById("pauseLength") as HTMLInputElement).value) || 0;
 
   if (showCustomInput.value) {
     trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
@@ -116,9 +128,12 @@ async function submit() {
   }
 
   newTraining.type = trainingType;
+  newTraining.mode = trainingsMode;
   newTraining.duration = parseInt(trainingDuration, 10);
   newTraining.avgHeartRate = parseInt(averageHeartRate, 10);
   newTraining.notes = (document.getElementById("notes") as HTMLInputElement).value || "";
+  newTraining.pauses = pauses;
+  newTraining.pauseLength = pauseLength;
 
   let trainingLog;
 

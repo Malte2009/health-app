@@ -15,8 +15,15 @@
           id="trainingType"
           name="trainingType"
           type="text"
-          @keydown.enter.prevent="changeFocus('averageHeartRate')"
+          @keydown.enter.prevent="changeFocus('trainingsMode')"
         />
+        <select id="trainingsMode" name="trainingsMode" @keydown.enter.prevent="changeFocus('averageHeartRate')">
+          <option value="" disabled selected>Select Training Mode</option>
+          <option value="weights_light">Weights Light</option>
+          <option value="weights_mod">Weights Moderate</option>
+          <option value="weights_vig">Weights Heavy</option>
+          <option value="cardio">Cardio</option>
+        </select>
         <input
           placeholder="Average Heart Rate (30 - 220)"
           id="averageHeartRate"
@@ -35,14 +42,8 @@
           max="600"
           @keydown.enter.prevent="changeFocus('pauses')"
         />
-        <input placeholder="Pauses (optional)" id="pauses" name="pauses" type="text" @keydown.enter.prevent="changeFocus('pausesLength')" />
-        <input
-          placeholder="Pauses Length (optional)"
-          id="pausesLength"
-          name="pausesLength"
-          type="text"
-          @keydown.enter.prevent="changeFocus('notes')"
-        />
+        <input placeholder="Pauses (optional)" id="pauses" name="pauses" type="text" @keydown.enter.prevent="changeFocus('pauseLength')" />
+        <input placeholder="Pauses Length (optional)" id="pauseLength" name="pauseLength" type="text" @keydown.enter.prevent="changeFocus('notes')" />
         <input placeholder="Notes (optional)" id="notes" name="notes" type="text" @keydown.enter.prevent="changeFocus('submitButton')" />
         <button id="submitButton" value="Submit" class="btn" type="submit">Submit</button>
         <br />
@@ -76,23 +77,25 @@ function checkInput() {
 
 async function submit() {
   let trainingType = (document.getElementById("trainingTypeSelect") as HTMLInputElement).value;
+  const trainingsMode = (document.getElementById("trainingsMode") as HTMLInputElement).value;
   const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
   const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value);
-  const pausesLength = parseInt((document.getElementById("pausesLength") as HTMLInputElement).value);
+  const pauseLength = parseInt((document.getElementById("pauseLength") as HTMLInputElement).value);
 
   if (showCustomInput.value) {
     trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   }
 
-  console.log(trainingType, trainingDuration, averageHeartRate, pauses, pausesLength);
+  console.log(trainingType, trainingDuration, averageHeartRate, pauses, pauseLength);
 
   const trainingData: createTrainingLogRequestType = {
     type: trainingType,
+    mode: trainingsMode,
     duration: parseInt(trainingDuration, 10),
     avgHeartRate: parseInt(averageHeartRate, 10),
     pauses,
-    pausesLength,
+    pauseLength,
     notes: (document.getElementById("notes") as HTMLInputElement).value || undefined,
   };
 

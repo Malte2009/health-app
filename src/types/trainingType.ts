@@ -6,27 +6,27 @@ export type training = {
   createdAt: Date;
   changedAt?: Date;
   type: string;
+  mode: string;
   score?: number;
   notes?: string;
   caloriesBurned?: number;
   duration?: number;
   avgHeartRate?: number;
+  pauses?: number;
+  pauseLength?: number;
 
   exercises: exercise[];
 };
 
 export type createTrainingLogRequestType = {
   type: string;
+  mode: string;
   avgHeartRate?: number;
   duration?: number;
   notes?: string;
   pauses?: number;
-  pausesLength?: number;
+  pauseLength?: number;
 };
-
-export type getTrainingTypesResponseType = {
-  type: string;
-}[];
 
 export type getTrainingResponseType = {
   id: string;
@@ -34,11 +34,14 @@ export type getTrainingResponseType = {
   createdAt: Date;
   changedAt?: Date;
   type: string;
+  mode: string;
   score?: number;
   notes?: string;
   caloriesBurned?: number;
   duration?: number;
   avgHeartRate?: number;
+  pauses?: number;
+  pauseLength?: number;
 
   exercises: exercise[];
 };
