@@ -27,6 +27,14 @@ export const useTrainingStore = defineStore("trainingStore", {
     },
   },
   actions: {
+    async sortExercieses(trainingId: string) {
+      const training = this.trainings.find((t) => t.id === trainingId);
+      if (training) {
+        training.exercises.sort((a, b) => a.order - b.order);
+      } else {
+        console.warn(`Training with ID ${trainingId} not found.`);
+      }
+    },
     async loadTrainings() {
       const trainings = await getTrainings();
       this.trainings = trainings;

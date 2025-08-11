@@ -39,5 +39,10 @@ export const useTypeStore = defineStore("typeStore", {
       this.exerciseTypes = await getExerciseNames();
       this.setRepUnitTypes = await getSetUnits();
     },
+    checkTypes() {
+      if (this.trainingTypes.length === 0 || this.setTypes.length === 0 || this.exerciseTypes.length === 0 || this.setRepUnitTypes.length === 0) {
+        this.loadTypes();
+      }
+    },
   },
 });

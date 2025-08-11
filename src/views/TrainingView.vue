@@ -164,10 +164,12 @@ import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { getTrainingById, updateTraining } from "@/services/trainingService.ts";
 import { deleteExerciseRequest } from "@/services/exerciseService.ts";
 import { deleteSetRequest } from "@/services/setService.ts";
+import { useTypeStore } from "@/stores/type.ts";
 
 const isMobile = window.innerWidth <= 768;
 
 const trainingStore = useTrainingStore();
+const typeStore = useTypeStore();
 const router = useRouter();
 const route = useRoute();
 
@@ -418,6 +420,7 @@ function reloadTrainingFromStore() {
 }
 
 onMounted(async () => {
+  typeStore.checkTypes();
   if (!training.value) {
     const getTraining = await getTrainingById(trainingsId);
 
