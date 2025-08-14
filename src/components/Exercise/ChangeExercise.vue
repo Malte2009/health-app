@@ -20,8 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import { changeExercise } from "@/services/exerciseService.ts";
-import type { changeExerciseRequest, exercise } from "@/types/exerciseType.ts";
+import { changeExerciseInTraining } from "@/services/exerciseService.ts";
+import type { changeExerciseInTrainingRequest, exercise } from "@/types/exerciseType.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
 import { useTrainingStore } from "@/stores/training.ts";
@@ -63,13 +63,13 @@ async function submit() {
     return;
   }
 
-  const exerciseData: changeExerciseRequest = {
+  const exerciseData: changeExerciseInTrainingRequest = {
     id: props.exerciseId,
     name: exerciseName,
     notes: (document.getElementById("exerciseNotes") as HTMLInputElement).value || "",
   };
 
-  const changedExercise = await changeExercise(exerciseData);
+  const changedExercise = await changeExerciseInTraining(exerciseData);
 
   if (!changedExercise) {
     console.error("Failed to change exercise");

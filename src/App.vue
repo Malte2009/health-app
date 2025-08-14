@@ -11,12 +11,11 @@ import { useAuthStore } from "@/stores/auth.ts";
 import { isAuthenticated } from "@/services/authService.ts";
 import NavBar from "@/components/General/NavBar.vue";
 import { useTypeStore } from "@/stores/type.ts";
-import { useTrainingStore } from "@/stores/training.ts";
+import { getTrainings } from "@/services/trainingService.ts";
 
 const router = useRouter();
 const authStore = useAuthStore();
 const typeStore = useTypeStore();
-const trainingsStore = useTrainingStore();
 
 function setViewport(scale: number) {
   let viewport = document.querySelector('meta[name="viewport"]');
@@ -33,7 +32,7 @@ onMounted(async () => {
   if (token) {
     authStore.setToken(token);
     await typeStore.loadTypes();
-    await trainingsStore.loadTrainings();
+    await getTrainings();
     if (router.currentRoute.value.name === "/home") await router.push({ name: "trainings" });
     if (router.currentRoute.value.name === "/") await router.push({ name: "trainings" });
     if (router.currentRoute.value.name === "/login") await router.push({ name: "trainings" });

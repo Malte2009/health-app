@@ -15,7 +15,6 @@ import { useRouter } from "vue-router";
 import { onMounted } from "vue";
 
 import { useAuthStore } from "@/stores/auth.ts";
-import { setCookie } from "@/utility/cookie.ts";
 import { isAuthenticated, login } from "@/services/authService.ts";
 
 const authStore = useAuthStore();
@@ -33,11 +32,7 @@ async function submit() {
   const email = (document.getElementById("email") as HTMLInputElement).value;
   const password = (document.getElementById("password") as HTMLInputElement).value;
 
-  const token = await login(email, password);
-
-  authStore.setToken(token);
-
-  setCookie("token", token, 1);
+  await login(email, password);
 
   await route();
 }

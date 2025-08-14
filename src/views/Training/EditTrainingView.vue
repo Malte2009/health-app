@@ -148,9 +148,7 @@ async function submit() {
 
   trainingStore.setCurrentTraining(trainingsId);
 
-  const trainings = await getTrainings();
-
-  trainingStore.setTrainings(trainings);
+  await getTrainings();
 
   await router.push({ name: "training", params: { trainingsId } });
 }

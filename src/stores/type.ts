@@ -34,10 +34,10 @@ export const useTypeStore = defineStore("typeStore", {
       this.setTypes = [];
     },
     async loadTypes() {
-      this.trainingTypes = await getTrainingTypes();
-      this.setTypes = await getSetTypes();
-      this.exerciseTypes = await getExerciseNames();
-      this.setRepUnitTypes = await getSetUnits();
+      await getTrainingTypes();
+      await getSetTypes();
+      await getExerciseNames();
+      await getSetUnits();
     },
     checkTypes() {
       if (this.trainingTypes.length === 0 || this.setTypes.length === 0 || this.exerciseTypes.length === 0 || this.setRepUnitTypes.length === 0) {

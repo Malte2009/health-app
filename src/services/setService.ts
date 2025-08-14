@@ -1,32 +1,57 @@
 import api from "./api";
 import type { changeSetRequestType, createSetRequestType, set } from "@/types/setType.ts";
+import { useTypeStore } from "@/stores/type.ts";
 
-export const getSetById = async (id: string): Promise<set | null> => {
-  const response = await api.get(`/set/getSet/${id}`);
-  return response.data;
+export const getSetById = async (id: string): Promise<set | void> => {
+  try {
+    return (await api.get(`/set/getSet/${id}`)).data;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
-export const getSetTypes = async (): Promise<string[]> => {
-  const response = await api.get("/set/getSetTypes");
-  return response.data;
+export const getSetTypes = async (): Promise<string[] | void> => {
+  const typeStore = useTypeStore();
+  try {
+    const setTypes = (await api.get(`/set/getSetTypes`)).data;
+    typeStore.setSetTypes(setTypes);
+    return setTypes;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
-export const getSetUnits = async (): Promise<string[]> => {
-  const response = await api.get("/set/getSetUnits");
-  return response.data;
+export const getSetUnits = async (): Promise<string[] | void> => {
+  const typeStore = useTypeStore();
+  try {
+    const setUnits = (await api.get(`/set/getSetUnits`)).data;
+    typeStore.setSetUnitTypes(setUnits);
+    return setUnits;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
-export const changeSetRequest = async (set: changeSetRequestType): Promise<set | null> => {
-  const response = await api.patch(`/set/changeSet/${set.id}`, set);
-  return response.data;
+export const changeSetRequest = async (set: changeSetRequestType): Promise<set | void> => {
+  try {
+    return (await api.patch(`/set/changeSet/${set.id}`, set)).data;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
-export const createSetRequest = async (set: createSetRequestType): Promise<set | null> => {
-  const response = await api.post("/set/createSet", set);
-  return response.data;
+export const createSetRequest = async (set: createSetRequestType): Promise<set | void> => {
+  try {
+    return (await api.put(`/set/createSet`, set)).data;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const deleteSetRequest = async (setId: string): Promise<void> => {
-  const response = await api.delete(`/set/deleteSet/${setId}`);
-  return response.data;
+  try {
+    await api.delete(`/set/deleteSet/${setId}`);
+  } catch (error) {
+    console.error(error);
+  }
 };

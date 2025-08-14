@@ -40,6 +40,11 @@ const router = createRouter({
       name: "editTraining",
       component: () => import("../views/Training/EditTrainingView.vue"),
     },
+    {
+      path: "/trainingsplan",
+      name: "trainingsplan",
+      component: () => import("../views/Trainingsplan/TrainingsPlanView.vue"),
+    },
   ],
 });
 

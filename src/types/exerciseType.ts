@@ -13,14 +13,14 @@ export type exercise = {
   sets: set[];
 };
 
-export type createExerciseLogRequest = {
+export type addExerciseToTrainingRequest = {
   name: string;
   trainingId: string;
   order: number;
   notes?: string;
 };
 
-export type changeExerciseRequest = {
+export type changeExerciseInTrainingRequest = {
   id: string;
   name?: string;
   notes?: string;

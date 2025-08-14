@@ -69,7 +69,7 @@ const deleteTrainingId = ref<string>("");
 const router = useRouter();
 const trainingsStore = useTrainingStore();
 const authStore = useAuthStore();
-const trainings = ref([] as getTrainingResponseType[]);
+const trainings = ref(trainingsStore.getTrainings as getTrainingResponseType[]);
 
 async function confirmDelete(id: string) {
   try {
@@ -98,11 +98,9 @@ onMounted(async () => {
   if (!authStore.isAuthenticated) {
     await router.push({ name: "login" });
   } else {
-    if (trainingsStore.trainings.length > 0) {
-      trainings.value = trainingsStore.trainings;
-    } else {
-      trainings.value = await getTrainings();
-      trainingsStore.setTrainings(trainings.value);
+    if (trainingsStore.trainings.length <= 0) {
+      await getTrainings();
+      trainings.value = trainingsStore.getTrainings;
     }
   }
 });

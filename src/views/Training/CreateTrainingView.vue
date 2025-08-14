@@ -110,9 +110,11 @@ async function submit() {
 
   console.log(trainingLog);
 
-  trainingStore.setCurrentTraining(trainingLog.id);
+  if (trainingLog) {
+    trainingStore.setCurrentTraining(trainingLog.id);
 
-  await router.push({ name: "training", params: { id: trainingLog.id } });
+    await router.push({ name: "training", params: { id: trainingLog.id } });
+  }
 }
 
 function handleError(error: AxiosError) {

@@ -2,6 +2,7 @@
   <div class="navbar">
     <div class="start"></div>
     <div class="middle">
+      <button :class="{ active: route.name === 'trainingsplan' }" @click="router.push('/trainingsplan')">Trainings Plan</button>
       <button :class="{ active: route.name === 'trainings' }" @click="router.push('/trainings')">Trainings Overview</button>
     </div>
     <div class="end"></div>

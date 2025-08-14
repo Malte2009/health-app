@@ -20,8 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import { createExercise } from "@/services/exerciseService.ts";
-import type { createExerciseLogRequest } from "@/types/exerciseType.ts";
+import { addExerciseToTraining } from "@/services/exerciseService.ts";
+import type { addExerciseToTrainingRequest } from "@/types/exerciseType.ts";
 import { onMounted, ref } from "vue";
 import { useTrainingStore } from "@/stores/training.ts";
 import { useTypeStore } from "@/stores/type.ts";
@@ -64,14 +64,14 @@ async function submit() {
     return;
   }
 
-  const exerciseData: createExerciseLogRequest = {
+  const exerciseData: addExerciseToTrainingRequest = {
     name: exerciseName,
     trainingId: props.trainingId,
     order: trainingStore.getTrainingById(props.trainingId)?.exercises.length || 0,
     notes: (document.getElementById("exerciseNotes") as HTMLTextAreaElement).value || undefined,
   };
 
-  const newExercise = await createExercise(exerciseData);
+  const newExercise = await addExerciseToTraining(exerciseData);
 
   if (!newExercise) {
     console.error("Failed to create exercise");

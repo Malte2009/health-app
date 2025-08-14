@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import type { createSetRequestType } from "@/types/setType.ts";
-import { createSetRequest, getSetTypes, getSetUnits } from "@/services/setService.ts";
+import { createSetRequest, getSetUnits } from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
@@ -183,7 +183,7 @@ function sleep(ms: number) {
 onMounted(async () => {
   try {
     setTypes.value = typeStore.getSetTypes;
-    setRepUnits.value = await getSetUnits();
+    await getSetUnits();
   } catch (error) {
     console.error("Failed to fetch set types:", error);
   }

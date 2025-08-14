@@ -37,14 +37,13 @@ export const useTrainingStore = defineStore("trainingStore", {
     },
     async loadTrainings() {
       const trainings = await getTrainings();
-      this.trainings = trainings;
-      if (trainings.length > 0) {
+      if (trainings && trainings.length > 0) {
         this.currentTraining = trainings[0].id; // Set the first training as current by default
       } else {
         this.currentTraining = "";
       }
     },
-    changeTraining(trainingId: string, training: getTrainingResponseType) {
+    updateTraining(trainingId: string, training: getTrainingResponseType) {
       const index = this.trainings.findIndex((t) => t.id === trainingId);
       if (index !== -1) {
         this.trainings[index] = training;
@@ -52,7 +51,7 @@ export const useTrainingStore = defineStore("trainingStore", {
         console.warn(`Training with ID ${trainingId} not found.`);
       }
     },
-    addTraining(training: getTrainingResponseType) {
+    createTraining(training: getTrainingResponseType) {
       this.trainings.push(training);
     },
     setCurrentTraining(trainingId: string) {
@@ -131,7 +130,7 @@ export const useTrainingStore = defineStore("trainingStore", {
       this.trainings = [];
       this.currentTraining = "";
     },
-    removeTraining(trainingId: string) {
+    deleteTraining(trainingId: string) {
       this.trainings = this.trainings.filter((training) => training.id !== trainingId);
       if (this.currentTraining === trainingId) {
         this.currentTraining = "";

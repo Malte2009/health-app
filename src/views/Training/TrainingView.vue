@@ -162,19 +162,19 @@ import ChangeSet from "@/components/Set/ChangeSet.vue";
 import ChangeExercise from "@/components/Exercise/ChangeExercise.vue";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { getTrainingById, updateTraining } from "@/services/trainingService.ts";
-import { deleteExerciseRequest } from "@/services/exerciseService.ts";
+import { deleteExerciseFromTraining } from "@/services/exerciseService.ts";
 import { deleteSetRequest } from "@/services/setService.ts";
 import { useTypeStore } from "@/stores/type.ts";
 
 const isMobile = window.innerWidth <= 768;
 
-const trainingStore = useTrainingStore();
+const trainingsStore = useTrainingStore();
 const typeStore = useTypeStore();
 const router = useRouter();
 const route = useRoute();
 
 const trainingsId = route.params.id as string;
-const training = ref(trainingStore.getTrainingById(trainingsId));
+const training = ref(trainingsStore.getTrainingById(trainingsId));
 
 const addExercise = ref(false);
 const changeExerciseCon = ref(false);
@@ -268,8 +268,6 @@ function onExerciseDrop(targetIndex: number) {
     exercise.order = index;
   });
 
-  trainingStore.changeTraining(trainingsId, training.value);
-
   updateTraining(trainingsId, training.value);
 
   draggingExerciseIndex.value = null;
@@ -290,8 +288,6 @@ function onSetDrop(targetExerciseIndex: number, targetSetIndex: number) {
   training.value.exercises[targetExerciseIndex].sets.splice(draggingSetIndex.value.setIndex, 1);
 
   training.value.exercises[targetExerciseIndex].sets.splice(targetSetIndex, 0, moved);
-
-  trainingStore.changeTraining(trainingsId, training.value);
 
   training.value.exercises[targetExerciseIndex].sets.forEach((set, index) => {
     set.order = index;
@@ -381,13 +377,11 @@ async function changeSet() {
 }
 
 async function deleteExercise() {
-  trainingStore.removeExercise(editExerciseId.value);
-  await deleteExerciseRequest(editExerciseId.value);
+  await deleteExerciseFromTraining(editExerciseId.value);
   editExerciseId.value = "";
 }
 
 async function deleteSet() {
-  trainingStore.removeSet(editSetId.value);
   await deleteSetRequest(editSetId.value);
   editSetId.value = "";
 }
@@ -413,7 +407,7 @@ function getDateString(date: Date): string {
 }
 
 function reloadTrainingFromStore() {
-  training.value = trainingStore.getTrainingById(trainingsId);
+  training.value = trainingsStore.getTrainingById(trainingsId);
   if (!training.value) {
     router.push({ name: "home" });
   }
@@ -426,12 +420,9 @@ onMounted(async () => {
 
     if (getTraining) {
       training.value = getTraining;
-      trainingStore.addTraining(training.value);
     } else {
       await router.push({ name: "home" });
     }
-
-    console.log(training);
   }
 });
 </script>
