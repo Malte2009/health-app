@@ -19,10 +19,12 @@
         />
         <select id="trainingsMode" name="trainingsMode" @keydown.enter.prevent="changeFocus('averageHeartRate')">
           <option value="" disabled selected>Select Training Mode</option>
-          <option value="weights_light">Weights Light</option>
-          <option value="weights_mod">Weights Moderate</option>
-          <option value="weights_vig">Weights Heavy</option>
-          <option value="cardio">Cardio</option>
+          <option value="weights_light">Weights Light ({{ roundTo(HFmax * 0.4, 0) }} - {{ roundTo(HFmax * 0.55, 0) }})</option>
+          <option value="weights_mod">Weights Moderate ({{ roundTo(HFmax * 0.55, 0) }} - {{ roundTo(HFmax * 0.7, 0) }})</option>
+          <option value="weights_vig">Weights Heavy ({{ roundTo(HFmax * 0.7, 0) }} - {{ roundTo(HFmax * 0.8, 0) }})</option>
+          <option value="cardio_light">Cardio Light ({{ roundTo(HFmax * 0.5, 0) }} - {{ roundTo(HFmax * 0.6, 0) }})</option>
+          <option value="cardio_mod">Cardio Moderate ({{ roundTo(HFmax * 0.6, 0) }} - {{ roundTo(HFmax * 0.75, 0) }})</option>
+          <option value="cardio_vig">Cardio Heavy ({{ roundTo(HFmax * 0.75, 0) }} - {{ roundTo(HFmax * 0.9, 0) }})</option>
         </select>
         <input
           placeholder="Average Heart Rate (30 - 220)"
@@ -61,6 +63,8 @@ import { useTrainingStore } from "@/stores/training.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
+import { getUserAge } from "@/services/authService.ts";
+import { roundTo } from "@/utility/math.ts";
 
 const authStore = useAuthStore();
 const trainingStore = useTrainingStore();
@@ -68,6 +72,8 @@ const typeStore = useTypeStore();
 const router = useRouter();
 
 const showCustomInput = ref(false);
+
+const HFmax = ref(0);
 
 function checkInput() {
   const input = document.getElementById("trainingTypeSelect") as HTMLSelectElement;
@@ -173,6 +179,10 @@ onMounted(async () => {
   if (!authStore.isAuthenticated) {
     await router.push({ name: "login" });
   }
+
+  const userAge = await getUserAge();
+
+  if (userAge) HFmax.value = 220 - userAge;
 
   checkInput();
 });

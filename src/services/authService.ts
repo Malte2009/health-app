@@ -20,3 +20,11 @@ export const register = async (data: { email: string; name: string; password: st
 export const login = async (email: string, password: string): Promise<string> => {
   return (await api.post("/users/login", { email, password })).data;
 };
+
+export const getUserAge = async (): Promise<number | void> => {
+  try {
+    return (await api.get("/users/getUserAge")).data;
+  } catch (error) {
+    return console.error(error);
+  }
+};
