@@ -8,7 +8,7 @@
 import { useRouter } from "vue-router";
 import { onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth.ts";
-import TrainingsView from "@/views/TrainingsView.vue";
+import TrainingsView from "@/views/Training/TrainingsView.vue";
 
 const authStore = useAuthStore();
 const router = useRouter();

@@ -12,33 +12,33 @@ const router = createRouter({
     {
       path: "/login",
       name: "login",
-      component: () => import("../views/LoginView.vue"),
+      component: () => import("../views/Login/LoginView.vue"),
     },
     {
       path: "/register",
       name: "register",
-      component: () => import("../views/SignUpView.vue"),
+      component: () => import("../views/Login/SignUpView.vue"),
     },
     {
       path: "/trainings",
       name: "trainings",
-      component: () => import("../views/TrainingsView.vue"),
+      component: () => import("../views/Training/TrainingsView.vue"),
     },
     {
       path: "/training/create",
       name: "createTraining",
-      component: () => import("../views/CreateTrainingView.vue"),
+      component: () => import("../views/Training/CreateTrainingView.vue"),
     },
     {
       path: "/training/:id",
       name: "training",
-      component: () => import("../views/TrainingView.vue"),
+      component: () => import("../views/Training/TrainingView.vue"),
       props: true,
     },
     {
       path: "/training/edit/:id",
       name: "editTraining",
-      component: () => import("../views/EditTrainingView.vue"),
+      component: () => import("../views/Training/EditTrainingView.vue"),
     },
   ],
 });
