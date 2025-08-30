@@ -12,7 +12,7 @@
         </select>
         <input placeholder="Type" id="type" name="type" type="text" v-if="customTypeInput" @keydown.enter="changeFocus('repUnit-selection')" />
         <select id="repUnit-selection" @change="checkSetUnitInput()">
-          <option v-for="setRepUnit in setRepUnits" :key="setRepUnit" :value="setRepUnit">
+          <option :selected="setRepUnit === 'Wdh.'" v-for="setRepUnit in setRepUnits" :key="setRepUnit" :value="setRepUnit">
             {{ setRepUnit }}
           </option>
           <option value="Custom">Custom</option>
