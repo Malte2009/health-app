@@ -155,7 +155,7 @@
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
 import { useTrainingStore } from "@/stores/training.ts";
-import { onMounted, ref } from "vue";
+import { onBeforeMount, ref } from "vue";
 import AddExercise from "@/components/Exercise/AddExercise.vue";
 import AddSet from "@/components/Set/AddSet.vue";
 import ChangeSet from "@/components/Set/ChangeSet.vue";
@@ -419,7 +419,7 @@ function reloadTrainingFromStore() {
   }
 }
 
-onMounted(async () => {
+onBeforeMount(async () => {
   typeStore.checkTypes();
   if (!training.value) {
     const getTraining = await getTrainingById(trainingsId);
@@ -430,8 +430,10 @@ onMounted(async () => {
     } else {
       await router.push({ name: "home" });
     }
-
-    console.log(training);
+  }
+  if (training.value) {
+    await trainingStore.sortExercises(training.value.id);
+    await trainingStore.sortSets(training.value.id);
   }
 });
 </script>

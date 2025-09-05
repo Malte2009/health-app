@@ -1,5 +1,5 @@
 export function roundTo(n: number, digits: number) {
-  var negative = false;
+  let negative = false;
   if (digits === undefined) {
     digits = 0;
   }
@@ -7,7 +7,7 @@ export function roundTo(n: number, digits: number) {
     negative = true;
     n = n * -1;
   }
-  var multiplicator = Math.pow(10, digits);
+  const multiplicator = Math.pow(10, digits);
   n = parseFloat((n * multiplicator).toFixed(11));
   n = parseFloat((Math.round(n) / multiplicator).toFixed(digits));
   if (negative) {

@@ -59,7 +59,7 @@ async function submit() {
       exercise.style.borderColor = "var(--border)";
     });
 
-    await trainingStore.sortExercieses(props.trainingId);
+    await trainingStore.sortExercises(props.trainingId);
 
     return;
   }
