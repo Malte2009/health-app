@@ -17,8 +17,10 @@ import { onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth.ts";
 import { setCookie } from "@/utility/cookie.ts";
 import { isAuthenticated, login } from "@/services/authService.ts";
+import { useTypeStore } from "@/stores/type.ts";
 
 const authStore = useAuthStore();
+const typeStore = useTypeStore();
 
 const router = useRouter();
 
@@ -38,6 +40,8 @@ async function submit() {
   authStore.setToken(token);
 
   setCookie("token", token, 1);
+
+  await typeStore.loadTypes();
 
   await route();
 }
