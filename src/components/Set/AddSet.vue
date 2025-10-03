@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import type { createSetRequestType } from "@/types/setType.ts";
-import { createSetRequest, getSetTypes, getSetUnits } from "@/services/setService.ts";
+import { createSetRequest, getSetUnits } from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
@@ -52,6 +52,22 @@ const customRepUnitInput = ref(false);
 
 function checkTypeInput() {
   const input = document.getElementById("type-selection") as HTMLSelectElement;
+
+  if (input.value === "Pause") {
+    const weightInput = document.getElementById("weight") as HTMLInputElement;
+    const repUnitInput = document.getElementById("repUnit-selection") as HTMLInputElement;
+    weightInput.value = "0";
+    repUnitInput.value = "s";
+    weightInput.style.display = "none";
+  } else {
+    const weightInput = document.getElementById("weight") as HTMLInputElement;
+    const repUnitInput = document.getElementById("repUnit-selection") as HTMLInputElement;
+
+    weightInput.style.display = "block";
+
+    weightInput.value = "";
+    repUnitInput.value = "Wdh.";
+  }
 
   customTypeInput.value = input.value === "Custom";
 }
@@ -87,6 +103,9 @@ async function submit() {
 
     if (newSet) {
       trainingStore.addSet(newSet);
+
+      if (customRepUnitInput.value) typeStore.addSetUnitType(type);
+      if (customTypeInput.value) typeStore.addSetType(type);
     }
   } catch (error) {
     if (error as AxiosError) {

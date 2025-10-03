@@ -5,14 +5,14 @@
       <h1>Edit Set</h1>
       <div class="inputs">
         <select id="type-selection" @change="checkTypeInput()">
-          <option :selected="setType === 'Work'" v-for="setType in setTypes" :key="setType || ''" :value="setType">
+          <option v-for="setType in setTypes" :key="setType || ''" :value="setType">
             {{ setType }}
           </option>
           <option value="Custom">Custom</option>
         </select>
         <input placeholder="Type" id="type" name="type" type="text" v-if="customTypeInput" @keydown.enter="changeFocus('repUnit-selection')" />
         <select id="repUnit-selection" @change="checkSetUnitInput()">
-          <option :selected="setRepUnit === 'Wdh.'" v-for="setRepUnit in setRepUnits" :key="setRepUnit" :value="setRepUnit">
+          <option v-for="setRepUnit in setRepUnits" :key="setRepUnit" :value="setRepUnit">
             {{ setRepUnit }}
           </option>
           <option value="Custom">Custom</option>
@@ -52,13 +52,34 @@ const customRepUnitInput = ref(false);
 function checkTypeInput() {
   const input = document.getElementById("type-selection") as HTMLSelectElement;
 
+  if (input.value === "Pause") {
+    const weightInput = document.getElementById("weight") as HTMLInputElement;
+    const repUnitInput = document.getElementById("repUnit-selection") as HTMLInputElement;
+    weightInput.value = "0";
+    repUnitInput.value = "s";
+    weightInput.style.display = "none";
+  } else {
+    const weightInput = document.getElementById("weight") as HTMLInputElement;
+    const repUnitInput = document.getElementById("repUnit-selection") as HTMLInputElement;
+    const oldWeight = trainingStore.getSetById(props.setId)?.weight;
+    const oldRepUnit = trainingStore.getSetById(props.setId)?.repUnit;
+
+    weightInput.style.display = "block";
+
+    if (weightInput.value === "0" || weightInput.value === "") {
+      weightInput.value = oldWeight?.toString() || "0";
+    }
+
+    if (repUnitInput.value === "" || repUnitInput.value === "s") {
+      repUnitInput.value = oldRepUnit || "";
+    }
+  }
+
   customTypeInput.value = input.value === "Custom";
 }
 
 function checkSetUnitInput() {
   const input = document.getElementById("repUnit-selection") as HTMLSelectElement;
-
-  console.log(input.value);
 
   customRepUnitInput.value = input.value === "Custom";
 }
@@ -86,6 +107,9 @@ async function submit() {
 
     if (changedSet) {
       trainingStore.updateSet(changedSet);
+
+      if (customRepUnitInput.value) typeStore.addSetUnitType(type);
+      if (customTypeInput.value) typeStore.addSetType(type);
     }
   } catch (error) {
     if (error as AxiosError) {
@@ -101,8 +125,6 @@ async function submit() {
 
 function handleError(error: AxiosError) {
   if (error?.response?.data) {
-    console.log(error.response.data);
-
     switch (error.response.data) {
       case "Type must be a string":
       case "Type must be less than 50 characters":
@@ -206,12 +228,13 @@ onMounted(async () => {
   const repsInput = document.getElementById("reps") as HTMLInputElement;
   setTypes.value = typeStore.getSetTypes;
   setRepUnits.value = typeStore.getSetRepUnitTypes;
-  await loadOldSetData();
   if (repsInput) {
     repsInput.focus();
   }
 
-  await sleep(100);
+  await sleep(10);
+  await loadOldSetData();
+  await sleep(10);
   checkSetUnitInput();
   checkTypeInput();
 });
