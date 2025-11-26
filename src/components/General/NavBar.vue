@@ -4,16 +4,28 @@
     <div class="middle">
       <button :class="{ active: route.name === 'trainings' }" @click="router.push('/trainings')">Trainings Overview</button>
     </div>
-    <div class="end"></div>
+    <div class="end">
+      <button class="logout-button" @click="logout">Logout</button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
 import { onMounted } from "vue";
+import { useAuthStore } from "@/stores/auth.ts";
+import { logoutUser } from "@/services/authService.ts";
 
 const router = useRouter();
 const route = useRoute();
+
+const authStore = useAuthStore();
+
+async function logout() {
+  await logoutUser();
+  authStore.setToken("");
+  await router.push({ name: "login" });
+}
 
 onMounted(() => {
   console.log(route.name);
@@ -24,6 +36,14 @@ onMounted(() => {
   background: #1c2839 !important;
   color: #90caf9 !important;
   box-shadow: 0 2px 8px 0 rgba(70, 130, 230, 0.13) !important;
+}
+
+.logout-button {
+  background: var(--danger) !important;
+}
+
+.logout-button:hover {
+  background: var(--danger-secondary) !important;
 }
 
 .navbar button {

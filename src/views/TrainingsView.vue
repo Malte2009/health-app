@@ -192,6 +192,6 @@ onMounted(async () => {
 }
 
 .button-danger:hover {
-  background-color: #e83f60;
+  background-color: var(--danger-secondary);
 }
 </style>

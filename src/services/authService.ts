@@ -32,3 +32,11 @@ export const getUserAge = async (): Promise<number | void> => {
     return console.error(error);
   }
 };
+
+export const logoutUser = async (): Promise<string | void> => {
+  try {
+    return api.post("/users/logout");
+  } catch (error) {
+    return console.error(error);
+  }
+}
