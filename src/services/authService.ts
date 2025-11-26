@@ -17,8 +17,12 @@ export const register = async (data: { email: string; name: string; password: st
   return api.post("/users/register", data);
 };
 
-export const login = async (email: string, password: string): Promise<string> => {
-  return (await api.post("/users/login", { email, password })).data;
+export const login = async (email: string, password: string): Promise<string | undefined> => {
+  try {
+    return (await api.post("/users/login", { email, password })).data;
+  } catch (error) {
+    console.error(error);
+  }
 };
 
 export const getUserAge = async (): Promise<number | void> => {

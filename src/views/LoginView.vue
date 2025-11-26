@@ -37,6 +37,25 @@ async function submit() {
 
   const token = await login(email, password);
 
+  if (!token) {
+    const emailInput = document.getElementById("email") as HTMLInputElement;
+    const passwordInput = document.getElementById("password") as HTMLInputElement;
+
+    emailInput.style.borderColor = "var(--danger)";
+    passwordInput.style.borderColor = "var(--danger)";
+
+    emailInput.addEventListener("focus", () => {
+      emailInput.style.borderColor = "var(--border)";
+      passwordInput.style.borderColor = "var(--border)";
+    });
+
+    passwordInput.addEventListener("focus", () => {
+      passwordInput.style.borderColor = "var(--border)";
+      emailInput.style.borderColor = "var(--border)";
+    });
+    return
+  }
+
   authStore.setToken(token);
 
   setCookie("token", token, 1);
@@ -97,7 +116,7 @@ p a {
 .login input[type="password"] {
   opacity: 1;
   display: block;
-  border: none;
+  border: 1px solid var(--border);
   outline: none;
   width: 100%;
   padding: 13px 18px;
