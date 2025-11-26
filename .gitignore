@@ -31,3 +31,5 @@ coverage
 
 .env
 
+# NPM package files
+package-lock.json
