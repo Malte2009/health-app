@@ -21,7 +21,7 @@
             <table class="exercise-table">
               <tr>
                 <th>Exercises</th>
-                <th v-for="sets in getSetRangeFromLongestExercise(training)" :key="sets">Set {{ sets }}</th>
+                <th v-for="sets in getHeadingNames(training)" :key="sets">{{ sets }}</th>
               </tr>
               <tr
                 :class="{ dragging: draggingExerciseIndex === index, focused: currentExerciseIndex === index }"
@@ -55,6 +55,7 @@
                   :class="{
                     work: set.type === 'Work',
                     warmup: set.type === 'Warmup',
+                    pause: set.type === 'Pause',
                     focused: currentSetIndex?.setIndex === setIndex && currentSetIndex?.index === index,
                     dragging: draggingSetIndex?.setIndex === setIndex && draggingSetIndex?.index === index,
                   }"
@@ -302,7 +303,7 @@ function onSetDrop(targetExerciseIndex: number, targetSetIndex: number) {
   draggingSetIndex.value = null;
 }
 
-function getSetRangeFromLongestExercise(training: getTrainingResponseType): number[] {
+function getHeadingNames(training: getTrainingResponseType): string[] {
   if (!training.exercises || training.exercises.length === 0) return [];
 
   let maxSetCount = 0;
@@ -314,7 +315,17 @@ function getSetRangeFromLongestExercise(training: getTrainingResponseType): numb
     }
   }
 
-  return Array.from({ length: maxSetCount + 1 }, (_, i) => i + 1);
+  const nameArray: string[] = [];
+
+  for (let i = 1; i <= maxSetCount; i++) {
+    if (i % 2 === 0) {
+      nameArray.push("Pause " + i / 2);
+    } else {
+      nameArray.push("Set " + Math.ceil(i / 2));
+    }
+  }
+
+  return nameArray;
 }
 
 function addSetToExercise(exerciseId: string) {
