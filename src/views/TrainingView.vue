@@ -64,7 +64,8 @@
                   v-for="(set, setIndex) in exercise.sets"
                   :key="set.id"
                 >
-                  {{ set.reps }}{{ set.repUnit }} | {{ set.weight }}kg
+                  <p v-if="set?.type != 'Pause'">{{ set.reps + set.repUnit}} | {{ set.weight }}kg</p>
+                  <p v-if="set?.type === 'Pause'">{{ set.reps + set.repUnit }}</p>
                 </td>
                 <td @click="addSetToExercise(exercise.id)" class="add-Button">+</td>
               </tr>
