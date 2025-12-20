@@ -29,6 +29,26 @@ export const useTypeStore = defineStore("typeStore", {
     setSetUnitTypes(types: string[]) {
       this.setRepUnitTypes = types;
     },
+    addTrainingType(type: string) {
+      if (!this.trainingTypes.includes(type)) {
+        this.trainingTypes.push(type);
+      }
+    },
+    addSetType(type: string) {
+      if (!this.setTypes.includes(type)) {
+        this.setTypes.push(type);
+      }
+    },
+    addExerciseType(type: string) {
+      if (!this.exerciseTypes.includes(type)) {
+        this.exerciseTypes.push(type);
+      }
+    },
+    addSetUnitType(type: string) {
+      if (!this.setRepUnitTypes.includes(type)) {
+        this.setRepUnitTypes.push(type);
+      }
+    },
     clearTypes() {
       this.trainingTypes = [];
       this.setTypes = [];
