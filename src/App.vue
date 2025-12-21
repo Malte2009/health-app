@@ -34,9 +34,6 @@ onMounted(async () => {
     authStore.setToken(token);
     await typeStore.loadTypes();
     await trainingsStore.loadTrainings();
-    if (router.currentRoute.value.name === "/home") await router.push({ name: "trainings" });
-    if (router.currentRoute.value.name === "/") await router.push({ name: "trainings" });
-    if (router.currentRoute.value.name === "/login") await router.push({ name: "trainings" });
   } else {
     await router.push({ name: "login" });
   }

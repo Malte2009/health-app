@@ -13,10 +13,11 @@ import TrainingsView from "@/views/TrainingsView.vue";
 const authStore = useAuthStore();
 const router = useRouter();
 
-onMounted(() => {
+onMounted(async () => {
   if (!authStore.isAuthenticated) {
-    console.log(2);
-    router.push({ name: "login" });
+    await router.push({ name: "login" });
+  } else {
+    await router.push({ name: "trainings" });
   }
 });
 </script>
