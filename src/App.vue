@@ -4,19 +4,16 @@
 </template>
 
 <script setup lang="ts">
-import { RouterView, useRouter } from "vue-router";
+import { RouterView } from "vue-router";
 
 import { onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth.ts";
 import { isAuthenticated } from "@/services/authService.ts";
 import NavBar from "@/components/General/NavBar.vue";
 import { useTypeStore } from "@/stores/type.ts";
-import { useTrainingStore } from "@/stores/training.ts";
 
-const router = useRouter();
 const authStore = useAuthStore();
 const typeStore = useTypeStore();
-const trainingsStore = useTrainingStore();
 
 function setViewport(scale: number) {
   let viewport = document.querySelector('meta[name="viewport"]');
@@ -33,9 +30,6 @@ onMounted(async () => {
   if (token) {
     authStore.setToken(token);
     await typeStore.loadTypes();
-    await trainingsStore.loadTrainings();
-  } else {
-    await router.push({ name: "login" });
   }
 });
 </script>
