@@ -25,7 +25,7 @@
               </tr>
               <tr
                 :class="{ dragging: draggingExerciseIndex === index, focused: currentExerciseIndex === index }"
-                v-for="(exercise, index) in training.exercises"
+                v-for="(exercise, index) in training.exerciseLogs"
                 :key="exercise.id"
               >
                 <td
@@ -80,23 +80,23 @@
       </div>
     </div>
 
-    <div v-if="addExercise" class="add-Exercise">
+    <div v-if="addExerciseLog" class="add-Exercise">
       <AddExercise
         @close="
-          addExercise = false;
+          addExerciseLog = false;
           reloadTrainingFromStore();
         "
         :trainingId="trainingsId"
       ></AddExercise>
     </div>
 
-    <div v-if="changeExerciseCon" class="add-Exercise">
+    <div v-if="changeExerciseLogCon" class="add-Exercise">
       <ChangeExercise
         @close="
-          changeExerciseCon = false;
+          changeExerciseLogCon = false;
           reloadTrainingFromStore();
         "
-        :exerciseId="editExerciseId"
+        :exerciseLogId="editExerciseLogId"
       ></ChangeExercise>
     </div>
 
@@ -106,7 +106,7 @@
           addSet = false;
           reloadTrainingFromStore();
         "
-        :exerciseId="selectedExerciseId"
+        :exerciseLogId="selectedExerciseLogId"
       ></AddSet>
     </div>
 
@@ -164,7 +164,7 @@ import ChangeSet from "@/components/Set/ChangeSet.vue";
 import ChangeExercise from "@/components/Exercise/ChangeExercise.vue";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { getTrainingById, updateTraining } from "@/services/trainingService.ts";
-import { deleteExerciseRequest } from "@/services/exerciseService.ts";
+import { deleteExerciseLogRequest } from "@/services/exerciseLogService.ts";
 import { deleteSetRequest } from "@/services/setService.ts";
 import { useTypeStore } from "@/stores/type.ts";
 
@@ -178,8 +178,8 @@ const route = useRoute();
 const trainingsId = route.params.id as string;
 const training = ref(trainingStore.getTrainingById(trainingsId));
 
-const addExercise = ref(false);
-const changeExerciseCon = ref(false);
+const addExerciseLog = ref(false);
+const changeExerciseLogCon = ref(false);
 const addSet = ref(false);
 const changeSetCon = ref(false);
 const showConfirmDelete = ref(false);
@@ -190,26 +190,27 @@ const currentExerciseIndex = ref<number | null>(null);
 const draggingSetIndex = ref<{ setIndex: number; index: number } | null>(null);
 const currentSetIndex = ref<{ setIndex: number; index: number } | null>(null);
 
-const selectedExerciseId = ref<string>("");
+const selectedExerciseLogId = ref<string>("");
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const selectedSetId = ref<string>("");
 
-const editExerciseId = ref<string>("");
+const editExerciseLogId = ref<string>("");
 const editSetId = ref<string>("");
 
 function confirmDelete() {
-  if (editExerciseId.value) {
+  if (editExerciseLogId.value) {
     deleteExercise();
   } else if (editSetId.value) {
     deleteSet();
   }
   showConfirmDelete.value = false;
-  editExerciseId.value = "";
+  editExerciseLogId.value = "";
   editSetId.value = "";
 }
 
 function cancelDelete() {
   showConfirmDelete.value = false;
-  editExerciseId.value = "";
+  editExerciseLogId.value = "";
   editSetId.value = "";
 }
 
@@ -256,18 +257,18 @@ function onExerciseDrop(targetIndex: number) {
     return;
   }
 
-  const moved = training.value?.exercises[draggingExerciseIndex.value];
+  const moved = training.value?.exerciseLogs[draggingExerciseIndex.value];
   if (!moved || !training.value) {
     draggingExerciseIndex.value = null;
     return;
   }
 
-  training.value.exercises.splice(draggingExerciseIndex.value, 1);
+  training.value.exerciseLogs.splice(draggingExerciseIndex.value, 1);
 
-  training.value.exercises.splice(targetIndex, 0, moved);
+  training.value.exerciseLogs.splice(targetIndex, 0, moved);
 
-  training.value.exercises.forEach((exercise, index) => {
-    exercise.order = index;
+  training.value.exerciseLogs.forEach((exerciseLog, index) => {
+    exerciseLog.order = index;
   });
 
   trainingStore.changeTraining(trainingsId, training.value);
@@ -283,19 +284,19 @@ function onSetDrop(targetExerciseIndex: number, targetSetIndex: number) {
     return;
   }
 
-  const moved = training.value?.exercises[targetExerciseIndex].sets[draggingSetIndex.value.setIndex];
+  const moved = training.value?.exerciseLogs[targetExerciseIndex].sets[draggingSetIndex.value.setIndex];
   if (!moved || !training.value) {
     draggingSetIndex.value = null;
     return;
   }
 
-  training.value.exercises[targetExerciseIndex].sets.splice(draggingSetIndex.value.setIndex, 1);
+  training.value.exerciseLogs[targetExerciseIndex].sets.splice(draggingSetIndex.value.setIndex, 1);
 
-  training.value.exercises[targetExerciseIndex].sets.splice(targetSetIndex, 0, moved);
+  training.value.exerciseLogs[targetExerciseIndex].sets.splice(targetSetIndex, 0, moved);
 
   trainingStore.changeTraining(trainingsId, training.value);
 
-  training.value.exercises[targetExerciseIndex].sets.forEach((set, index) => {
+  training.value.exerciseLogs[targetExerciseIndex].sets.forEach((set, index) => {
     set.order = index;
   });
 
@@ -305,11 +306,11 @@ function onSetDrop(targetExerciseIndex: number, targetSetIndex: number) {
 }
 
 function getHeadingNames(training: getTrainingResponseType): string[] {
-  if (!training.exercises || training.exercises.length === 0) return [];
+  if (!training.exerciseLogs || training.exerciseLogs.length === 0) return [];
 
   let maxSetCount = 0;
 
-  for (const exercise of training.exercises) {
+  for (const exercise of training.exerciseLogs) {
     const setCount = exercise.sets?.length || 0;
     if (setCount > maxSetCount) {
       maxSetCount = setCount;
@@ -331,19 +332,19 @@ function getHeadingNames(training: getTrainingResponseType): string[] {
 
 function addSetToExercise(exerciseId: string) {
   addSet.value = true;
-  selectedExerciseId.value = exerciseId;
+  selectedExerciseLogId.value = exerciseId;
   console.log(`Add set to exercise with ID: ${exerciseId}`);
 }
 
 function addExerciseToTraining(trainingId: string) {
-  addExercise.value = true;
+  addExerciseLog.value = true;
   console.log(`Add new exercise to training with ID: ${trainingId}`);
 }
 
 function exerciseContextMenu(event: MouseEvent, exerciseId: string) {
   event.preventDefault();
   // Logic to handle context menu for exercise
-  editExerciseId.value = exerciseId;
+  editExerciseLogId.value = exerciseId;
 
   const menu = document.querySelector(".exercise-context-menu") as HTMLDivElement;
   if (menu) {
@@ -381,7 +382,7 @@ function hideContextMenu() {
 }
 
 async function changeExercise() {
-  changeExerciseCon.value = true;
+  changeExerciseLogCon.value = true;
 
   hideContextMenu();
 }
@@ -393,9 +394,9 @@ async function changeSet() {
 }
 
 async function deleteExercise() {
-  trainingStore.removeExercise(editExerciseId.value);
-  await deleteExerciseRequest(editExerciseId.value);
-  editExerciseId.value = "";
+  trainingStore.removeExerciseLog(editExerciseLogId.value);
+  await deleteExerciseLogRequest(editExerciseLogId.value);
+  editExerciseLogId.value = "";
 }
 
 async function deleteSet() {
@@ -444,7 +445,7 @@ onBeforeMount(async () => {
     }
   }
   if (training.value) {
-    await trainingStore.sortExercises(training.value.id);
+    await trainingStore.sortExerciseLogs(training.value.id);
     await trainingStore.sortSets(training.value.id);
   }
 });

@@ -1,10 +1,10 @@
 <template>
-  <div class="add-exercise">
+  <div class="add-exerciseLog">
     <div class="container">
       <div @click="$emit('close')" class="close">x</div>
       <h1>Change Exercise</h1>
       <div class="inputs">
-        <select id="exerciseName" @change="checkInput()">
+        <select id="exerciseLogName" @change="checkInput()">
           <option value="" disabled selected>Select an exercise</option>
           <option v-for="exercise in typeStore.getExerciseTypes" :key="exercise" :value="exercise">
             {{ exercise }}
@@ -12,7 +12,7 @@
           <option value="Custom">Custom</option>
         </select>
         <input v-if="showCustomInput" id="customName" placeholder="Exercise Name" type="text" @keydown.enter="submit()" />
-        <input id="exerciseNotes" placeholder="Notes (optional)" type="text" />
+        <input id="exerciseLogNotes" placeholder="Notes (optional)" type="text" />
         <button class="button" @click="submit">Submit</button>
       </div>
     </div>
@@ -20,8 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import { changeExercise } from "@/services/exerciseService.ts";
-import type { changeExerciseRequest, exercise } from "@/types/exerciseType.ts";
+import { changeExerciseLog } from "@/services/exerciseLogService.ts";
+import type { changeExerciseLogRequest, exerciseLog } from "@/types/exerciseLogType.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
 import { useTrainingStore } from "@/stores/training.ts";
@@ -31,52 +31,52 @@ const trainingStore = useTrainingStore();
 
 const emit = defineEmits(["close", "reload"]);
 
-const exercise = ref<exercise>();
+const exerciseLog = ref<exerciseLog>();
 
 const props = defineProps<{
-  exerciseId: string;
+  exerciseLogId: string;
 }>();
 
 const showCustomInput = ref(false);
 
 function checkInput() {
-  const input = document.getElementById("exerciseName") as HTMLSelectElement;
+  const input = document.getElementById("exerciseLogName") as HTMLSelectElement;
 
   showCustomInput.value = input.value === "Custom";
 }
 
 async function submit() {
-  let exerciseName = (document.getElementById("exerciseName") as HTMLInputElement).value;
+  let exerciseName = (document.getElementById("exerciseLogName") as HTMLInputElement).value;
 
   if (showCustomInput.value) {
     exerciseName = (document.getElementById("customName") as HTMLInputElement).value;
   }
 
   if (exerciseName.trim() === "") {
-    const exercise = document.getElementById("exerciseName") as HTMLInputElement;
+    const exerciseInput = document.getElementById("exerciseLogName") as HTMLInputElement;
 
-    exercise.style.borderColor = "var(--danger)";
+    exerciseInput.style.borderColor = "var(--danger)";
 
-    exercise.addEventListener("focus", () => {
-      exercise.style.borderColor = "var(--border)";
+    exerciseInput.addEventListener("focus", () => {
+      exerciseInput.style.borderColor = "var(--border)";
     });
     return;
   }
 
-  const exerciseData: changeExerciseRequest = {
-    id: props.exerciseId,
+  const exerciseLogData: changeExerciseLogRequest = {
+    id: props.exerciseLogId,
     name: exerciseName,
-    notes: (document.getElementById("exerciseNotes") as HTMLInputElement).value || "",
+    notes: (document.getElementById("exerciseLogNotes") as HTMLInputElement).value || "",
   };
 
-  const changedExercise = await changeExercise(exerciseData);
+  const changedExerciseLog = await changeExerciseLog(exerciseLogData);
 
-  if (!changedExercise) {
+  if (!changedExerciseLog) {
     console.error("Failed to change exercise");
     return;
   }
 
-  trainingStore.updateExercise(changedExercise);
+  trainingStore.updateExerciseLog(changedExerciseLog);
 
   emit("close");
 
@@ -84,19 +84,19 @@ async function submit() {
 }
 
 onMounted(async () => {
-  const exerciseNameInput = document.getElementById("exerciseName") as HTMLInputElement;
-  const exerciseNotes = document.getElementById("exerciseNotes") as HTMLInputElement;
+  const exerciseNameInput = document.getElementById("exerciseLogName") as HTMLInputElement;
+  const exerciseNotes = document.getElementById("exerciseLogNotes") as HTMLInputElement;
   exerciseNameInput.focus();
 
   try {
-    const oldExercise = trainingStore.getExerciseById(props.exerciseId);
+    const oldExerciseLog = trainingStore.getExerciseLogById(props.exerciseLogId);
 
-    if (oldExercise) {
-      exercise.value = oldExercise;
-      exerciseNameInput.value = oldExercise.name;
-      exerciseNotes.value = oldExercise.notes || "";
+    if (oldExerciseLog) {
+      exerciseLog.value = oldExerciseLog;
+      exerciseNameInput.value = oldExerciseLog.name;
+      exerciseNotes.value = oldExerciseLog.notes || "";
     } else {
-      console.error("Exercise not found");
+      console.error("ExerciseLog not found");
     }
   } catch (error) {
     console.error("Failed to fetch exercise names:", error);
@@ -107,7 +107,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.add-exercise {
+.add-exerciseLog {
   padding: 20px;
   background-color: var(--bg-surface);
   border-radius: 8px;

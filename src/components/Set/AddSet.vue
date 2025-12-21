@@ -40,7 +40,7 @@ const typeStore = useTypeStore();
 const trainingStore = useTrainingStore();
 
 const props = defineProps<{
-  exerciseId: string;
+  exerciseLogId: string;
 }>();
 
 const setTypes = ref<string[]>([]);
@@ -94,7 +94,7 @@ async function submit() {
     type,
     reps,
     weight,
-    exerciseId: props.exerciseId,
+    exerciseLogId: props.exerciseLogId,
     repUnit,
   };
 

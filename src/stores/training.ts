@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
-import type { exercise } from "@/types/exerciseType.ts";
+import type { exerciseLog } from "@/types/exerciseLogType.ts";
 import type { set } from "@/types/setType.ts";
 import { getTrainings } from "@/services/trainingService.ts";
 
@@ -15,22 +15,22 @@ export const useTrainingStore = defineStore("trainingStore", {
     getTrainingById: (state) => {
       return (id: string) => state.trainings.find((training) => training.id === id);
     },
-    getExerciseById: (state) => {
-      return (exerciseId: string) => {
-        return state.trainings.flatMap((training) => training.exercises).find((exercise) => exercise.id === exerciseId);
+    getExerciseLogById: (state) => {
+      return (exerciseLogId: string) => {
+        return state.trainings.flatMap((training) => training.exerciseLogs).find((exerciseLog) => exerciseLog.id === exerciseLogId);
       };
     },
     getSetById: (state) => {
       return (setId: string) => {
-        return state.trainings.flatMap((training) => training.exercises.flatMap((exercise) => exercise.sets)).find((set) => set.id === setId);
+        return state.trainings.flatMap((training) => training.exerciseLogs.flatMap((exerciseLog) => exerciseLog.sets)).find((set) => set.id === setId);
       };
     },
   },
   actions: {
-    async sortExercises(trainingId: string) {
+    async sortExerciseLogs(trainingId: string) {
       const training = this.trainings.find((t) => t.id === trainingId);
       if (training) {
-        training.exercises.sort((a, b) => a.order - b.order);
+        training.exerciseLogs.sort((a, b) => a.order - b.order);
       } else {
         console.warn(`Training with ID ${trainingId} not found.`);
       }
@@ -39,8 +39,8 @@ export const useTrainingStore = defineStore("trainingStore", {
       const training = this.trainings.find((t) => t.id === trainingId);
 
       if (training) {
-        training.exercises.forEach((exercise) => {
-          exercise.sets.sort((a, b) => a.order - b.order);
+        training.exerciseLogs.forEach((exerciseLog) => {
+          exerciseLog.sets.sort((a, b) => a.order - b.order);
         });
       }
     },
@@ -70,63 +70,63 @@ export const useTrainingStore = defineStore("trainingStore", {
     setTrainings(trainings: getTrainingResponseType[]) {
       this.trainings = trainings;
     },
-    addExercise(exercise: exercise) {
-      const trainingId = exercise.trainingId;
+    addExerciseLog(exerciseLog: exerciseLog) {
+      const trainingId = exerciseLog.trainingId;
       const training = this.trainings.find((t) => t.id === trainingId);
       if (training) {
-        training.exercises.push(exercise);
+        training.exerciseLogs.push(exerciseLog);
       }
     },
-    updateExercise(exercise: exercise) {
-      const trainingId = exercise.trainingId;
+    updateExerciseLog(exerciseLog: exerciseLog) {
+      const trainingId = exerciseLog.trainingId;
       const training = this.trainings.find((t) => t.id === trainingId);
       if (training) {
-        const index = training.exercises.findIndex((e) => e.id === exercise.id);
+        const index = training.exerciseLogs.findIndex((e) => e.id === exerciseLog.id);
         if (index !== -1) {
-          training.exercises[index] = exercise;
+          training.exerciseLogs[index] = exerciseLog;
         } else {
-          console.warn(`Exercise with ID ${exercise.id} not found in training ${trainingId}.`);
+          console.warn(`Exercise with ID ${exerciseLog.id} not found in training ${trainingId}.`);
         }
       } else {
         console.warn(`Training with ID ${trainingId} not found.`);
       }
     },
-    removeExercise(exerciseId: string) {
+    removeExerciseLog(exerciseLogId: string) {
       for (const training of this.trainings) {
-        const index = training.exercises.findIndex((e) => e.id === exerciseId);
+        const index = training.exerciseLogs.findIndex((e) => e.id === exerciseLogId);
         if (index !== -1) {
-          training.exercises.splice(index, 1);
+          training.exerciseLogs.splice(index, 1);
           return;
         }
       }
-      console.warn(`Exercise with ID ${exerciseId} not found in any training.`);
+      console.warn(`Exercise with ID ${exerciseLogId} not found in any training.`);
     },
     addSet(set: set) {
-      const exerciseId = set.exerciseId;
-      const exercise = this.getExerciseById(exerciseId);
+      const exerciseLogId = set.exerciseLogId;
+      const exercise = this.getExerciseLogById(exerciseLogId);
       if (exercise) {
         exercise.sets.push(set);
       } else {
-        console.warn(`Exercise with ID ${exerciseId} not found.`);
+        console.warn(`Exercise with ID ${exerciseLogId} not found.`);
       }
     },
     updateSet(set: set) {
-      const exerciseId = set.exerciseId;
-      const exercise = this.getExerciseById(exerciseId);
+      const exerciseLogId = set.exerciseLogId;
+      const exercise = this.getExerciseLogById(exerciseLogId);
       if (exercise) {
         const index = exercise.sets.findIndex((s) => s.id === set.id);
         if (index !== -1) {
           exercise.sets[index] = set;
         } else {
-          console.warn(`Set with ID ${set.id} not found in exercise ${exerciseId}.`);
+          console.warn(`Set with ID ${set.id} not found in exercise ${exerciseLogId}.`);
         }
       } else {
-        console.warn(`Exercise with ID ${exerciseId} not found.`);
+        console.warn(`Exercise with ID ${exerciseLogId} not found.`);
       }
     },
     removeSet(setId: string) {
       for (const training of this.trainings) {
-        for (const exercise of training.exercises) {
+        for (const exercise of training.exerciseLogs) {
           const index = exercise.sets.findIndex((s) => s.id === setId);
           if (index !== -1) {
             exercise.sets.splice(index, 1);

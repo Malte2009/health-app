@@ -1,18 +1,18 @@
 <template>
-  <div class="add-exercise">
+  <div class="add-exerciseLog">
     <div class="container">
       <div @click="$emit('close')" class="close">x</div>
       <h1>Add Exercise</h1>
       <div class="inputs">
-        <select id="exerciseName" @change="checkInput()">
+        <select id="exerciseLogName" @change="checkInput()">
           <option value="" disabled selected>Select an exercise</option>
           <option v-for="exercise in typeStore.getExerciseTypes" :key="exercise" :value="exercise">
             {{ exercise }}
           </option>
           <option value="Custom">Custom</option>
         </select>
-        <input v-if="showCustomInput" id="customName" placeholder="Exercise Name" type="text" @keydown.enter="changeFocus('exerciseNotes')" />
-        <input id="exerciseNotes" placeholder="Notes (optional)" type="text" @keydown.enter="submit()" />
+        <input v-if="showCustomInput" id="customName" placeholder="Exercise Name" type="text" @keydown.enter="changeFocus('exerciseLogNotes')" />
+        <input id="exerciseLogNotes" placeholder="Notes (optional)" type="text" @keydown.enter="submit()" />
         <button class="button" @click="submit">Submit</button>
       </div>
     </div>
@@ -20,8 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import { createExercise } from "@/services/exerciseService.ts";
-import type { createExerciseLogRequest } from "@/types/exerciseType.ts";
+import { createExerciseLog } from "@/services/exerciseLogService.ts";
+import type { createExerciseLogRequest } from "@/types/exerciseLogType.ts";
 import { onMounted, ref } from "vue";
 import { useTrainingStore } from "@/stores/training.ts";
 import { useTypeStore } from "@/stores/type.ts";
@@ -38,28 +38,28 @@ const props = defineProps<{
 const showCustomInput = ref(false);
 
 function checkInput() {
-  const input = document.getElementById("exerciseName") as HTMLSelectElement;
+  const input = document.getElementById("exerciseLogName") as HTMLSelectElement;
 
   showCustomInput.value = input.value === "Custom";
 }
 
 async function submit() {
-  let exerciseName = (document.getElementById("exerciseName") as HTMLInputElement).value;
+  let exerciseName = (document.getElementById("exerciseLogName") as HTMLInputElement).value;
 
   if (showCustomInput.value) {
     exerciseName = (document.getElementById("customName") as HTMLInputElement).value;
   }
 
   if (exerciseName.trim() === "") {
-    const exercise = document.getElementById("exerciseName") as HTMLInputElement;
+    const exerciseInput = document.getElementById("exerciseLogName") as HTMLInputElement;
 
-    exercise.style.borderColor = "var(--danger)";
+    exerciseInput.style.borderColor = "var(--danger)";
 
-    exercise.addEventListener("focus", () => {
-      exercise.style.borderColor = "var(--border)";
+    exerciseInput.addEventListener("focus", () => {
+      exerciseInput.style.borderColor = "var(--border)";
     });
 
-    await trainingStore.sortExercises(props.trainingId);
+    await trainingStore.sortExerciseLogs(props.trainingId);
 
     return;
   }
@@ -67,18 +67,18 @@ async function submit() {
   const exerciseData: createExerciseLogRequest = {
     name: exerciseName,
     trainingId: props.trainingId,
-    order: trainingStore.getTrainingById(props.trainingId)?.exercises.length || 0,
-    notes: (document.getElementById("exerciseNotes") as HTMLTextAreaElement).value || undefined,
+    order: trainingStore.getTrainingById(props.trainingId)?.exerciseLogs.length || 0,
+    notes: (document.getElementById("exerciseLogNotes") as HTMLTextAreaElement).value || undefined,
   };
 
-  const newExercise = await createExercise(exerciseData);
+  const newExerciseLog = await createExerciseLog(exerciseData);
 
-  if (!newExercise) {
-    console.error("Failed to create exercise");
+  if (!newExerciseLog) {
+    console.error("Failed to create exerciseLog");
     return;
   }
 
-  trainingStore.addExercise(newExercise);
+  trainingStore.addExerciseLog(newExerciseLog);
 
   emit("close");
 
@@ -93,7 +93,7 @@ function changeFocus(elementId: string) {
 }
 
 onMounted(async () => {
-  const exerciseNameInput = document.getElementById("exerciseName") as HTMLInputElement;
+  const exerciseNameInput = document.getElementById("exerciseLogName") as HTMLInputElement;
   exerciseNameInput.focus();
 
   checkInput();
@@ -101,7 +101,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.add-exercise {
+.add-exerciseLog {
   padding: 20px;
   background-color: var(--bg-surface);
   border-radius: 8px;

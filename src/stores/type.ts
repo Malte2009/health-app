@@ -56,7 +56,7 @@ export const useTypeStore = defineStore("typeStore", {
     async loadTypes() {
       this.trainingTypes = await getTrainingTypes();
       this.setTypes = await getSetTypes();
-      this.exerciseTypes = await getExerciseNames();
+      this.exerciseTypes = await getExerciseNames() || [];
       this.setRepUnitTypes = await getSetUnits();
     },
     checkTypes() {
