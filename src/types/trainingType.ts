@@ -1,4 +1,4 @@
-import type { exercise } from "./exerciseType";
+import type { exerciseLog } from "./exerciseLogType.ts";
 
 export type training = {
   id: string;
@@ -15,7 +15,7 @@ export type training = {
   pauses?: number;
   pauseLength?: number;
 
-  exercises: exercise[];
+  exerciseLogs: exerciseLog[];
 };
 
 export type createTrainingLogRequestType = {
@@ -43,5 +43,5 @@ export type getTrainingResponseType = {
   pauses?: number;
   pauseLength?: number;
 
-  exercises: exercise[];
+  exerciseLogs: exerciseLog[];
 };

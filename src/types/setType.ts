@@ -6,7 +6,7 @@ export type set = {
   order: number;
   reps: number;
   weight: number;
-  exerciseId: string;
+  exerciseLogId: string;
   userId: string;
   repUnit: string;
 };
@@ -15,7 +15,7 @@ export type createSetRequestType = {
   type?: string;
   reps: number;
   weight: number;
-  exerciseId: string;
+  exerciseLogId: string;
   repUnit: string;
 };
 

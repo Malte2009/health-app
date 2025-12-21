@@ -13,7 +13,7 @@ export const isAuthenticated = async (): Promise<string> => {
   }
 };
 
-export const register = async (data: { email: string; name: string; password: string; birthYear: string; gender: string }): Promise<string> => {
+export const register = async (data: { email: string; name: string; password: string; birthYear: number; gender: string }): Promise<string> => {
   return api.post("/users/register", data);
 };
 

@@ -30,7 +30,7 @@ async function submit() {
   const email = (document.getElementById('email') as HTMLInputElement).value;
   const name = (document.getElementById('name') as HTMLInputElement).value;
   const gender = (document.getElementById('gender') as HTMLInputElement).value;
-  const birthYear = (document.getElementById('birthYear') as HTMLInputElement).value;
+  let birthYear: number | string = (document.getElementById('birthYear') as HTMLInputElement).value;
   const password = (document.getElementById('password') as HTMLInputElement).value;
   const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement).value;
 
@@ -38,6 +38,8 @@ async function submit() {
     alert('Passwords do not match');
     return;
   }
+
+  birthYear = parseInt(birthYear, 10);
 
   const data = {
     email,
