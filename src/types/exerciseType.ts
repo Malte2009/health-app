@@ -8,4 +8,4 @@ export type exerciseType = {
   changedAt?: Date;
 
   exerciseLogs: exerciseLog[];
-}
+};

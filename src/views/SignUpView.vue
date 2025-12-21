@@ -39,7 +39,7 @@ async function submit() {
     return;
   }
 
-  birthYear = parseInt(birthYear, 10);
+  birthYear = parseInt(birthYear as string, 10);
 
   const data = {
     email,

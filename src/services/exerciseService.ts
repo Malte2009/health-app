@@ -28,9 +28,9 @@ export const createExercise = async (name: string): Promise<exerciseType | null>
   }
 };
 
-export const changeExercise = async (name: string): Promise<exerciseType | null> => {
+export const changeExercise = async (oldName: string, newName: string): Promise<exerciseType | null> => {
   try {
-    const response = await api.patch(`/exercise/changeExercise/${name}`, { name });
+    const response = await api.patch(`/exercise/changeExercise/${oldName}`, { name: newName });
     return response.data;
   } catch (error) {
     return null;
