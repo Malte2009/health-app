@@ -1,14 +1,11 @@
 <template>
-  <div class="home">
-    <trainings-view></trainings-view>
-  </div>
+  <div class="home"></div>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import { onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth.ts";
-import TrainingsView from "@/views/TrainingsView.vue";
 
 const authStore = useAuthStore();
 const router = useRouter();
