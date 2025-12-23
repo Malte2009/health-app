@@ -1,30 +1,27 @@
 import api from "./api";
 import type { changeExerciseLogRequest, createExerciseLogRequest, exerciseLog } from "@/types/exerciseLogType.ts";
 
-export const getExerciseLogById = async (id: string): Promise<exerciseLog | null> => {
+export const getExerciseLogById = async (id: string): Promise<exerciseLog | void> => {
   try {
-    const response = await api.get(`/exerciseLog/getExerciseLog/${id}`);
-    return response.data;
+    return (await api.get(`/exerciseLog/getExerciseLog/${id}`)).data;
   } catch (error) {
-    return null;
+    return;
   }
 };
 
-export const changeExerciseLog = async (exercise: changeExerciseLogRequest): Promise<exerciseLog | null> => {
+export const changeExerciseLog = async (exercise: changeExerciseLogRequest): Promise<exerciseLog | void> => {
   try {
-    const response = await api.patch(`/exerciseLog/changeExerciseLog/${exercise.id}`, exercise);
-    return response.data;
+    return (await api.patch(`/exerciseLog/changeExerciseLog/${exercise.id}`, exercise)).data;
   } catch (error) {
-    return null;
+    return;
   }
 };
 
-export const createExerciseLog = async (exercise: createExerciseLogRequest): Promise<exerciseLog | null> => {
+export const createExerciseLog = async (exercise: createExerciseLogRequest): Promise<exerciseLog | void> => {
   try {
-    const response = await api.post("/exerciseLog/createExerciseLog", exercise);
-    return response.data;
+    return (await api.post("/exerciseLog/createExerciseLog", exercise)).data;
   } catch (error) {
-    return null;
+    return;
   }
 };
 

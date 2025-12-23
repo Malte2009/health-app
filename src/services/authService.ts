@@ -1,27 +1,28 @@
 import api from "./api";
 
-export const isAuthenticated = async (): Promise<string> => {
+export const isAuthenticated = async (): Promise<boolean> => {
   try {
     const response = await api.get("/users/isAuthenticated");
-    if (response.status === 200) {
-      return response.data;
-    } else {
-      return "";
-    }
+
+    return response.status === 200;
   } catch (error) {
-    return "";
+    return false;
   }
 };
 
-export const register = async (data: { email: string; name: string; password: string; birthYear: number; gender: string }): Promise<string> => {
-  return api.post("/users/register", data);
+export const register = async (data: { email: string; name: string; password: string; birthYear: number; gender: string }): Promise<string | void> => {
+  try {
+    return (await api.post("/users/register", data)).data;
+  } catch (error) {
+    return;
+  }
 };
 
-export const login = async (email: string, password: string): Promise<string | undefined> => {
+export const login = async (email: string, password: string): Promise<string | void> => {
   try {
     return (await api.post("/users/login", { email, password })).data;
   } catch (error) {
-    console.error(error);
+    return;
   }
 };
 
@@ -29,6 +30,6 @@ export const getUserAge = async (): Promise<number | void> => {
   try {
     return (await api.get("/users/getUserAge")).data;
   } catch (error) {
-    return console.error(error);
+    return;
   }
 };
