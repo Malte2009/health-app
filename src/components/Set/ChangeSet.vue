@@ -192,6 +192,12 @@ function handleError(error: AxiosError) {
 
 function changeFocus(elementId: string) {
   const element = document.getElementById(elementId);
+  const repUnitInput = document.getElementById("repUnit-selection") as HTMLInputElement;
+
+  if (repUnitInput.value === "s" && elementId === "weight") {
+    submit();
+    return;
+  }
   if (element) {
     element.focus();
   }
