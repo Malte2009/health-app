@@ -1,39 +1,35 @@
 import api from "./api";
 import type { exerciseType } from "@/types/exerciseType.ts";
 
-export const getExerciseNames = async (): Promise<string[] | null> => {
+export const getExerciseNames = async (): Promise<string[] | void> => {
   try {
-    const response = await api.get("/exercise/getExerciseNames");
-    return response.data;
+    return (await api.get("/exercise/getExerciseNames")).data;
   } catch (error) {
-    return null;
+    return;
   }
 };
 
-export const getExerciseByName = async (name: string): Promise<exerciseType | null> => {
+export const getExerciseByName = async (name: string): Promise<exerciseType | void> => {
   try {
-    const response = await api.get(`/exercise/getExercise/${name}`);
-    return response.data;
+    return (await api.get(`/exercise/getExercise/${name}`)).data;
   } catch (error) {
-    return null;
+    return;
   }
 };
 
-export const createExercise = async (name: string): Promise<exerciseType | null> => {
+export const createExercise = async (name: string): Promise<exerciseType | void> => {
   try {
-    const response = await api.post("/exercise/createExercise", { name });
-    return response.data;
+    return (await api.post("/exercise/createExercise", { name })).data;
   } catch (error) {
-    return null;
+    return;
   }
 };
 
-export const changeExercise = async (oldName: string, newName: string): Promise<exerciseType | null> => {
+export const changeExercise = async (oldName: string, newName: string): Promise<exerciseType | void> => {
   try {
-    const response = await api.patch(`/exercise/changeExercise/${oldName}`, { name: newName });
-    return response.data;
+    return (await api.patch(`/exercise/changeExercise/${oldName}`, { name: newName })).data;
   } catch (error) {
-    return null;
+    return;
   }
 };
 
