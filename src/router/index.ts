@@ -40,6 +40,11 @@ const router = createRouter({
       name: "editTraining",
       component: () => import("../views/Training/EditTrainingView.vue"),
     },
+    {
+      path: "/body",
+      name: "body",
+      component: () => import("../views/Body/BodyView.vue"),
+    }
   ],
 });
 

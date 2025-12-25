@@ -3,6 +3,7 @@
     <div class="start"></div>
     <div class="middle">
       <button :class="{ active: route.name === 'trainings' }" @click="router.push('/trainings')">Trainings Overview</button>
+      <button :class="{ active: route.name === 'body' }" @click="router.push('/body')">Body Overview</button>
     </div>
     <div class="end"></div>
   </div>
