@@ -1,4 +1,4 @@
-export type createBodyLogRequest = {
+export type bodyLog = {
   weight: number;
   height: number;
   fatMass?: number;
