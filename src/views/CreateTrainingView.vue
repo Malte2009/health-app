@@ -114,7 +114,7 @@ async function submit() {
     return;
   }
 
-  console.log(trainingLog);
+  if (!trainingLog) return;
 
   trainingStore.setCurrentTraining(trainingLog.id);
 
