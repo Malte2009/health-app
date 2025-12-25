@@ -4,27 +4,23 @@
 
     <div class="inputs">
       <form id="trainingForm" @submit.prevent="submit">
-        <select @change="checkInput()" id="trainingTypeSelect" name="trainingType" @keydown.enter.prevent="changeFocus('trainingDate')">
-          <option value="" disabled selected>Select Training Type</option>
-          <option v-for="type in trainingTypes" :key="type" :value="type">{{ type }}</option>
+        <select @change="checkInput()" id="trainingNameSelect" name="trainingsName" @keydown.enter.prevent="changeFocus('trainingDate')">
+          <option value="" disabled selected>Select Training Name</option>
+          <option v-for="name in trainingNames" :key="name" :value="name">{{ name }}</option>
           <option value="Custom">Custom</option>
         </select>
         <input
           v-if="showCustomInput"
-          placeholder="Training Type"
-          id="trainingType"
-          name="trainingType"
+          placeholder="Training Name"
+          id="trainingName"
+          name="trainingName"
           type="text"
-          @keydown.enter.prevent="changeFocus('trainingsMode')"
+          @keydown.enter.prevent="changeFocus('trainingType')"
         />
-        <select id="trainingsMode" name="trainingsMode" @keydown.enter.prevent="changeFocus('averageHeartRate')">
-          <option value="" disabled selected>Select Training Mode</option>
-          <option value="weights_light">Weights Light ({{ roundTo(HFmax * 0.4, 0) }} - {{ roundTo(HFmax * 0.55, 0) }})</option>
-          <option value="weights_mod">Weights Moderate ({{ roundTo(HFmax * 0.55, 0) }} - {{ roundTo(HFmax * 0.7, 0) }})</option>
-          <option value="weights_vig">Weights Heavy ({{ roundTo(HFmax * 0.7, 0) }} - {{ roundTo(HFmax * 0.8, 0) }})</option>
-          <option value="cardio_light">Cardio Light ({{ roundTo(HFmax * 0.5, 0) }} - {{ roundTo(HFmax * 0.6, 0) }})</option>
-          <option value="cardio_mod">Cardio Moderate ({{ roundTo(HFmax * 0.6, 0) }} - {{ roundTo(HFmax * 0.75, 0) }})</option>
-          <option value="cardio_vig">Cardio Heavy ({{ roundTo(HFmax * 0.75, 0) }} - {{ roundTo(HFmax * 0.9, 0) }})</option>
+        <select id="trainingType" name="trainingType" @keydown.enter.prevent="changeFocus('averageHeartRate')">
+          <option value="" disabled selected>Select Training Type</option>
+          <option value="Weights">Weights</option>
+          <option value="Cardio">Cardio</option>
         </select>
         <input
           placeholder="Average Heart Rate (30 - 220)"
@@ -60,9 +56,7 @@ import { useAuthStore } from "@/stores/auth.ts";
 import { getTrainings, updateTraining } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/training.ts";
 import { onMounted, ref } from "vue";
-import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
-import { roundTo } from "@/utility/math.ts";
 import { getUserAge } from "@/services/authService.ts";
 
 const authStore = useAuthStore();
@@ -73,15 +67,15 @@ const route = useRoute();
 
 const HFmax = ref(0);
 
-const trainingTypes = ref<string[]>([]);
+const trainingNames = ref<string[]>([]);
 const showCustomInput = ref(false);
 
 const trainingsId = route.params.id as string;
 
 function loadValues() {
-  const trainingTypeSelect = document.getElementById("trainingTypeSelect") as HTMLSelectElement;
-  const trainingsModeSelect = document.getElementById("trainingsMode") as HTMLSelectElement;
-  const trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
+  const trainingNameSelect = document.getElementById("trainingNameSelect") as HTMLSelectElement;
+  const trainingNameInput = document.getElementById("trainingName") as HTMLInputElement;
+  const trainingType = document.getElementById("trainingType") as HTMLSelectElement;
   const averageHeartRateInput = document.getElementById("averageHeartRate") as HTMLInputElement;
   const trainingDurationInput = document.getElementById("trainingDuration") as HTMLInputElement;
   const notesInput = document.getElementById("notes") as HTMLInputElement;
@@ -92,14 +86,15 @@ function loadValues() {
 
   if (training) {
     if (showCustomInput.value) {
-      trainingTypeInput.value = training.type;
+      trainingNameInput.value = training.type;
     } else {
-      trainingTypeSelect.value = training.type;
+      trainingNameSelect.value = training.type;
     }
 
     console.log("Training:", training);
 
-    trainingsModeSelect.value = training.mode || "weights_light";
+    trainingNameSelect.value = training.name;
+    trainingType.value = training.type || "";
     averageHeartRateInput.value = training?.avgHeartRate?.toString() || "";
     trainingDurationInput.value = training?.duration?.toString() || "";
     notesInput.value = training.notes || "";
@@ -109,21 +104,21 @@ function loadValues() {
 }
 
 function checkInput() {
-  const input = document.getElementById("trainingTypeSelect") as HTMLSelectElement;
+  const input = document.getElementById("trainingNameSelect") as HTMLSelectElement;
 
   showCustomInput.value = input.value === "Custom";
 }
 
 async function submit() {
-  let trainingType = (document.getElementById("trainingTypeSelect") as HTMLInputElement).value;
-  const trainingsMode = (document.getElementById("trainingsMode") as HTMLInputElement).value;
+  let trainingName = (document.getElementById("trainingNameSelect") as HTMLInputElement).value;
+  const trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
   const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value) || 0;
   const pauseLength = parseInt((document.getElementById("pauseLength") as HTMLInputElement).value) || 0;
 
   if (showCustomInput.value) {
-    trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
+    trainingName = (document.getElementById("trainingName") as HTMLInputElement).value;
   }
 
   const newTraining = trainingStore.getTrainingById(trainingsId);
@@ -133,24 +128,44 @@ async function submit() {
     return;
   }
 
+  newTraining.name = trainingName;
   newTraining.type = trainingType;
-  newTraining.mode = trainingsMode;
   newTraining.duration = parseInt(trainingDuration, 10);
   newTraining.avgHeartRate = parseInt(averageHeartRate, 10);
   newTraining.notes = (document.getElementById("notes") as HTMLInputElement).value || "";
   newTraining.pauses = pauses;
   newTraining.pauseLength = pauseLength;
 
-  let trainingLog;
+  if (!newTraining.name) {
+    const trainingNameInput = showCustomInput.value
+      ? (document.getElementById("trainingName") as HTMLInputElement)
+      : (document.getElementById("trainingNameSelect") as HTMLInputElement);
+    trainingNameInput.style.borderColor = "var(--danger)";
 
-  try {
-    trainingLog = await updateTraining(trainingsId, newTraining);
-  } catch (error) {
-    handleError(error as AxiosError);
+    trainingNameInput.addEventListener("keydown", () => {
+      trainingNameInput.style.borderColor = "var(--border)";
+    });
+
     return;
   }
 
-  console.log(trainingLog);
+  if (!newTraining.type) {
+    const trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
+    trainingTypeInput.style.borderColor = "var(--danger)";
+
+    trainingTypeInput.addEventListener("focus", () => {
+      trainingTypeInput.style.borderColor = "var(--border)";
+    });
+
+    return;
+  }
+
+  try {
+    await updateTraining(trainingsId, newTraining);
+  } catch (error) {
+    console.error("Failed to update training:", error);
+    return;
+  }
 
   trainingStore.setCurrentTraining(trainingsId);
 
@@ -159,53 +174,6 @@ async function submit() {
   trainingStore.setTrainings(trainings);
 
   await router.push({ name: "training", params: { trainingsId } });
-}
-
-function handleError(error: AxiosError) {
-  if (error?.response?.data) {
-    console.log(error.response.data);
-
-    switch (error.response.data) {
-      case "Training type is required":
-        let trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
-
-        if (showCustomInput.value) trainingTypeInput = document.getElementById("trainingTypeSelect") as HTMLInputElement;
-
-        trainingTypeInput.style.borderColor = "var(--danger)";
-
-        trainingTypeInput.addEventListener("keydown", () => {
-          trainingTypeInput.style.borderColor = "var(--border)";
-        });
-        break;
-      case "Invalid date format, use YYYY-MM-DD":
-        const trainingDateInput = document.getElementById("trainingDate") as HTMLInputElement;
-
-        trainingDateInput.style.borderColor = "var(--danger)";
-
-        trainingDateInput.addEventListener("focus", () => {
-          trainingDateInput.style.borderColor = "var(--border)";
-        });
-        break;
-      case "Invalid heart rate (30-220)":
-        const averageHeartRateInput = document.getElementById("averageHeartRate") as HTMLInputElement;
-
-        averageHeartRateInput.style.borderColor = "var(--danger)";
-
-        averageHeartRateInput.addEventListener("keydown", () => {
-          averageHeartRateInput.style.borderColor = "var(--border)";
-        });
-        break;
-      case "Invalid duration (1-600 minutes)":
-        const trainingDurationInput = document.getElementById("trainingDuration") as HTMLInputElement;
-
-        trainingDurationInput.style.borderColor = "var(--danger)";
-
-        trainingDurationInput.addEventListener("keydown", () => {
-          trainingDurationInput.style.borderColor = "var(--border)";
-        });
-        break;
-    }
-  }
 }
 
 function changeFocus(elementId: string) {
@@ -221,7 +189,7 @@ onMounted(async () => {
   }
 
   try {
-    trainingTypes.value = typeStore.getTrainingTypes;
+    trainingNames.value = typeStore.getTrainingNames;
   } catch (error) {
     console.error("Failed to fetch training types:", error);
   }

@@ -7,6 +7,7 @@
         <tr>
           <th v-if="!isMobile">Training ID</th>
           <th>Date</th>
+          <th>Name</th>
           <th>Type</th>
           <th>Duration (min)</th>
           <th>Avg Heart Rate (bpm)</th>
@@ -24,6 +25,7 @@
         <tr v-for="training in trainings" :key="training.id">
           <td v-if="!isMobile">{{ training.id }}</td>
           <td>{{ getDateString(training.createdAt) }}</td>
+          <td>{{ training.name }}</td>
           <td>{{ training.type }}</td>
           <td>{{ training.duration || "" }}</td>
           <td>{{ training.avgHeartRate || "" }}</td>

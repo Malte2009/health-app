@@ -4,27 +4,23 @@
 
     <div class="inputs">
       <form id="trainingForm" @submit.prevent="submit">
-        <select @change="checkInput()" id="trainingTypeSelect" name="trainingType" @keydown.enter.prevent="changeFocus('trainingDate')">
-          <option value="" disabled selected>Select Training Type</option>
-          <option v-for="type in typeStore.getTrainingTypes" :key="type" :value="type">{{ type }}</option>
+        <select @change="checkInput()" id="trainingNameSelect" name="trainingName" @keydown.enter.prevent="changeFocus('trainingDate')">
+          <option value="" disabled selected>Select Training Name</option>
+          <option v-for="name in typeStore.getTrainingNames" :key="name" :value="name">{{ name }}</option>
           <option value="Custom">Custom</option>
         </select>
         <input
           v-if="showCustomInput"
-          placeholder="Training Type"
-          id="trainingType"
-          name="trainingType"
+          placeholder="Training Name"
+          id="trainingName"
+          name="trainingName"
           type="text"
-          @keydown.enter.prevent="changeFocus('trainingsMode')"
+          @keydown.enter.prevent="changeFocus('trainingType')"
         />
-        <select id="trainingsMode" name="trainingsMode" @keydown.enter.prevent="changeFocus('averageHeartRate')">
+        <select id="trainingType" name="trainingType" @keydown.enter.prevent="changeFocus('averageHeartRate')">
           <option value="" disabled selected>Select Training Mode</option>
-          <option value="weights_light">Weights Light ({{ roundTo(HFmax * 0.4, 0) }} - {{ roundTo(HFmax * 0.55, 0) }})</option>
-          <option value="weights_mod">Weights Moderate ({{ roundTo(HFmax * 0.55, 0) }} - {{ roundTo(HFmax * 0.7, 0) }})</option>
-          <option value="weights_vig">Weights Heavy ({{ roundTo(HFmax * 0.7, 0) }} - {{ roundTo(HFmax * 0.8, 0) }})</option>
-          <option value="cardio_light">Cardio Light ({{ roundTo(HFmax * 0.5, 0) }} - {{ roundTo(HFmax * 0.6, 0) }})</option>
-          <option value="cardio_mod">Cardio Moderate ({{ roundTo(HFmax * 0.6, 0) }} - {{ roundTo(HFmax * 0.75, 0) }})</option>
-          <option value="cardio_vig">Cardio Heavy ({{ roundTo(HFmax * 0.75, 0) }} - {{ roundTo(HFmax * 0.9, 0) }})</option>
+          <option value="Weights">Weights</option>
+          <option value="Cardio">Cardio</option>
         </select>
         <input
           placeholder="Average Heart Rate (30 - 220)"
@@ -64,7 +60,6 @@ import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
 import { getUserAge } from "@/services/authService.ts";
-import { roundTo } from "@/utility/math.ts";
 
 const authStore = useAuthStore();
 const trainingStore = useTrainingStore();
@@ -82,22 +77,22 @@ function checkInput() {
 }
 
 async function submit() {
-  let trainingType = (document.getElementById("trainingTypeSelect") as HTMLInputElement).value;
-  const trainingsMode = (document.getElementById("trainingsMode") as HTMLInputElement).value;
+  let trainingName = (document.getElementById("trainingNameSelect") as HTMLInputElement).value;
+  const trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
   const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value);
   const pauseLength = parseInt((document.getElementById("pauseLength") as HTMLInputElement).value);
 
   if (showCustomInput.value) {
-    trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
+    trainingName = (document.getElementById("trainingName") as HTMLInputElement).value;
   }
 
-  console.log(trainingType, trainingDuration, averageHeartRate, pauses, pauseLength);
+  console.log(trainingName, trainingDuration, averageHeartRate, pauses, pauseLength);
 
   const trainingData: createTrainingLogRequestType = {
     type: trainingType,
-    mode: trainingsMode,
+    name: trainingName,
     duration: parseInt(trainingDuration, 10),
     avgHeartRate: parseInt(averageHeartRate, 10),
     pauses,

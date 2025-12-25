@@ -20,9 +20,9 @@ export const getTrainingById = async (id: string): Promise<getTrainingResponseTy
   }
 };
 
-export const getTrainingTypes = async (): Promise<string[]> => {
+export const getTrainingNames= async (): Promise<string[]> => {
   try {
-    return (await api.get("/training/getTrainingTypes")).data;
+    return (await api.get("/training/getTrainingNames")).data;
   } catch (error) {
     return [];
   }

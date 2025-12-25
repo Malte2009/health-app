@@ -5,8 +5,8 @@ export type training = {
   userId: string;
   createdAt: Date;
   changedAt?: Date;
+  name: string;
   type: string;
-  mode: string;
   score?: number;
   notes?: string;
   caloriesBurned?: number;
@@ -20,7 +20,7 @@ export type training = {
 
 export type createTrainingLogRequestType = {
   type: string;
-  mode: string;
+  name: string;
   avgHeartRate?: number;
   duration?: number;
   notes?: string;
@@ -34,7 +34,7 @@ export type getTrainingResponseType = {
   createdAt: Date;
   changedAt?: Date;
   type: string;
-  mode: string;
+  name: string;
   score?: number;
   notes?: string;
   caloriesBurned?: number;

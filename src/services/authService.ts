@@ -1,12 +1,12 @@
 import api from "./api";
 
-export const isAuthenticated = async (): Promise<boolean> => {
+export const isAuthenticated = async (): Promise<string> => {
   try {
     const response = await api.get("/users/isAuthenticated");
 
-    return response.status === 200;
+    return response.data;
   } catch (error) {
-    return false;
+    return "";
   }
 };
 
