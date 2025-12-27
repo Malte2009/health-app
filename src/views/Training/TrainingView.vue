@@ -167,6 +167,7 @@ import { getTrainingById, updateTraining } from "@/services/trainingService.ts";
 import { deleteExerciseLogRequest } from "@/services/exerciseLogService.ts";
 import { deleteSetRequest } from "@/services/setService.ts";
 import { useTypeStore } from "@/stores/type.ts";
+import { getDateString } from "@/utility/date.ts";
 
 const isMobile = window.innerWidth <= 768;
 
@@ -417,12 +418,6 @@ function closeSetContextMenu() {
   if (menu) {
     menu.style.display = "none";
   }
-}
-
-function getDateString(date: Date): string {
-  return new Intl.DateTimeFormat("de-DE", {
-    dateStyle: "short",
-  }).format(new Date(date));
 }
 
 function reloadTrainingFromStore() {

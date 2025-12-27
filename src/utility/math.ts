@@ -1,4 +1,5 @@
-export function roundTo(n: number, digits: number) {
+export function roundTo(n: number | undefined, digits: number) {
+  if (!n) return null;
   let negative = false;
   if (digits === undefined) {
     digits = 0;

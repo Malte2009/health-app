@@ -64,6 +64,7 @@ import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { deleteTrainingRequest, getTrainings } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/training.ts";
 import { useAuthStore } from "@/stores/auth.ts";
+import { getDateString } from "@/utility/date.ts";
 
 const isMobile = window.innerWidth <= 768;
 const showConfirmDelete = ref(false);
@@ -88,12 +89,6 @@ async function confirmDelete(id: string) {
 function cancelDelete() {
   showConfirmDelete.value = false;
   deleteTrainingId.value = "";
-}
-
-function getDateString(date: Date): string {
-  return new Intl.DateTimeFormat("de-DE", {
-    dateStyle: "short",
-  }).format(new Date(date));
 }
 
 onMounted(async () => {
