@@ -5,7 +5,7 @@
       <input @keydown.enter="changeFocus('password')" placeholder="Email" id="email" name="email" type="text" />
       <input @keydown.enter="submit()" placeholder="Password" id="password" name="password" type="password" />
       <input @click="submit()" value="Login" class="btn" type="submit" />
-      <p>No account? <a @click="router.push('register')">Sign up</a></p>
+      <p>No account? <a @click="router.push({name: 'signup'})">Sign up</a></p>
     </div>
   </div>
 </template>

@@ -13,7 +13,7 @@
       <input placeholder="Password" id="password" name="password" type="password">
       <input placeholder="Confirm Password" id="confirmPassword" name="confirmPassword" type="password">
       <input @click="submit()" value="Sign Up" class="btn" type="submit">
-      <p>Already have an account? <a @click="router.push('/')">Login</a></p>
+      <p>Already have an account? <a @click="router.push({name: 'login'})">Login</a></p>
     </div>
   </div>
 </template>
@@ -51,7 +51,7 @@ async function submit() {
 
   await register(data);
 
-  await router.push('login');
+  await router.push({name: "login"});
 }
 </script>
 
