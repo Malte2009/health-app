@@ -10,4 +10,9 @@ export default [
     name: "createBodyLog",
     component: () => import("../views/Body/CreateBodyLogView.vue"),
   },
+  {
+    path: "/body/editBodyLog/:id",
+    name: "editBodyLog",
+    component: () => import("../views/Body/EditBodyLogView.vue"),
+  }
 ];

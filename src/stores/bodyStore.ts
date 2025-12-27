@@ -10,6 +10,10 @@ export const useBodyStore = defineStore("body", {
     getBodyLogs() {
       return this.bodyLogs;
     },
+
+    getBodyLogById(bodyLogId: string): bodyLog | undefined {
+      return this.bodyLogs.find(bodyLog => bodyLog.id === bodyLogId);
+    },
     setBodyLogs(bodyLogs: Array<bodyLog>) {
       this.bodyLogs = bodyLogs;
     },
