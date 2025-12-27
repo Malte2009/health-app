@@ -5,6 +5,7 @@ export const getBodyLogs = async (): Promise<bodyLog[]> => {
   try {
     return (await api.get("/bodyLog/getBodyLogs")).data;
   } catch (error) {
+    console.error(error);
     return [];
   }
 }
@@ -13,7 +14,7 @@ export const getBodyLogById = async (id: string): Promise<bodyLog | void> => {
   try {
     return (await api.get(`/bodyLog/getBodyLog/${id}`)).data;
   } catch (error) {
-    return;
+    console.error(error);
   }
 }
 
@@ -21,7 +22,7 @@ export const updateBodyLog = async (id: string, body: updateBodyLogType): Promis
   try {
     return (await api.patch(`/bodyLog/updateBodyLog/${id}`, body)).data;
   } catch (error) {
-    return;
+    console.error(error);
   }
 }
 
@@ -29,7 +30,7 @@ export const createBodyLog = async (body: createBodyLogType): Promise<bodyLog | 
   try {
     return (await api.post("/bodyLog/createBodyLog", body)).data;
   } catch (error) {
-    return;
+    console.error(error);
   }
 };
 
@@ -37,6 +38,6 @@ export const deleteBodyLog = async (id: string): Promise<void> => {
   try {
     await api.delete(`/bodyLog/deleteBodyLog/${id}`);
   } catch (error) {
-    return;
+    console.error(error);
   }
 }
