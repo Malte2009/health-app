@@ -1,6 +1,14 @@
 import api from "./api";
 import type { exerciseType } from "@/types/exerciseType.ts";
 
+export const getExercises = async (): Promise<exerciseType[] | void> => {
+  try {
+    return (await api.get("/exercise/getExercises")).data;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 export const getExerciseNames = async (): Promise<string[] | void> => {
   try {
     return (await api.get("/exercise/getExerciseNames")).data;
@@ -25,7 +33,7 @@ export const createExercise = async (name: string): Promise<exerciseType | void>
   }
 };
 
-export const changeExercise = async (oldName: string, newName: string): Promise<exerciseType | void> => {
+export const updateExercise = async (oldName: string, newName: string): Promise<exerciseType | void> => {
   try {
     return (await api.patch(`/exercise/changeExercise/${oldName}`, { name: newName })).data;
   } catch (error) {
