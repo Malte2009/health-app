@@ -24,7 +24,7 @@ import { changeExerciseLog } from "@/services/exerciseLogService.ts";
 import type { changeExerciseLogRequest, exerciseLog } from "@/types/exerciseLogType.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
-import { useTrainingStore } from "@/stores/training.ts";
+import { useTrainingStore } from "@/stores/trainingStore.ts";
 
 const typeStore = useTypeStore();
 const trainingStore = useTrainingStore();

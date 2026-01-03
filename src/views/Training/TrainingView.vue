@@ -156,7 +156,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { useTrainingStore } from "@/stores/training.ts";
+import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { onBeforeMount, ref } from "vue";
 import AddExercise from "@/components/Exercise/AddExercise.vue";
 import AddSet from "@/components/Set/AddSet.vue";

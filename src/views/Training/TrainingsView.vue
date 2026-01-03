@@ -62,7 +62,7 @@ import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { deleteTrainingRequest, getTrainings } from "@/services/trainingService.ts";
-import { useTrainingStore } from "@/stores/training.ts";
+import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { useAuthStore } from "@/stores/auth.ts";
 import { getDateString } from "@/utility/date.ts";
 
