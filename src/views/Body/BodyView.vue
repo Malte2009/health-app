@@ -69,7 +69,6 @@ import { roundTo } from "@/utility/math.ts";
 import { getDateString } from "@/utility/date.ts";
 import { deleteBodyLog } from "@/services/bodyService.ts";
 
-
 const bodyStore = useBodyStore();
 
 const bodyLogs = ref([] as bodyLog[]);
