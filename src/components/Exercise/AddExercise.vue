@@ -23,7 +23,7 @@
 import { createExerciseLog } from "@/services/exerciseLogService.ts";
 import type { createExerciseLogRequest } from "@/types/exerciseLogType.ts";
 import { onMounted, ref } from "vue";
-import { useTrainingStore } from "@/stores/training.ts";
+import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { useTypeStore } from "@/stores/type.ts";
 
 const trainingStore = useTrainingStore();
