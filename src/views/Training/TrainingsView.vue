@@ -32,7 +32,7 @@
           <td>{{ training.caloriesBurned || "" }}</td>
           <td>{{ training.notes || "" }}</td>
           <td>
-            <button class="button button-primary" @click="router.push({ name: 'training', params: { id: training.id } })">View</button>
+            <button class="button button-primary" @click="router.push({ name: 'trainingDetails', params: { id: training.id } })">View</button>
             <button class="button button-secondary" @click="router.push({ name: 'editTraining', params: { id: training.id } })">Edit</button>
             <button
               class="button button-danger"
