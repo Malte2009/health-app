@@ -18,28 +18,17 @@ import Chart from "@/components/General/Chart.vue";
 import { useExerciseStore } from "@/stores/exerciseStore.ts";
 import { onBeforeMount, ref } from "vue";
 import { useRoute } from "vue-router";
+import { getExerciseScoresByName } from "@/services/exerciseScoreService.ts";
 
 const route = useRoute();
 
-const exerciseStore = useExerciseStore();
-
-const exerciseName = route.params.name as string;
-
 const chartData = ref({
-  xData: [] as number[],
+  xData: [] as string[],
   yData: [] as number[],
 });
 
 const width = ref(0);
 const height = ref(0);
-
-function getChartData() {
-  const exercise = exerciseStore.getExerciseByName(exerciseName);
-
-  if (exercise) {
-
-  }
-}
 
 onBeforeMount(() => {
   width.value = window.innerWidth * 0.8;

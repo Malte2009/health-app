@@ -19,30 +19,59 @@
 <script setup lang="ts">
 import { onBeforeMount, onBeforeUpdate, onMounted, onUpdated, ref } from "vue";
 import { roundTo } from "@/utility/math.ts";
+import { useRoute } from "vue-router";
+import { getExerciseScoresByName } from "@/services/exerciseScoreService.ts";
 
-const xScaledData = ref([] as number[]);
+const route = useRoute();
+
+const xScaledData = ref([] as string[]);
 const xDataNumbers = ref([] as number[]);
 const yScaledData = ref([] as number[]);
 const yDataNumbers = ref([] as number[]);
 
 const legendOffset = 50; // Px = value - 10
 
+const exerciseName = route.params.name as string;
+
+const chartData = ref<{
+  xData: string[];
+  yData: number[];
+}>({
+  xData: [],
+  yData: [],
+});
+
 const props = defineProps<{
-  chartData: {
-    xData: number[];
-    yData: number[];
-  };
-  chartUnits?: {
-    xUnit?: string;
-    yUnit?: string;
-  };
   width: number;
   height: number;
 }>();
 
-function scaleData(data: number[], maxValue: number): number[] {
-  const factor = maxValue / Math.max(...data);
-  return data.map((value) => Math.round(value * factor));
+async function getChartData() {
+  if (exerciseName) {
+    const data = await getExerciseScoresByName(exerciseName);
+
+    if (!data) {
+      chartData.value.xData = [];
+      chartData.value.yData = [];
+      return;
+    }
+
+    chartData.value.xData = data.map((entry) => entry.createdAt);
+    chartData.value.yData = data.map((entry) => entry.score);
+  }
+}
+
+function scaleData(data: number[], maxValue: number, minValue: number = 0): number[] {
+  const dataMin = Math.min(...data);
+  const dataMax = Math.max(...data);
+  const dataRange = dataMax - dataMin;
+  const targetRange = maxValue - minValue;
+
+  if (dataRange === 0) {
+    return data.map(() => Math.round((maxValue + minValue) / 2));
+  }
+
+  return data.map((value) => Math.round(((value - dataMin) / dataRange) * targetRange + minValue));
 }
 
 function generateXDataNumbers(length: number): number[] {
@@ -53,11 +82,12 @@ function generateXDataNumbers(length: number): number[] {
   return result;
 }
 
-function generateYDataNumbers(maxValue: number, steps: number): number[] {
+function generateYDataNumbers(minValue: number, maxValue: number, steps: number): number[] {
   const result: number[] = [];
-  const stepValue = maxValue / steps;
+  const range = maxValue - minValue;
+  const stepValue = range / steps;
   for (let i = 0; i <= steps; i++) {
-    result.push(roundTo(i * stepValue, 2) || 0);
+    result.push(roundTo(minValue + i * stepValue, 2) || 0);
   }
   return result;
 }
@@ -67,7 +97,7 @@ function displayLegend() {
   document.getElementById("makers-labels")!.innerHTML = "";
 
   const length = xScaledData.value.length;
-  const chartWidth = props.width
+  const chartWidth = props.width;
   const chartHeight = props.height - legendOffset;
 
   const marginTop = props.height - legendOffset;
@@ -78,7 +108,7 @@ function displayLegend() {
     const xPos = (i / (length - 1)) * chartWidth;
 
     // Generate label
-    const xValue = props.chartData.xData[i];
+    const xValue = chartData.value.xData[i];
 
     const xValueLabel = document.createElement("div");
 
@@ -106,7 +136,6 @@ function displayLegend() {
   const yLength = yDataNumbers.value.length;
 
   for (let i = 0; i < yLength; i++) {
-
     if (i === 0) continue;
 
     const yPos = chartHeight - (i / (yLength - 1)) * chartHeight;
@@ -142,37 +171,37 @@ function displayLegend() {
 }
 
 function displayValuesUnderChart() {
-      // Generate Y-axis marks
+  // Generate Y-axis marks
 
-    const yMark = document.createElement("div");
+  const yMark = document.createElement("div");
 
-    yMark.className = "y-axis-mark";
+  yMark.className = "y-axis-mark";
 
-    yMark.style.marginTop = (yScaledData.value[i] + chartHeight) - (yScaledData.value[i] * 2) - 1 + "px";
-    yMark.style.marginLeft = -5.5 + "px";
+  yMark.style.marginTop = yScaledData.value[i] + chartHeight - yScaledData.value[i] * 2 - 1 + "px";
+  yMark.style.marginLeft = -5.5 + "px";
 
-    document.getElementById("makers-labels")?.appendChild(yMark);
+  document.getElementById("makers-labels")?.appendChild(yMark);
 
-    // Generate Y-axis labels
+  // Generate Y-axis labels
 
-    const yValue = props.chartData.yData[i];
+  const yValue = props.chartData.yData[i];
 
-    const yValueLabel = document.createElement("div");
+  const yValueLabel = document.createElement("div");
 
-    yValueLabel.className = "y-axis-label";
+  yValueLabel.className = "y-axis-label";
 
-    yValueLabel.style.marginTop = (yScaledData.value[i] + chartHeight) - (yScaledData.value[i] * 2) - 7 + "px";
+  yValueLabel.style.marginTop = yScaledData.value[i] + chartHeight - yScaledData.value[i] * 2 - 7 + "px";
 
-    yValueLabel.style.marginLeft = -15 - yValueLabel.offsetWidth + "px";
+  yValueLabel.style.marginLeft = -15 - yValueLabel.offsetWidth + "px";
 
-    yValueLabel.innerText = yValue.toString();
+  yValueLabel.innerText = yValue.toString();
 
-    document.getElementById("makers-labels")?.appendChild(yValueLabel);
+  document.getElementById("makers-labels")?.appendChild(yValueLabel);
 }
 
-function beforeHook() {
-  xScaledData.value = props.chartData.xData;
-  yScaledData.value = props.chartData.yData;
+async function beforeHook() {
+  xScaledData.value = chartData.value.xData;
+  yScaledData.value = chartData.value.yData;
 
   if (!xScaledData.value || !yScaledData.value) {
     console.error("Invalid chart data provided.");
@@ -182,14 +211,17 @@ function beforeHook() {
     console.error("xData and yData must have the same length.");
   }
 
-  xScaledData.value = scaleData(xScaledData.value, props.width);
-  yScaledData.value = scaleData(yScaledData.value, props.height - legendOffset);
-  xDataNumbers.value = scaleData(generateXDataNumbers(yScaledData.value.length), props.width);
-  yDataNumbers.value = generateYDataNumbers(Math.max(...props.chartData.yData), 10);
+  console.log("Original Y data:", yScaledData.value);
+
+  //xScaledData.value = scaleData(xScaledData.value, props.width);
+  yScaledData.value = scaleData(yScaledData.value, props.height - legendOffset, 0);
+  xDataNumbers.value = scaleData(generateXDataNumbers(yScaledData.value.length), props.width, 0);
+  yDataNumbers.value = generateYDataNumbers(Math.min(...chartData.value.yData), Math.max(...chartData.value.yData), 10);
 }
 
-onBeforeMount(() => {
-  beforeHook();
+onBeforeMount(async () => {
+  await getChartData();
+  await beforeHook();
 });
 
 onBeforeUpdate(() => {
@@ -205,7 +237,6 @@ onUpdated(() => {
 });
 </script>
 <style scoped>
-
 .chart-container {
   padding: 10px;
   border: 1px solid var(--border);
@@ -267,5 +298,4 @@ onUpdated(() => {
   background-color: black;
   position: absolute;
 }
-
 </style>
