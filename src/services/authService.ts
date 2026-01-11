@@ -6,6 +6,7 @@ export const isAuthenticated = async (): Promise<string> => {
 
     return response.data;
   } catch (error) {
+    console.error(error);
     return "";
   }
 };
@@ -14,7 +15,7 @@ export const register = async (data: { email: string; name: string; password: st
   try {
     return (await api.post("/users/register", data)).data;
   } catch (error) {
-    return;
+    console.error(error);
   }
 };
 
@@ -22,7 +23,7 @@ export const login = async (email: string, password: string): Promise<string | v
   try {
     return (await api.post("/users/login", { email, password })).data;
   } catch (error) {
-    return;
+    console.error(error);
   }
 };
 
@@ -30,6 +31,6 @@ export const getUserAge = async (): Promise<number | void> => {
   try {
     return (await api.get("/users/getUserAge")).data;
   } catch (error) {
-    return;
+    console.error(error);
   }
 };

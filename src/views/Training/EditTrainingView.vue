@@ -54,7 +54,7 @@
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth.ts";
 import { getTrainings, updateTraining } from "@/services/trainingService.ts";
-import { useTrainingStore } from "@/stores/training.ts";
+import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
 import { getUserAge } from "@/services/authService.ts";

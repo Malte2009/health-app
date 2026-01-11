@@ -32,7 +32,7 @@ import { createSetRequest, getSetUnits } from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
-import { useTrainingStore } from "@/stores/training.ts";
+import { useTrainingStore } from "@/stores/trainingStore.ts";
 
 const emit = defineEmits(["close", "reload"]);
 

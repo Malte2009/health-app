@@ -156,7 +156,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { useTrainingStore } from "@/stores/training.ts";
+import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { onBeforeMount, ref } from "vue";
 import AddExercise from "@/components/Exercise/AddExercise.vue";
 import AddSet from "@/components/Set/AddSet.vue";
@@ -167,6 +167,7 @@ import { getTrainingById, updateTraining } from "@/services/trainingService.ts";
 import { deleteExerciseLogRequest } from "@/services/exerciseLogService.ts";
 import { deleteSetRequest } from "@/services/setService.ts";
 import { useTypeStore } from "@/stores/type.ts";
+import { getDateString } from "@/utility/date.ts";
 
 const isMobile = window.innerWidth <= 768;
 
@@ -417,12 +418,6 @@ function closeSetContextMenu() {
   if (menu) {
     menu.style.display = "none";
   }
-}
-
-function getDateString(date: Date): string {
-  return new Intl.DateTimeFormat("de-DE", {
-    dateStyle: "short",
-  }).format(new Date(date));
 }
 
 function reloadTrainingFromStore() {

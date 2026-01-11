@@ -14,7 +14,7 @@ onMounted(async () => {
   if (!authStore.isAuthenticated) {
     await router.push({ name: "login" });
   } else {
-    await router.push({ name: "trainings" });
+    await router.push({ name: "training" });
   }
 });
 </script>

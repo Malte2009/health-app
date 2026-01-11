@@ -55,7 +55,7 @@ import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth.ts";
 import type { createTrainingLogRequestType } from "@/types/trainingType.ts";
 import { createTrainingLog } from "@/services/trainingService.ts";
-import { useTrainingStore } from "@/stores/training.ts";
+import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
