@@ -1,7 +1,7 @@
 import { getCookie } from "@/utility/cookie";
 import axios from "axios";
 
-const host = window.location.hostname;
+const host = import.meta.env.VITE_API_HOST || window.location.hostname;
 const protocol = window.location.protocol;
 const port = import.meta.env.VITE_API_PORT;
 
