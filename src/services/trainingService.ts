@@ -1,12 +1,21 @@
 import api from "./api";
 import type {
   createTrainingLogRequestType,
-  getTrainingResponseType, training
+  getTrainingResponseType, trainingLog
 } from "@/types/trainingType.ts";
 
-export const getTrainings = async (): Promise<getTrainingResponseType[]> => {
+export const getTrainingLogs = async (): Promise<trainingLog[]> => {
   try {
-    return (await api.get("/training/getTraining")).data;
+    return (await api.get("/training/getTrainingLogs")).data;
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+export const getTrainingLogsWithExercises = async (): Promise<getTrainingResponseType[]> => {
+  try {
+    return (await api.get("/training/getTrainingLogsWithExercises")).data;
   } catch (error) {
     console.error(error);
     return [];
@@ -30,7 +39,7 @@ export const getTrainingNames= async (): Promise<string[]> => {
   }
 };
 
-export const updateTraining = async (id: string, training: training): Promise<training | void> => {
+export const updateTraining = async (id: string, training: trainingLog): Promise<trainingLog | void> => {
   try {
     return (await api.patch(`/training/updateTraining/${id}`, training)).data;
   } catch (error) {
@@ -38,7 +47,7 @@ export const updateTraining = async (id: string, training: training): Promise<tr
   }
 };
 
-export const createTrainingLog = async (training: createTrainingLogRequestType): Promise<training | void> => {
+export const createTrainingLog = async (training: createTrainingLogRequestType): Promise<trainingLog | void> => {
   try {
     return (await api.post("/training/createTraining", training)).data;
   } catch (error) {

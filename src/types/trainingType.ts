@@ -1,6 +1,6 @@
 import type { exerciseLog } from "./exerciseLogType.ts";
 
-export type training = {
+export type trainingLog = {
   id: string;
   userId: string;
   createdAt: Date;
@@ -15,7 +15,7 @@ export type training = {
   pauses?: number;
   pauseLength?: number;
 
-  exerciseLogs: exerciseLog[];
+  exerciseLogs?: exerciseLog[];
 };
 
 export type createTrainingLogRequestType = {
