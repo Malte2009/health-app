@@ -22,23 +22,23 @@
             <button class="button" @click="router.push({ name: 'createTraining' })">Create New Training</button>
           </td>
         </tr>
-        <tr v-for="training in trainings" :key="training.id">
-          <td v-if="!isMobile">{{ training.id }}</td>
-          <td>{{ getDateString(training.createdAt) }}</td>
-          <td>{{ training.name }}</td>
-          <td>{{ training.type }}</td>
-          <td>{{ training.duration || "" }}</td>
-          <td>{{ training.avgHeartRate || "" }}</td>
-          <td>{{ training.caloriesBurned || "" }}</td>
-          <td>{{ training.notes || "" }}</td>
+        <tr v-for="trainingLog in trainingLogs" :key="trainingLog.id">
+          <td v-if="!isMobile">{{ trainingLog.id }}</td>
+          <td>{{ getDateString(trainingLog.createdAt) }}</td>
+          <td>{{ trainingLog.name }}</td>
+          <td>{{ trainingLog.type }}</td>
+          <td>{{ trainingLog.duration || "" }}</td>
+          <td>{{ trainingLog.avgHeartRate || "" }}</td>
+          <td>{{ trainingLog.caloriesBurned || "" }}</td>
+          <td>{{ trainingLog.notes || "" }}</td>
           <td>
-            <button class="button button-primary" @click="router.push({ name: 'trainingDetails', params: { id: training.id } })">View</button>
-            <button class="button button-secondary" @click="router.push({ name: 'editTraining', params: { id: training.id } })">Edit</button>
+            <button class="button button-primary" @click="router.push({ name: 'trainingDetails', params: { id: trainingLog.id } })">View</button>
+            <button class="button button-secondary" @click="router.push({ name: 'editTraining', params: { id: trainingLog.id } })">Edit</button>
             <button
               class="button button-danger"
               @click="
                 showConfirmDelete = true;
-                deleteTrainingId = training.id;
+                deleteTrainingId = trainingLog.id;
               "
             >
               Delete
@@ -60,9 +60,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import type { getTrainingResponseType } from "@/types/trainingType.ts";
-import { deleteTrainingRequest, getTrainings } from "@/services/trainingService.ts";
-import { useTrainingStore } from "@/stores/trainingStore.ts";
+import type { trainingLog } from "@/types/trainingType.ts";
+import { deleteTrainingRequest, getTrainingLogs } from "@/services/trainingService.ts";
+import { useTrainingLogStore } from "@/stores/trainingStore.ts";
 import { getDateString } from "@/utility/date.ts";
 import { isAuthenticated } from "@/services/authService.ts";
 
@@ -70,13 +70,13 @@ const isMobile = window.innerWidth <= 768;
 const showConfirmDelete = ref(false);
 const deleteTrainingId = ref<string>("");
 const router = useRouter();
-const trainingsStore = useTrainingStore();
-const trainings = ref([] as getTrainingResponseType[]);
+const trainingsStore = useTrainingLogStore();
+const trainingLogs = ref([] as trainingLog[]);
 
 async function confirmDelete(id: string) {
   try {
     await deleteTrainingRequest(id);
-    trainings.value = trainings.value.filter((training) => training.id !== id);
+    trainingLogs.value = trainingLogs.value.filter((trainingLog) => trainingLog.id !== id);
   } catch (error) {
     console.error("Error deleting training:", error);
   }
@@ -92,11 +92,11 @@ function cancelDelete() {
 
 onMounted(async () => {
   if (await isAuthenticated()) {
-    if (trainingsStore.trainings.length > 0) {
-      trainings.value = trainingsStore.trainings;
+    if (trainingsStore.trainingLogs.length > 0) {
+      trainingLogs.value = trainingsStore.trainingLogs;
     } else {
-      trainings.value = await getTrainings();
-      trainingsStore.setTrainings(trainings.value);
+      trainingLogs.value = await getTrainingLogs();
+      trainingsStore.trainingLogs = trainingLogs.value;
     }
   } else {
     await router.push({ name: "login" });

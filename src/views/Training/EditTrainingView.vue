@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { getTrainings, updateTraining } from "@/services/trainingService.ts";
+import { getTrainingLogsWithExercises, updateTraining } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
@@ -167,7 +167,7 @@ async function submit() {
 
   trainingStore.setCurrentTraining(trainingsId);
 
-  const trainings = await getTrainings();
+  const trainings = await getTrainingLogsWithExercises();
 
   trainingStore.setTrainings(trainings);
 
