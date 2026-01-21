@@ -14,12 +14,9 @@
 import { useRouter } from "vue-router";
 import { onMounted } from "vue";
 
-import { useAuthStore } from "@/stores/auth.ts";
-import { setCookie } from "@/utility/cookie.ts";
 import { isAuthenticated, login } from "@/services/authService.ts";
 import { useTypeStore } from "@/stores/type.ts";
 
-const authStore = useAuthStore();
 const typeStore = useTypeStore();
 
 const router = useRouter();
@@ -56,10 +53,6 @@ async function submit() {
     return
   }
 
-  authStore.setToken(token);
-
-  setCookie("token", token, 1);
-
   await typeStore.loadTypes();
 
   await route();
@@ -68,8 +61,6 @@ async function submit() {
 async function route() {
   if (await isAuthenticated()) {
     await router.push({ name: "home" });
-  } else {
-    authStore.setToken("");
   }
 }
 

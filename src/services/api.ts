@@ -1,4 +1,3 @@
-import { getCookie } from "@/utility/cookie";
 import axios from "axios";
 
 const host = import.meta.env.VITE_API_HOST || window.location.hostname;
@@ -10,9 +9,6 @@ console.log(port);
 const api = axios.create({
   baseURL: port ? `${protocol}//${host}:${port}/health-api` : `${protocol}//${host}/health-api`,
   withCredentials: true,
-  headers: {
-    authorization: getCookie("token") || "",
-  },
 });
 
 export default api;

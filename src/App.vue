@@ -1,19 +1,19 @@
 <template>
-  <NavBar v-if="authStore.isAuthenticated"></NavBar>
+  <NavBar v-if="showNavBar"></NavBar>
   <RouterView />
 </template>
 
 <script setup lang="ts">
 import { RouterView } from "vue-router";
 
-import { onMounted } from "vue";
-import { useAuthStore } from "@/stores/auth.ts";
+import { onMounted, ref } from "vue";
 import { isAuthenticated } from "@/services/authService.ts";
 import NavBar from "@/components/General/NavBar.vue";
 import { useTypeStore } from "@/stores/type.ts";
 
-const authStore = useAuthStore();
 const typeStore = useTypeStore();
+
+const showNavBar = ref(false);
 
 function setViewport(scale: number) {
   let viewport = document.querySelector('meta[name="viewport"]');
@@ -25,11 +25,10 @@ function setViewport(scale: number) {
 }
 
 onMounted(async () => {
-  const token = await isAuthenticated();
   setViewport(window.innerWidth <= 768 ? 0.59 : 1);
-  if (token) {
-    authStore.setToken(token);
+  if (await isAuthenticated()) {
     await typeStore.loadTypes();
+    showNavBar.value = true;
   }
 });
 </script>
