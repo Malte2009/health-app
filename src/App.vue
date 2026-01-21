@@ -1,6 +1,6 @@
 <template>
   <NavBar v-if="showNavBar"></NavBar>
-  <RouterView />
+  <RouterView @loginSuccess="showNavBar = true"/>
 </template>
 
 <script setup lang="ts">

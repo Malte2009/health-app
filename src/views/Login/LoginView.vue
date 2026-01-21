@@ -21,6 +21,10 @@ const typeStore = useTypeStore();
 
 const router = useRouter();
 
+const emit = defineEmits<{
+  (e: "loginSuccess"): void;
+}>();
+
 function changeFocus(elementId: string) {
   const element = document.getElementById(elementId);
   if (element) {
@@ -60,6 +64,7 @@ async function submit() {
 
 async function route() {
   if (await isAuthenticated()) {
+    emit("loginSuccess");
     await router.push({ name: "home" });
   }
 }
