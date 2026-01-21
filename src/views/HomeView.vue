@@ -5,16 +5,15 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import { onMounted } from "vue";
-import { useAuthStore } from "@/stores/auth.ts";
+import { isAuthenticated } from "@/services/authService.ts";
 
-const authStore = useAuthStore();
 const router = useRouter();
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
-    await router.push({ name: "login" });
-  } else {
+  if (await isAuthenticated()) {
     await router.push({ name: "training" });
+  } else {
+    await router.push({ name: "login" });
   }
 });
 </script>

@@ -63,15 +63,14 @@ import { useRouter } from "vue-router";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import { deleteTrainingRequest, getTrainings } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/trainingStore.ts";
-import { useAuthStore } from "@/stores/auth.ts";
 import { getDateString } from "@/utility/date.ts";
+import { isAuthenticated } from "@/services/authService.ts";
 
 const isMobile = window.innerWidth <= 768;
 const showConfirmDelete = ref(false);
 const deleteTrainingId = ref<string>("");
 const router = useRouter();
 const trainingsStore = useTrainingStore();
-const authStore = useAuthStore();
 const trainings = ref([] as getTrainingResponseType[]);
 
 async function confirmDelete(id: string) {
@@ -92,15 +91,15 @@ function cancelDelete() {
 }
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
-    await router.push({ name: "login" });
-  } else {
+  if (await isAuthenticated()) {
     if (trainingsStore.trainings.length > 0) {
       trainings.value = trainingsStore.trainings;
     } else {
       trainings.value = await getTrainings();
       trainingsStore.setTrainings(trainings.value);
     }
+  } else {
+    await router.push({ name: "login" });
   }
 });
 </script>
