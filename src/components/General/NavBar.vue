@@ -2,9 +2,9 @@
   <div class="navbar">
     <div class="start"></div>
     <div class="middle">
-      <button :class="{ active: route.name === 'exercise' }" @click="router.push({name: 'exercise'})">Exercise Overview</button>
-      <button :class="{ active: route.name === 'training' }" @click="router.push({name: 'training'})">Trainings Overview</button>
-      <button :class="{ active: route.name === 'body' }" @click="router.push({name: 'body'})">Body Overview</button>
+      <button :class="{ active: route.name === 'progression' }" @click="router.push({ name: 'progression' })">Progression Overview</button>
+      <button :class="{ active: route.name === 'training' }" @click="router.push({ name: 'training' })">Trainings Overview</button>
+      <button :class="{ active: route.name === 'body' }" @click="router.push({ name: 'body' })">Body Overview</button>
     </div>
     <div class="end"></div>
   </div>
@@ -43,13 +43,13 @@ onMounted(() => {
     box-shadow 0.18s;
   outline: none;
   position: relative;
-  height: 40px;
+  height: 50px;
   padding: 0 16px;
 }
 
 .navbar {
   width: 100%;
-  height: 50px;
+  height: 60px;
   background-color: var(--bg-surface);
   color: var(--text-main);
   display: flex;
