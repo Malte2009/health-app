@@ -4,7 +4,7 @@
 </template>
 
 <script setup lang="ts">
-import { RouterView } from "vue-router";
+import { RouterView, useRouter } from "vue-router";
 
 import { onMounted, ref } from "vue";
 import { isAuthenticated } from "@/services/authService.ts";
@@ -12,6 +12,15 @@ import NavBar from "@/components/General/NavBar.vue";
 import { useTypeStore } from "@/stores/type.ts";
 
 const typeStore = useTypeStore();
+const router = useRouter();
+
+const EXCLUDED_ROUTES = new Set(["login", "signup", "home"]);
+
+router.afterEach((to) => {
+  if (to.name && !EXCLUDED_ROUTES.has(to.name as string)) {
+    localStorage.setItem("lastRoute", to.name as string);
+  }
+});
 
 const showNavBar = ref(false);
 
