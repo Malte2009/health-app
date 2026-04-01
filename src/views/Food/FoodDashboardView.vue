@@ -81,19 +81,19 @@
             </div>
           </div>
 
-          <div v-if="meal.foodLogs && meal.foodLogs.length > 0" class="food-logs-list">
-            <div v-for="fl in meal.foodLogs" :key="fl.id" class="food-log-item">
+          <div v-if="hasMealFoods(meal)" class="food-logs-list">
+            <div v-for="(fl, idx) in mealFoodLogs(meal)" :key="fl.id || `${meal.id}-${idx}`" class="food-log-item">
               <div class="food-log-left">
-                <div class="food-log-name">{{ fl.food?.name ?? 'Unknown' }}</div>
+                <div class="food-log-name">{{ foodLogName(fl) }}</div>
                 <div class="food-log-macros">
-                  <span class="fl-weight">{{ fl.weight_g }}g</span>
-                  <span class="fl-kcal kcal-color">{{ calcFoodLogCalories(fl) }}</span>
-                  <span class="fl-macro protein-color">P{{ calcFoodLogMacro(fl, 'protein') }}</span>
-                  <span class="fl-macro carbs-color">C{{ calcFoodLogMacro(fl, 'carbs') }}</span>
-                  <span class="fl-macro fat-color">F{{ calcFoodLogMacro(fl, 'fat') }}</span>
+                  <span class="macro-pill weight-pill">{{ foodLogWeight(fl) }} g</span>
+                  <span class="macro-pill kcal-pill">{{ calcFoodLogCalories(fl) }} kcal</span>
+                  <span class="macro-pill protein-pill">Protein {{ calcFoodLogMacro(fl, 'protein') }} g</span>
+                  <span class="macro-pill carbs-pill">Carbs {{ calcFoodLogMacro(fl, 'carbs') }} g</span>
+                  <span class="macro-pill fat-pill">Fats {{ calcFoodLogMacro(fl, 'fat') }} g</span>
                 </div>
               </div>
-              <button class="delete-food-log-btn" @click="deleteFoodLogItem(meal.id, fl.id)">&#10005;</button>
+              <button v-if="foodLogId(fl)" class="delete-food-log-btn" @click="deleteFoodLogItem(meal.id, foodLogId(fl) as string)">&#10005;</button>
             </div>
           </div>
           <div v-else class="meal-empty">No foods logged yet.</div>
@@ -273,16 +273,64 @@ function formatMealType(type: MealType): string {
 }
 
 function mealCalories(meal: MealLog): number {
-  return Math.round((meal.foodLogs ?? []).reduce((s, fl) => s + ((fl.food?.calories_per_100g ?? 0) * fl.weight_g) / 100, 0));
+  return Math.round(mealFoodLogs(meal).reduce((s, fl) => s + calcFoodLogCalories(fl), 0));
+}
+
+function mealFoodLogs(meal: MealLog): FoodLog[] {
+  const raw = (meal as MealLog & { food_logs?: FoodLog[]; foods?: FoodLog[] }).foodLogs
+    ?? (meal as MealLog & { food_logs?: FoodLog[]; foods?: FoodLog[] }).food_logs
+    ?? (meal as MealLog & { food_logs?: FoodLog[]; foods?: FoodLog[] }).foods;
+  return Array.isArray(raw) ? raw : [];
+}
+
+function hasMealFoods(meal: MealLog): boolean {
+  return mealFoodLogs(meal).length > 0;
 }
 
 function calcFoodLogCalories(fl: FoodLog): number {
-  return Math.round(((fl.food?.calories_per_100g ?? 0) * fl.weight_g) / 100);
+  const calories = Number(foodField(fl, "calories_per_100g", "caloriesPer100g"));
+  return Math.round((calories * foodLogWeight(fl)) / 100);
 }
 
 function calcFoodLogMacro(fl: FoodLog, type: "protein" | "carbs" | "fat"): string {
-  const base = type === "protein" ? fl.food?.protein_g : type === "carbs" ? fl.food?.carbs_g : fl.food?.fat_g;
-  return (Math.round(((base ?? 0) * fl.weight_g) / 10) / 10).toString();
+  const base = type === "protein"
+    ? Number(foodField(fl, "protein_g", "proteinG"))
+    : type === "carbs"
+      ? Number(foodField(fl, "carbs_g", "carbsG"))
+      : Number(foodField(fl, "fat_g", "fatG"));
+  return (Math.round((base * foodLogWeight(fl)) / 10) / 10).toString();
+}
+
+function foodLogId(fl: FoodLog): string | null {
+  const id = (fl as FoodLog & { food_log_id?: unknown }).id ?? (fl as FoodLog & { food_log_id?: unknown }).food_log_id;
+  if (id == null) return null;
+  const normalized = String(id);
+  return normalized.length > 0 ? normalized : null;
+}
+
+function foodLogWeight(fl: FoodLog): number {
+  const raw = (fl as FoodLog & { weightG?: number; weight?: number }).weight_g
+    ?? (fl as FoodLog & { weightG?: number; weight?: number }).weightG
+    ?? (fl as FoodLog & { weightG?: number; weight?: number }).weight;
+  const n = Number(raw ?? 0);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function foodField(fl: FoodLog, snake: string, camel: string): number {
+  const withFoodItem = fl as FoodLog & { food_item?: Record<string, unknown> };
+  const foodObj = (fl.food ?? withFoodItem.food_item ?? null) as Record<string, unknown> | null;
+  if (foodObj) {
+    const nested = Number(foodObj[snake] ?? foodObj[camel] ?? 0);
+    if (Number.isFinite(nested)) return nested;
+  }
+  const top = fl as unknown as Record<string, unknown>;
+  const direct = Number(top[snake] ?? top[camel] ?? 0);
+  return Number.isFinite(direct) ? direct : 0;
+}
+
+function foodLogName(fl: FoodLog): string {
+  const withFoodItem = fl as FoodLog & { food_item?: { name?: string } };
+  return fl.food?.name ?? withFoodItem.food_item?.name ?? "Unknown";
 }
 
 function nutrientVal(key: NutrientValueKey): number | null {
@@ -706,13 +754,47 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
 
 .food-log-macros {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
   margin-top: 2px;
 }
 
-.fl-weight { font-size: 0.78rem; color: var(--text-secondary); }
-.fl-kcal, .fl-macro { font-size: 0.78rem; font-weight: 600; }
+.macro-pill {
+  font-size: 0.74rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 3px 9px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
+  border: 1px solid transparent;
+}
+
+.weight-pill {
+  color: var(--text-secondary);
+  background: var(--bg-surface-secondary);
+  border-color: var(--border);
+}
+
+.kcal-pill {
+  color: var(--primary);
+  background: rgba(0, 191, 174, 0.12);
+}
+
+.protein-pill {
+  color: var(--success);
+  background: rgba(47, 213, 114, 0.14);
+}
+
+.carbs-pill {
+  color: var(--accent);
+  background: rgba(255, 209, 102, 0.16);
+}
+
+.fat-pill {
+  color: #f97316;
+  background: rgba(249, 115, 22, 0.14);
+}
 
 .delete-food-log-btn {
   background: none;
