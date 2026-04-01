@@ -50,6 +50,22 @@
             <label>Fiber (g per 100g)</label>
             <input v-model.number="newFood.fiber_g" type="number" min="0" step="0.1" />
           </div>
+          <div class="form-field">
+            <label>Default Amount</label>
+            <input v-model.number="newFood.defaultAmount" type="number" min="0" step="0.1" placeholder="e.g. 250" />
+          </div>
+          <div class="form-field">
+            <label>Default Unit</label>
+            <select v-model="newFood.defaultUnit">
+              <option :value="undefined">None</option>
+              <option value="G">g</option>
+              <option value="ML">ml</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Density (g/ml)</label>
+            <input v-model.number="newFood.density_g_per_ml" type="number" min="0" step="0.001" :disabled="newFood.defaultUnit !== 'ML'" />
+          </div>
         </div>
 
         <!-- Nutrient Toggle -->
@@ -123,6 +139,11 @@
           </span>
         </div>
 
+        <div v-if="food.defaultAmount && food.defaultUnit" class="portion-preview">
+          Default portion: {{ food.defaultAmount }} {{ food.defaultUnit === "G" ? "g" : "ml" }}
+          <span v-if="food.defaultUnit === 'ML' && food.density_g_per_ml">(density {{ food.density_g_per_ml }} g/ml)</span>
+        </div>
+
         <div class="food-card-actions">
           <button
             v-if="editingId !== food.id"
@@ -163,12 +184,64 @@
               <label>Fiber (g)</label>
               <input v-model.number="editData.fiber_g" type="number" min="0" step="0.1" />
             </div>
+            <div class="form-field">
+              <label>Default Amount</label>
+              <input v-model.number="editData.defaultAmount" type="number" min="0" step="0.1" />
+            </div>
+            <div class="form-field">
+              <label>Default Unit</label>
+              <select v-model="editData.defaultUnit">
+                <option :value="undefined">None</option>
+                <option value="G">g</option>
+                <option value="ML">ml</option>
+              </select>
+            </div>
+            <div class="form-field">
+              <label>Density (g/ml)</label>
+              <input v-model.number="editData.density_g_per_ml" type="number" min="0" step="0.001" :disabled="editData.defaultUnit !== 'ML'" />
+            </div>
           </div>
+
+          <button class="nutrient-toggle-btn" @click="showEditNutrients = !showEditNutrients">
+            {{ showEditNutrients ? "▲ Hide Micronutrients" : "▼ Edit Micronutrients" }}
+          </button>
+
+          <div v-if="showEditNutrients" class="nutrient-form">
+            <div class="nutrient-group">
+              <h4>Vitamins</h4>
+              <div class="form-grid">
+                <div v-for="v in vitamins" :key="v.key" class="form-field">
+                  <label>{{ v.label }} ({{ v.unit }})</label>
+                  <input v-model.number="editNutrients[v.key]" type="number" min="0" step="0.01" />
+                </div>
+              </div>
+            </div>
+            <div class="nutrient-group">
+              <h4>Minerals</h4>
+              <div class="form-grid">
+                <div v-for="m in minerals" :key="m.key" class="form-field">
+                  <label>{{ m.label }} ({{ m.unit }})</label>
+                  <input v-model.number="editNutrients[m.key]" type="number" min="0" step="0.01" />
+                </div>
+              </div>
+            </div>
+            <div class="nutrient-group">
+              <h4>Fatty Acids</h4>
+              <div class="form-grid">
+                <div v-for="f in fattyAcids" :key="f.key" class="form-field">
+                  <label>{{ f.label }} ({{ f.unit }})</label>
+                  <input v-model.number="editNutrients[f.key]" type="number" min="0" step="0.01" />
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="form-actions">
             <button class="btn btn-primary btn-sm" :disabled="saving" @click="submitEdit(food.id)">
               {{ saving ? "Saving..." : "Save" }}
             </button>
-            <button class="btn btn-secondary btn-sm" @click="editingId = null">Cancel</button>
+            <button class="btn btn-secondary btn-sm" @click="cancelEdit">Cancel</button>
+            <span v-if="editError" class="error-msg">{{ editError }}</span>
           </div>
         </div>
       </div>
@@ -191,8 +264,19 @@
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { isAuthenticated } from "@/services/authService.ts";
-import { getFoods, getMyFoods, searchFoods, createFood, updateFood, deleteFood } from "@/services/foodService.ts";
-import type { Food, CreateFoodRequest, Nutrient } from "@/types/foodType.ts";
+import {
+  getFoods,
+  getMyFoods,
+  searchFoods,
+  createFood,
+  updateFood,
+  deleteFood,
+  getFoodNutrients,
+  createFoodNutrients,
+  updateFoodNutrients,
+  deleteFoodNutrients,
+} from "@/services/foodService.ts";
+import type { Food, CreateFoodRequest, Nutrient, PortionUnit } from "@/types/foodType.ts";
 
 type NutrientValueKey = Exclude<keyof Nutrient, "id" | "foodId">;
 type NutrientField = { key: NutrientValueKey; label: string; unit: string };
@@ -209,6 +293,7 @@ const showCreateForm = ref(false);
 const showNutrients = ref(false);
 const saving = ref(false);
 const createError = ref("");
+const editError = ref("");
 const editingId = ref<string | null>(null);
 const deleteId = ref<string | null>(null);
 
@@ -226,9 +311,11 @@ const defaultFood = (): CreateFoodRequest => ({
 const newFood = ref<CreateFoodRequest>(defaultFood());
 const newNutrients = ref<Partial<Record<NutrientValueKey, number>>>({});
 const editData = ref<Partial<CreateFoodRequest>>({});
+const editNutrients = ref<Partial<Record<NutrientValueKey, number>>>({});
+const showEditNutrients = ref(false);
 
 const displayedFoods = computed<Food[]>(() => {
-  if (searchQuery.value.length >= 2) return searchResults.value;
+  if (searchQuery.value.length >= 1) return searchResults.value;
   return filter.value === "mine" ? myFoods.value : foods.value;
 });
 
@@ -237,9 +324,35 @@ function setFilter(f: "all" | "mine") {
   searchQuery.value = "";
 }
 
+function normalizePortionFields(payload: Partial<CreateFoodRequest>): Partial<CreateFoodRequest> {
+  const out = { ...payload };
+  const amount = typeof out.defaultAmount === "number" ? out.defaultAmount : undefined;
+  const unit = out.defaultUnit as PortionUnit | undefined;
+  const density = typeof out.density_g_per_ml === "number" ? out.density_g_per_ml : undefined;
+
+  out.defaultAmount = amount && amount > 0 ? amount : undefined;
+  out.defaultUnit = unit;
+  out.density_g_per_ml = density && density > 0 ? density : undefined;
+  return out;
+}
+
+function validatePortionFields(payload: Partial<CreateFoodRequest>): string | null {
+  const amount = payload.defaultAmount;
+  const unit = payload.defaultUnit;
+  const density = payload.density_g_per_ml;
+
+  if ((amount == null) !== (unit == null)) {
+    return "Default amount and unit must be set together.";
+  }
+  if (unit === "ML" && (density == null || density <= 0)) {
+    return "Density (g/ml) is required when default unit is ml.";
+  }
+  return null;
+}
+
 function onSearchInput() {
   if (debounceTimer) clearTimeout(debounceTimer);
-  if (searchQuery.value.length < 2) {
+  if (searchQuery.value.length < 1) {
     searchResults.value = [];
     return;
   }
@@ -248,8 +361,10 @@ function onSearchInput() {
   }, 350);
 }
 
-function startEdit(food: Food) {
+async function startEdit(food: Food) {
   editingId.value = food.id;
+  showEditNutrients.value = false;
+  editError.value = "";
   editData.value = {
     name: food.name,
     calories_per_100g: food.calories_per_100g,
@@ -257,7 +372,13 @@ function startEdit(food: Food) {
     carbs_g: food.carbs_g,
     fat_g: food.fat_g,
     fiber_g: food.fiber_g,
+    defaultAmount: food.defaultAmount,
+    defaultUnit: food.defaultUnit,
+    density_g_per_ml: food.density_g_per_ml,
   };
+
+  const nutrients = food.nutrients ?? (await getFoodNutrients(food.id));
+  editNutrients.value = extractEditableNutrients(nutrients);
 }
 
 async function submitCreate() {
@@ -269,10 +390,17 @@ async function submitCreate() {
   saving.value = true;
 
   const hasNutrients = Object.values(newNutrients.value).some((v) => v != null && v !== 0);
-  const payload: CreateFoodRequest = {
+  const payload = normalizePortionFields({
     ...newFood.value,
     ...(hasNutrients ? { nutrients: newNutrients.value } : {}),
-  };
+  }) as CreateFoodRequest;
+
+  const portionError = validatePortionFields(payload);
+  if (portionError) {
+    createError.value = portionError;
+    saving.value = false;
+    return;
+  }
 
   const result = await createFood(payload);
   saving.value = false;
@@ -287,22 +415,93 @@ async function submitCreate() {
 }
 
 async function submitEdit(id: string) {
+  editError.value = "";
   saving.value = true;
-  const result = await updateFood(id, editData.value);
+  const foodPayload = normalizePortionFields(editData.value);
+  const portionError = validatePortionFields(foodPayload);
+  if (portionError) {
+    editError.value = portionError;
+    saving.value = false;
+    return;
+  }
+
+  const result = await updateFood(id, foodPayload);
+
+  let nextNutrients: Nutrient | undefined;
+  const nutrientPayload = sanitizeNutrients(editNutrients.value);
+  const hasNutrientValues = Object.keys(nutrientPayload).length > 0;
+  const currentFood = foods.value.find((f) => f.id === id) ?? myFoods.value.find((f) => f.id === id);
+  const hadNutrients = !!currentFood?.nutrients;
+
+  if (hasNutrientValues) {
+    nextNutrients = (await updateFoodNutrients(id, nutrientPayload)) || undefined;
+    if (!nextNutrients) {
+      nextNutrients = (await createFoodNutrients(id, nutrientPayload)) || undefined;
+    }
+    if (!nextNutrients) {
+      nextNutrients = nutrientPayload as Nutrient;
+    }
+  } else if (hadNutrients) {
+    await deleteFoodNutrients(id);
+  }
+
   saving.value = false;
   if (result) {
+    const mergedFood: Food = {
+      ...(result as Food),
+      nutrients: hasNutrientValues ? nextNutrients : undefined,
+    };
+
     const update = (list: Food[]) => {
       const idx = list.findIndex((f) => f.id === id);
-      if (idx !== -1) list[idx] = result as Food;
+      if (idx !== -1) list[idx] = mergedFood;
     };
     update(foods.value);
     update(myFoods.value);
     editingId.value = null;
+    showEditNutrients.value = false;
+    editNutrients.value = {};
   }
+}
+
+function extractEditableNutrients(nutrients: Nutrient | void): Partial<Record<NutrientValueKey, number>> {
+  if (!nutrients) return {};
+  const allFields = [...vitamins, ...minerals, ...fattyAcids];
+  const source = nutrients as Record<string, unknown>;
+  const extracted: Partial<Record<NutrientValueKey, number>> = {};
+
+  for (const field of allFields) {
+    const key = field.key as string;
+    const camelKey = key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+    const raw = source[key] ?? source[camelKey];
+    const value = Number(raw);
+    if (Number.isFinite(value) && value >= 0) {
+      extracted[field.key] = value;
+    }
+  }
+
+  return extracted;
+}
+
+function sanitizeNutrients(values: Partial<Record<NutrientValueKey, number>>): Partial<Nutrient> {
+  const cleaned: Partial<Nutrient> = {};
+  for (const [key, value] of Object.entries(values) as [NutrientValueKey, number | undefined][]) {
+    if (typeof value === "number" && Number.isFinite(value) && value >= 0) {
+      cleaned[key] = value;
+    }
+  }
+  return cleaned;
 }
 
 function confirmDelete(id: string) {
   deleteId.value = id;
+}
+
+function cancelEdit() {
+  editingId.value = null;
+  showEditNutrients.value = false;
+  editNutrients.value = {};
+  editError.value = "";
 }
 
 async function doDelete() {
@@ -318,6 +517,7 @@ function topNutrients(food: Food): { label: string; value: number; unit: string 
   if (!food.nutrients) return [];
   const map: NutrientField[] = [
     { key: "vitamin_c", label: "Vit C", unit: "mg" },
+    { key: "caffeine", label: "Caffeine", unit: "mg" },
     { key: "iron", label: "Iron", unit: "mg" },
     { key: "calcium", label: "Ca", unit: "mg" },
     { key: "omega_3", label: "ω3", unit: "g" },
@@ -355,6 +555,7 @@ const vitamins: NutrientField[] = [
   { key: "vitamin_b9", label: "B9 Folate", unit: "µg" },
   { key: "vitamin_b12", label: "B12", unit: "µg" },
   { key: "choline", label: "Choline", unit: "mg" },
+  { key: "caffeine", label: "Caffeine", unit: "mg" },
 ];
 
 const minerals: NutrientField[] = [
@@ -517,7 +718,19 @@ h1 {
   transition: border-color 0.2s;
 }
 
-.form-field input:focus {
+.form-field select {
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text-main);
+  font-size: 0.95rem;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-field input:focus,
+.form-field select:focus {
   border-color: var(--primary);
 }
 
@@ -657,6 +870,12 @@ h1 {
   border-radius: 12px;
   padding: 2px 8px;
   color: var(--text-secondary);
+}
+
+.portion-preview {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
 }
 
 .food-card-actions {

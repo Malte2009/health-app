@@ -99,13 +99,14 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { isAuthenticated } from "@/services/authService.ts";
-import { getWeeklyDashboard, getMonthlyDashboard } from "@/services/foodDashboardService.ts";
-import type { DailyDashboard } from "@/types/foodType.ts";
+import { getNutritionOverTime } from "@/services/foodDashboardService.ts";
+import { toLocalIsoDate } from "@/utility/date.ts";
+import type { NutritionOverTimeDay } from "@/types/foodType.ts";
 
 const router = useRouter();
 
 const viewMode = ref<"week" | "month">("week");
-const data = ref<DailyDashboard[]>([]);
+const data = ref<NutritionOverTimeDay[]>([]);
 const loading = ref(false);
 const weekOffset = ref(0);
 const monthOffset = ref(0);
@@ -125,11 +126,7 @@ function barX(i: number): number {
   return barAreaLeft + i * ((svgWidth - barAreaLeft - 10) / n) + barPadding / 2;
 }
 
-// Goals now use new format: goals.calories?.target
-const calorieGoal = computed(() => {
-  const entry = data.value.find((d) => d.goals?.calories?.target);
-  return entry?.goals?.calories?.target ?? 0;
-});
+const calorieGoal = computed(() => 0);
 
 const maxCalories = computed(() => {
   const max = Math.max(...data.value.map((d) => d.totals.calories), calorieGoal.value * 1.1, 100);
@@ -150,7 +147,7 @@ function barHeight(cal: number): number {
 
 const goalY = computed(() => barY(calorieGoal.value));
 
-function barColor(item: DailyDashboard): string {
+function barColor(item: NutritionOverTimeDay): string {
   if (item.totals.calories === 0) return "transparent";
   if (!calorieGoal.value) return "var(--text-secondary)";
   return item.totals.calories <= calorieGoal.value * 1.05 ? "var(--success)" : "var(--danger)";
@@ -161,12 +158,12 @@ const maxMacroTotal = computed(() => {
   return max * 1.1;
 });
 
-function macroBarH(item: DailyDashboard, type: "protein" | "carbs" | "fat"): number {
+function macroBarH(item: NutritionOverTimeDay, type: "protein" | "carbs" | "fat"): number {
   const val = type === "protein" ? item.totals.protein_g : type === "carbs" ? item.totals.carbs_g : item.totals.fat_g;
   return (val / maxMacroTotal.value) * (chartAreaHeight - 10);
 }
 
-function macroBarY(item: DailyDashboard, type: "protein" | "carbs" | "fat"): number {
+function macroBarY(item: NutritionOverTimeDay, type: "protein" | "carbs" | "fat"): number {
   const total = maxMacroTotal.value;
   const protH = (item.totals.protein_g / total) * (chartAreaHeight - 10);
   const carbH = (item.totals.carbs_g / total) * (chartAreaHeight - 10);
@@ -230,7 +227,7 @@ function fmt(d: Date): string {
 function currentMonth(): string {
   const d = new Date();
   d.setMonth(d.getMonth() + monthOffset.value);
-  return d.toISOString().slice(0, 7);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
 const daysLogged = computed(() => data.value.filter((d) => d.totals.calories > 0).length);
@@ -254,12 +251,24 @@ const goalHitRate = computed(() => {
 
 async function loadData() {
   loading.value = true;
+  let startDate = "";
+  let endDate = "";
+
   if (viewMode.value === "week") {
-    const start = weekStart(weekOffset.value).toISOString().split("T")[0];
-    data.value = (await getWeeklyDashboard(start)) ?? [];
+    const start = weekStart(weekOffset.value);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 6);
+    startDate = toLocalIsoDate(start);
+    endDate = toLocalIsoDate(end);
   } else {
-    data.value = (await getMonthlyDashboard(currentMonth())) ?? [];
+    const [year, month] = currentMonth().split("-").map((v) => Number(v));
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 0);
+    startDate = toLocalIsoDate(start);
+    endDate = toLocalIsoDate(end);
   }
+
+  data.value = (await getNutritionOverTime(startDate, endDate))?.days ?? [];
   loading.value = false;
 }
 

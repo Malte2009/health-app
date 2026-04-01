@@ -8,14 +8,16 @@ function normalizeFoodLog(log: unknown): FoodLog {
     mealLogId: String(src.mealLogId ?? src.meal_log_id ?? ""),
     foodId: String(src.foodId ?? src.food_id ?? ""),
     weight_g: Number(src.weight_g ?? src.weightG ?? 0),
+    amount: src.amount != null ? Number(src.amount) : undefined,
+    unit: (src.unit ?? src.portionUnit ?? src.portion_unit ?? undefined) as FoodLog["unit"],
     date: String(src.date ?? ""),
-    food: (src.food ?? undefined) as FoodLog["food"],
+    food: (src.food ?? src.food_item ?? undefined) as FoodLog["food"],
   };
 }
 
 function normalizeMealLog(log: unknown): MealLog {
   const src = (log ?? {}) as Record<string, unknown>;
-  const rawFoodLogs = src.foodLogs ?? src.food_logs;
+  const rawFoodLogs = src.foodLogs ?? src.food_logs ?? src.foods;
   const foodLogs = Array.isArray(rawFoodLogs) ? rawFoodLogs.map((item) => normalizeFoodLog(item)) : [];
 
   return {
@@ -103,7 +105,7 @@ export const createFoodLog = async (mealLogId: string, data: CreateFoodLogReques
   }
 };
 
-export const updateFoodLog = async (mealLogId: string, id: string, data: { weight_g?: number; date?: string }): Promise<FoodLog | void> => {
+export const updateFoodLog = async (mealLogId: string, id: string, data: { weight_g?: number; amount?: number; unit?: FoodLog["unit"]; date?: string }): Promise<FoodLog | void> => {
   try {
     return (await api.patch(`/meal-logs/${mealLogId}/food-logs/${id}`, data)).data;
   } catch (error) {

@@ -42,8 +42,15 @@
           </div>
 
           <div class="weight-row">
-            <label class="weight-label">Weight (g)</label>
-            <input v-model.number="weight" class="weight-input" type="number" min="1" step="1" />
+            <label class="weight-label">Amount</label>
+            <input v-model.number="amount" class="weight-input" type="number" min="0.1" step="0.1" />
+            <select v-model="unit" class="unit-select">
+              <option value="G">g</option>
+              <option value="ML">ml</option>
+            </select>
+          </div>
+          <div v-if="unit === 'ML' && !selectedFood.density_g_per_ml" class="status-msg density-hint">
+            This food has no density (g/ml). Weight will fallback to backend defaults.
           </div>
 
           <div class="calculated-macros">
@@ -101,7 +108,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { Food, MealRecipe } from "@/types/foodType.ts";
+import type { Food, MealRecipe, PortionUnit } from "@/types/foodType.ts";
 import { searchFoods } from "@/services/foodService.ts";
 import { createFoodLog } from "@/services/mealLogService.ts";
 import { getMealRecipes, logMealRecipe } from "@/services/mealRecipeService.ts";
@@ -120,7 +127,8 @@ const tab = ref<"search" | "recipes">("search");
 const searchQuery = ref("");
 const searchResults = ref<Food[]>([]);
 const selectedFood = ref<Food | null>(null);
-const weight = ref(100);
+const amount = ref<number>(100);
+const unit = ref<PortionUnit>("G");
 const loading = ref(false);
 const saving = ref(false);
 
@@ -145,21 +153,32 @@ function onSearchInput() {
 
 function selectFood(food: Food) {
   selectedFood.value = food;
-  weight.value = 100;
+  amount.value = food.defaultAmount && food.defaultAmount > 0 ? food.defaultAmount : 100;
+  unit.value = food.defaultUnit ?? "G";
 }
 
-const calcCalories = computed(() => selectedFood.value ? Math.round((selectedFood.value.calories_per_100g * weight.value) / 100) : 0);
-const calcProtein = computed(() => selectedFood.value ? Math.round(((selectedFood.value.protein_g * weight.value) / 100) * 10) / 10 : 0);
-const calcCarbs = computed(() => selectedFood.value ? Math.round(((selectedFood.value.carbs_g * weight.value) / 100) * 10) / 10 : 0);
-const calcFat = computed(() => selectedFood.value ? Math.round(((selectedFood.value.fat_g * weight.value) / 100) * 10) / 10 : 0);
-const calcFiber = computed(() => selectedFood.value ? Math.round(((selectedFood.value.fiber_g * weight.value) / 100) * 10) / 10 : 0);
+const effectiveWeight = computed(() => {
+  if (!selectedFood.value) return 0;
+  if (unit.value === "G") return amount.value;
+  const density = selectedFood.value.density_g_per_ml;
+  if (!density || density <= 0) return 0;
+  return amount.value * density;
+});
+
+const calcCalories = computed(() => selectedFood.value ? Math.round((selectedFood.value.calories_per_100g * effectiveWeight.value) / 100) : 0);
+const calcProtein = computed(() => selectedFood.value ? Math.round(((selectedFood.value.protein_g * effectiveWeight.value) / 100) * 10) / 10 : 0);
+const calcCarbs = computed(() => selectedFood.value ? Math.round(((selectedFood.value.carbs_g * effectiveWeight.value) / 100) * 10) / 10 : 0);
+const calcFat = computed(() => selectedFood.value ? Math.round(((selectedFood.value.fat_g * effectiveWeight.value) / 100) * 10) / 10 : 0);
+const calcFiber = computed(() => selectedFood.value ? Math.round(((selectedFood.value.fiber_g * effectiveWeight.value) / 100) * 10) / 10 : 0);
 
 async function logFood() {
-  if (!selectedFood.value || weight.value <= 0) return;
+  if (!selectedFood.value || amount.value <= 0) return;
   saving.value = true;
   const result = await createFoodLog(props.mealLogId, {
     foodId: selectedFood.value.id,
-    weight_g: weight.value,
+    amount: amount.value,
+    unit: unit.value,
+    weight_g: effectiveWeight.value > 0 ? effectiveWeight.value : undefined,
     date: props.date,
   });
   saving.value = false;
@@ -373,6 +392,23 @@ async function logRecipe() {
 }
 
 .weight-input:focus { border-color: var(--primary); }
+
+.unit-select {
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 1rem;
+  padding: 10px 12px;
+  min-height: 48px;
+}
+
+.unit-select:focus { border-color: var(--primary); outline: none; }
+
+.density-hint {
+  padding-top: 0;
+  text-align: left;
+}
 
 .calculated-macros {
   background: var(--bg-surface-secondary);

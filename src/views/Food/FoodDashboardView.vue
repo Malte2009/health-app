@@ -86,7 +86,7 @@
               <div class="food-log-left">
                 <div class="food-log-name">{{ foodLogName(fl) }}</div>
                 <div class="food-log-macros">
-                  <span class="macro-pill weight-pill">{{ foodLogWeight(fl) }} g</span>
+                  <span class="macro-pill weight-pill">{{ foodLogAmountDisplay(fl) }}</span>
                   <span class="macro-pill kcal-pill">{{ calcFoodLogCalories(fl) }} kcal</span>
                   <span class="macro-pill protein-pill">Protein {{ calcFoodLogMacro(fl, 'protein') }} g</span>
                   <span class="macro-pill carbs-pill">Carbs {{ calcFoodLogMacro(fl, 'carbs') }} g</span>
@@ -309,11 +309,33 @@ function foodLogId(fl: FoodLog): string | null {
 }
 
 function foodLogWeight(fl: FoodLog): number {
-  const raw = (fl as FoodLog & { weightG?: number; weight?: number }).weight_g
+  const rawWeight = (fl as FoodLog & { weightG?: number; weight?: number }).weight_g
     ?? (fl as FoodLog & { weightG?: number; weight?: number }).weightG
     ?? (fl as FoodLog & { weightG?: number; weight?: number }).weight;
-  const n = Number(raw ?? 0);
-  return Number.isFinite(n) ? n : 0;
+  const weight = Number(rawWeight ?? 0);
+  if (Number.isFinite(weight) && weight > 0) return weight;
+
+  const amountRaw = (fl as FoodLog & { amount?: number }).amount;
+  const unitRaw = (fl as FoodLog & { unit?: string }).unit;
+  const amount = Number(amountRaw ?? 0);
+  const unit = typeof unitRaw === "string" ? unitRaw.toUpperCase() : "";
+
+  if (amount > 0 && unit === "G") return amount;
+  if (amount > 0 && unit === "ML") {
+    const density = Number(foodField(fl, "density_g_per_ml", "densityGPerMl"));
+    if (density > 0) return amount * density;
+  }
+
+  const defaultAmount = Number(foodField(fl, "default_amount", "defaultAmount"));
+  const defaultUnitRaw = foodTextField(fl, "defaultUnit", "defaultUnit");
+  const defaultUnit = defaultUnitRaw.toUpperCase();
+  if (defaultAmount > 0 && defaultUnit === "G") return defaultAmount;
+  if (defaultAmount > 0 && defaultUnit === "ML") {
+    const density = Number(foodField(fl, "density_g_per_ml", "densityGPerMl"));
+    if (density > 0) return defaultAmount * density;
+  }
+
+  return 0;
 }
 
 function foodField(fl: FoodLog, snake: string, camel: string): number {
@@ -326,6 +348,27 @@ function foodField(fl: FoodLog, snake: string, camel: string): number {
   const top = fl as unknown as Record<string, unknown>;
   const direct = Number(top[snake] ?? top[camel] ?? 0);
   return Number.isFinite(direct) ? direct : 0;
+}
+
+function foodTextField(fl: FoodLog, snake: string, camel: string): string {
+  const withFoodItem = fl as FoodLog & { food_item?: Record<string, unknown> };
+  const foodObj = (fl.food ?? withFoodItem.food_item ?? null) as Record<string, unknown> | null;
+  if (foodObj) {
+    const nested = foodObj[snake] ?? foodObj[camel];
+    if (typeof nested === "string") return nested;
+  }
+  const top = fl as unknown as Record<string, unknown>;
+  const direct = top[snake] ?? top[camel];
+  return typeof direct === "string" ? direct : "";
+}
+
+function foodLogAmountDisplay(fl: FoodLog): string {
+  const amount = Number((fl as FoodLog & { amount?: number }).amount ?? 0);
+  const unit = ((fl as FoodLog & { unit?: string }).unit ?? "").toString().toUpperCase();
+  if (amount > 0 && (unit === "G" || unit === "ML")) {
+    return `${Math.round(amount * 10) / 10} ${unit === "G" ? "g" : "ml"}`;
+  }
+  return `${Math.round(foodLogWeight(fl) * 10) / 10} g`;
 }
 
 function foodLogName(fl: FoodLog): string {
@@ -414,6 +457,7 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
       { key: "vitamin_b5", label: "B5", unit: "mg" }, { key: "vitamin_b6", label: "B6", unit: "mg" },
       { key: "vitamin_b7", label: "B7", unit: "µg" }, { key: "vitamin_b9", label: "B9", unit: "µg" },
       { key: "vitamin_b12", label: "B12", unit: "µg" }, { key: "choline", label: "Choline", unit: "mg" },
+      { key: "caffeine", label: "Caffeine", unit: "mg" },
     ],
   },
   {

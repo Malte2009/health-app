@@ -34,7 +34,10 @@ export interface Nutrient {
   omega_3?: number;
   omega_6?: number;
   omega_9?: number;
+  caffeine?: number;
 }
+
+export type PortionUnit = "G" | "ML";
 
 export interface Food {
   id: string;
@@ -45,6 +48,9 @@ export interface Food {
   carbs_g: number;
   fat_g: number;
   fiber_g: number;
+  defaultAmount?: number;
+  defaultUnit?: PortionUnit;
+  density_g_per_ml?: number;
   nutrients?: Nutrient;
 }
 
@@ -55,6 +61,8 @@ export interface FoodLog {
   mealLogId: string;
   foodId: string;
   weight_g: number;
+  amount?: number;
+  unit?: PortionUnit;
   date: string;
   food?: Food;
 }
@@ -96,6 +104,18 @@ export interface DailyDashboard {
   nutrientTotals: Partial<Nutrient>;
   meals: MealLog[];
   goals: DashboardGoals;
+}
+
+export interface NutritionOverTimeDay {
+  date: string;
+  totals: MacroTotals;
+  nutrientTotals: Partial<Nutrient>;
+}
+
+export interface NutritionOverTimeResponse {
+  startDate: string;
+  endDate: string;
+  days: NutritionOverTimeDay[];
 }
 
 // User goals CRUD
@@ -149,6 +169,9 @@ export interface CreateFoodRequest {
   carbs_g: number;
   fat_g: number;
   fiber_g: number;
+  defaultAmount?: number;
+  defaultUnit?: PortionUnit;
+  density_g_per_ml?: number;
   nutrients?: Partial<Nutrient>;
 }
 
@@ -160,5 +183,7 @@ export interface CreateMealLogRequest {
 export interface CreateFoodLogRequest {
   foodId: string;
   weight_g?: number;
+  amount?: number;
+  unit?: PortionUnit;
   date?: string;
 }

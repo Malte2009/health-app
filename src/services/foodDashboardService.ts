@@ -1,5 +1,5 @@
 import api from "./api";
-import type { DailyDashboard, MealLog, FoodLog, MealType } from "@/types/foodType.ts";
+import type { DailyDashboard, MealLog, FoodLog, MealType, NutritionOverTimeResponse, NutritionOverTimeDay } from "@/types/foodType.ts";
 
 type Obj = Record<string, unknown>;
 
@@ -76,3 +76,36 @@ export const getMonthlyDashboard = async (month: string): Promise<DailyDashboard
     console.error(error);
   }
 };
+
+function normalizeNutritionOverTimeResponse(payload: unknown): NutritionOverTimeResponse | void {
+  if (!payload || typeof payload !== "object") return;
+  const src = payload as Obj;
+  const wrapped = (src.data && typeof src.data === "object" ? src.data : src) as Obj;
+  const rawDays = wrapped.days;
+  const days: NutritionOverTimeDay[] = Array.isArray(rawDays)
+    ? rawDays.map((day) => {
+        const d = (day ?? {}) as Obj;
+        return {
+          date: String(d.date ?? ""),
+          totals: (d.totals ?? {}) as NutritionOverTimeDay["totals"],
+          nutrientTotals: (d.nutrientTotals ?? d.nutrient_totals ?? {}) as NutritionOverTimeDay["nutrientTotals"],
+        };
+      })
+    : [];
+
+  return {
+    startDate: String(wrapped.startDate ?? wrapped.start_date ?? ""),
+    endDate: String(wrapped.endDate ?? wrapped.end_date ?? ""),
+    days,
+  };
+}
+
+export const getNutritionOverTime = async (startDate: string, endDate: string): Promise<NutritionOverTimeResponse | void> => {
+  try {
+    const params = new URLSearchParams({ startDate, endDate });
+    return normalizeNutritionOverTimeResponse((await api.get(`/dashboard/nutrition-over-time?${params.toString()}`)).data);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
