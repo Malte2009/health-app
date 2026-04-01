@@ -1,6 +1,17 @@
 import api from "./api";
 import type { MealLog, FoodLog, CreateMealLogRequest, CreateFoodLogRequest } from "@/types/foodType.ts";
 
+function normalizeMealLogsResponse(payload: unknown): MealLog[] {
+  if (Array.isArray(payload)) return payload as MealLog[];
+  if (!payload || typeof payload !== "object") return [];
+
+  const wrapped = payload as { data?: unknown; mealLogs?: unknown; items?: unknown };
+  if (Array.isArray(wrapped.data)) return wrapped.data as MealLog[];
+  if (Array.isArray(wrapped.mealLogs)) return wrapped.mealLogs as MealLog[];
+  if (Array.isArray(wrapped.items)) return wrapped.items as MealLog[];
+  return [];
+}
+
 export const getMealLogs = async (date?: string, startDate?: string, endDate?: string): Promise<MealLog[]> => {
   try {
     const params = new URLSearchParams();
@@ -8,7 +19,7 @@ export const getMealLogs = async (date?: string, startDate?: string, endDate?: s
     if (startDate) params.set("startDate", startDate);
     if (endDate) params.set("endDate", endDate);
     const query = params.toString() ? `?${params.toString()}` : "";
-    return (await api.get(`/meal-logs${query}`)).data;
+    return normalizeMealLogsResponse((await api.get(`/meal-logs${query}`)).data);
   } catch (error) {
     console.error(error);
     return [];

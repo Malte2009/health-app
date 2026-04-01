@@ -1,9 +1,20 @@
 import api from "./api";
 import type { Food, CreateFoodRequest } from "@/types/foodType.ts";
 
+function normalizeFoodsResponse(payload: unknown): Food[] {
+  if (Array.isArray(payload)) return payload as Food[];
+  if (!payload || typeof payload !== "object") return [];
+
+  const wrapped = payload as { data?: unknown; foods?: unknown; items?: unknown };
+  if (Array.isArray(wrapped.data)) return wrapped.data as Food[];
+  if (Array.isArray(wrapped.foods)) return wrapped.foods as Food[];
+  if (Array.isArray(wrapped.items)) return wrapped.items as Food[];
+  return [];
+}
+
 export const getFoods = async (): Promise<Food[]> => {
   try {
-    return (await api.get("/foods")).data;
+    return normalizeFoodsResponse((await api.get("/foods")).data);
   } catch (error) {
     console.error(error);
     return [];
@@ -12,7 +23,7 @@ export const getFoods = async (): Promise<Food[]> => {
 
 export const searchFoods = async (query: string): Promise<Food[]> => {
   try {
-    return (await api.get(`/foods/search?q=${encodeURIComponent(query)}`)).data;
+    return normalizeFoodsResponse((await api.get(`/foods/search?q=${encodeURIComponent(query)}`)).data);
   } catch (error) {
     console.error(error);
     return [];
@@ -21,7 +32,7 @@ export const searchFoods = async (query: string): Promise<Food[]> => {
 
 export const getMyFoods = async (): Promise<Food[]> => {
   try {
-    return (await api.get("/foods/my-foods")).data;
+    return normalizeFoodsResponse((await api.get("/foods/my-foods")).data);
   } catch (error) {
     console.error(error);
     return [];

@@ -167,12 +167,13 @@ import { isAuthenticated } from "@/services/authService.ts";
 import { getDailyDashboard } from "@/services/foodDashboardService.ts";
 import { getNrvProgress } from "@/services/nrvService.ts";
 import { createMealLog, deleteMealLog, deleteFoodLog } from "@/services/mealLogService.ts";
+import { toLocalIsoDate } from "@/utility/date.ts";
 import type { DailyDashboard, MealLog, FoodLog, MealType, Nutrient, GoalProgress, NrvProgressItem, MacroTotals } from "@/types/foodType.ts";
 import AddFoodLogModal from "@/components/Food/AddFoodLogModal.vue";
 
 const router = useRouter();
 
-const todayStr = new Date().toISOString().split("T")[0];
+const todayStr = toLocalIsoDate();
 const selectedDate = ref(todayStr);
 const dashboard = ref<DailyDashboard | null>(null);
 const nrvData = ref<Record<string, NrvProgressItem>>({});
@@ -257,7 +258,7 @@ function formatDisplayDate(d: string): string {
 function changeDate(delta: number) {
   const d = new Date(selectedDate.value + "T12:00:00");
   d.setDate(d.getDate() + delta);
-  const newDate = d.toISOString().split("T")[0];
+  const newDate = toLocalIsoDate(d);
   if (newDate <= todayStr) selectedDate.value = newDate;
 }
 
@@ -307,7 +308,7 @@ async function deleteFoodLogItem(mealLogId: string, foodLogId: string) {
 
 async function addMeal(type: MealType) {
   creatingMeal.value = true;
-  await createMealLog({ type });
+  await createMealLog({ type, date: selectedDate.value });
   creatingMeal.value = false;
   await loadDashboard();
 }

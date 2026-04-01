@@ -141,6 +141,7 @@ import { isAuthenticated } from "@/services/authService.ts";
 import { getMealRecipes, createMealRecipe, deleteMealRecipe, addIngredient, deleteIngredient, logMealRecipe } from "@/services/mealRecipeService.ts";
 import { getMealLogs } from "@/services/mealLogService.ts";
 import { searchFoods } from "@/services/foodService.ts";
+import { toLocalIsoDate } from "@/utility/date.ts";
 import type { MealRecipe, MealLog, Food, MealType } from "@/types/foodType.ts";
 
 const router = useRouter();
@@ -246,7 +247,8 @@ async function doDeleteRecipe() {
   deleteId.value = null;
 }
 
-function openLogModal(recipe: MealRecipe) {
+async function openLogModal(recipe: MealRecipe) {
+  await loadTodayMeals();
   logRecipe.value = recipe;
   logMealId.value = "";
   logScale.value = 1.0;
@@ -267,17 +269,18 @@ async function loadRecipes() {
   recipes.value = await getMealRecipes();
 }
 
+async function loadTodayMeals() {
+  const today = toLocalIsoDate();
+  todayMeals.value = await getMealLogs(today);
+}
+
 onMounted(async () => {
   if (!(await isAuthenticated())) {
     await router.push({ name: "login" });
     return;
   }
   loading.value = true;
-  const today = new Date().toISOString().split("T")[0];
-  [recipes.value, todayMeals.value] = await Promise.all([
-    getMealRecipes(),
-    getMealLogs(today),
-  ]);
+  await Promise.all([loadRecipes(), loadTodayMeals()]);
   loading.value = false;
 });
 </script>

@@ -154,6 +154,7 @@ export interface CreateFoodRequest {
 
 export interface CreateMealLogRequest {
   type: MealType;
+  date?: string;
 }
 
 export interface CreateFoodLogRequest {
