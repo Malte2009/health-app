@@ -137,14 +137,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth.ts";
+import { isAuthenticated } from "@/services/authService.ts";
 import { getMealRecipes, createMealRecipe, deleteMealRecipe, addIngredient, deleteIngredient, logMealRecipe } from "@/services/mealRecipeService.ts";
 import { getMealLogs } from "@/services/mealLogService.ts";
 import { searchFoods } from "@/services/foodService.ts";
 import type { MealRecipe, MealLog, Food, MealType } from "@/types/foodType.ts";
 
 const router = useRouter();
-const authStore = useAuthStore();
 
 const recipes = ref<MealRecipe[]>([]);
 const todayMeals = ref<MealLog[]>([]);
@@ -269,7 +268,7 @@ async function loadRecipes() {
 }
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
+  if (!(await isAuthenticated())) {
     await router.push({ name: "login" });
     return;
   }

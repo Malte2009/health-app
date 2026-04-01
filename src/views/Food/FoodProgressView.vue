@@ -98,12 +98,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth.ts";
+import { isAuthenticated } from "@/services/authService.ts";
 import { getWeeklyDashboard, getMonthlyDashboard } from "@/services/foodDashboardService.ts";
 import type { DailyDashboard } from "@/types/foodType.ts";
 
 const router = useRouter();
-const authStore = useAuthStore();
 
 const viewMode = ref<"week" | "month">("week");
 const data = ref<DailyDashboard[]>([]);
@@ -267,7 +266,7 @@ async function loadData() {
 watch([viewMode, weekOffset, monthOffset], loadData);
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) { await router.push({ name: "login" }); return; }
+  if (!(await isAuthenticated())) { await router.push({ name: "login" }); return; }
   await loadData();
 });
 </script>

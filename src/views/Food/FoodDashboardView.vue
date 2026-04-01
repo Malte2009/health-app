@@ -163,7 +163,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth.ts";
+import { isAuthenticated } from "@/services/authService.ts";
 import { getDailyDashboard } from "@/services/foodDashboardService.ts";
 import { getNrvProgress } from "@/services/nrvService.ts";
 import { createMealLog, deleteMealLog, deleteFoodLog } from "@/services/mealLogService.ts";
@@ -171,7 +171,6 @@ import type { DailyDashboard, MealLog, FoodLog, MealType, Nutrient, GoalProgress
 import AddFoodLogModal from "@/components/Food/AddFoodLogModal.vue";
 
 const router = useRouter();
-const authStore = useAuthStore();
 
 const todayStr = new Date().toISOString().split("T")[0];
 const selectedDate = ref(todayStr);
@@ -345,7 +344,7 @@ async function loadDashboard() {
 watch(selectedDate, loadDashboard);
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
+  if (!(await isAuthenticated())) {
     await router.push({ name: "login" });
     return;
   }

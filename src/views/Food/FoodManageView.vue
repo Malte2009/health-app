@@ -190,7 +190,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth.ts";
+import { isAuthenticated } from "@/services/authService.ts";
 import { getFoods, getMyFoods, searchFoods, createFood, updateFood, deleteFood } from "@/services/foodService.ts";
 import type { Food, CreateFoodRequest, Nutrient } from "@/types/foodType.ts";
 
@@ -198,7 +198,6 @@ type NutrientValueKey = Exclude<keyof Nutrient, "id" | "foodId">;
 type NutrientField = { key: NutrientValueKey; label: string; unit: string };
 
 const router = useRouter();
-const authStore = useAuthStore();
 
 const foods = ref<Food[]>([]);
 const myFoods = ref<Food[]>([]);
@@ -331,7 +330,7 @@ function topNutrients(food: Food): { label: string; value: number; unit: string 
 }
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
+  if (!(await isAuthenticated())) {
     await router.push({ name: "login" });
     return;
   }

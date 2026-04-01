@@ -96,12 +96,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth.ts";
+import { isAuthenticated } from "@/services/authService.ts";
 import { getGoals, createGoals, updateGoals, deleteGoals } from "@/services/goalService.ts";
 import type { UserGoals } from "@/types/foodType.ts";
 
 const router = useRouter();
-const authStore = useAuthStore();
 
 const loading = ref(false);
 const saving = ref(false);
@@ -159,7 +158,7 @@ async function doDelete() {
 }
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
+  if (!(await isAuthenticated())) {
     await router.push({ name: "login" });
     return;
   }
