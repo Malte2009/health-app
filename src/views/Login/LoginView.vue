@@ -14,15 +14,16 @@
 import { useRouter } from "vue-router";
 import { onMounted } from "vue";
 
-import { useAuthStore } from "@/stores/auth.ts";
-import { setCookie } from "@/utility/cookie.ts";
 import { isAuthenticated, login } from "@/services/authService.ts";
 import { useTypeStore } from "@/stores/type.ts";
 
-const authStore = useAuthStore();
 const typeStore = useTypeStore();
 
 const router = useRouter();
+
+const emit = defineEmits<{
+  (e: "loginSuccess"): void;
+}>();
 
 function changeFocus(elementId: string) {
   const element = document.getElementById(elementId);
@@ -56,10 +57,6 @@ async function submit() {
     return
   }
 
-  authStore.setToken(token);
-
-  setCookie("token", token, 1);
-
   await typeStore.loadTypes();
 
   await route();
@@ -67,9 +64,8 @@ async function submit() {
 
 async function route() {
   if (await isAuthenticated()) {
+    emit("loginSuccess");
     await router.push({ name: "home" });
-  } else {
-    authStore.setToken("");
   }
 }
 

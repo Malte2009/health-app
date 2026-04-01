@@ -52,16 +52,14 @@
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import { useAuthStore } from "@/stores/auth.ts";
 import type { createTrainingLogRequestType } from "@/types/trainingType.ts";
 import { createTrainingLog } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
-import { getUserAge } from "@/services/authService.ts";
+import { getUserAge, isAuthenticated } from "@/services/authService.ts";
 
-const authStore = useAuthStore();
 const trainingStore = useTrainingStore();
 const typeStore = useTypeStore();
 const router = useRouter();
@@ -171,7 +169,7 @@ function changeFocus(elementId: string) {
 }
 
 onMounted(async () => {
-  if (!authStore.isAuthenticated) {
+  if (!(await isAuthenticated())) {
     await router.push({ name: "login" });
   }
 
