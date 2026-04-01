@@ -1,6 +1,6 @@
 <template>
   <div class="create-body-log-view">
-    <h1 class="heading">Create Body Log</h1>
+    <h1 class="heading">Edit Body Log</h1>
 
     <div class="inputs">
       <input @keydown.enter="changeFocus('height')" placeholder="Weight (kg)" id="weight" name="weight" type="number" step="0.1" />

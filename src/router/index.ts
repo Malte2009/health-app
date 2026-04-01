@@ -4,11 +4,13 @@ import HomeView from "../views/HomeView.vue";
 import bodyRoutes from "@/router/body.routes.ts";
 import trainingRoutes from "@/router/training.routes.ts";
 import loginRoutes from "@/router/login.routes.ts";
+import exerciseRoutes from "@/router/exercise.routes.ts";
 
 const routes = [
   ...loginRoutes,
   ...trainingRoutes,
-  ...bodyRoutes
+  ...bodyRoutes,
+  ...exerciseRoutes,
 ]
 
 const router = createRouter({
