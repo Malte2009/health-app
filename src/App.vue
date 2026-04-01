@@ -4,7 +4,7 @@
 </template>
 
 <script setup lang="ts">
-import { RouterView } from "vue-router";
+import { RouterView, useRouter } from "vue-router";
 
 import { onMounted } from "vue";
 import { useAuthStore } from "@/stores/auth.ts";
@@ -14,6 +14,15 @@ import { useTypeStore } from "@/stores/type.ts";
 
 const authStore = useAuthStore();
 const typeStore = useTypeStore();
+const router = useRouter();
+
+const EXCLUDED_ROUTES = new Set(["login", "signup", "home"]);
+
+router.afterEach((to) => {
+  if (to.name && !EXCLUDED_ROUTES.has(to.name as string)) {
+    localStorage.setItem("lastRoute", to.name as string);
+  }
+});
 
 function setViewport(scale: number) {
   let viewport = document.querySelector('meta[name="viewport"]');

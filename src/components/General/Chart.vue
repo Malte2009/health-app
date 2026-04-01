@@ -22,6 +22,10 @@ import { roundTo } from "@/utility/math.ts";
 import { useRoute } from "vue-router";
 import { getExerciseScoresByName } from "@/services/exerciseScoreService.ts";
 
+defineOptions({
+  name: "ExerciseChart",
+});
+
 const route = useRoute();
 
 const xScaledData = ref([] as string[]);
@@ -168,35 +172,6 @@ function displayLegend() {
 
     document.getElementById("makers-labels")?.appendChild(yMark);
   }
-}
-
-function displayValuesUnderChart() {
-  // Generate Y-axis marks
-
-  const yMark = document.createElement("div");
-
-  yMark.className = "y-axis-mark";
-
-  yMark.style.marginTop = yScaledData.value[i] + chartHeight - yScaledData.value[i] * 2 - 1 + "px";
-  yMark.style.marginLeft = -5.5 + "px";
-
-  document.getElementById("makers-labels")?.appendChild(yMark);
-
-  // Generate Y-axis labels
-
-  const yValue = props.chartData.yData[i];
-
-  const yValueLabel = document.createElement("div");
-
-  yValueLabel.className = "y-axis-label";
-
-  yValueLabel.style.marginTop = yScaledData.value[i] + chartHeight - yScaledData.value[i] * 2 - 7 + "px";
-
-  yValueLabel.style.marginLeft = -15 - yValueLabel.offsetWidth + "px";
-
-  yValueLabel.innerText = yValue.toString();
-
-  document.getElementById("makers-labels")?.appendChild(yValueLabel);
 }
 
 async function beforeHook() {
