@@ -64,6 +64,23 @@
         </div>
       </div>
 
+      <!-- Micronutrient Averages -->
+      <div class="chart-card">
+        <div class="chart-title">Micronutrients (Average / Day)</div>
+        <div v-if="micronutrientRows.length === 0" class="micro-empty">No micronutrient intake logged in this period.</div>
+        <div v-else class="micro-list">
+          <div v-for="row in micronutrientRows" :key="row.key" class="micro-row">
+            <div class="micro-head">
+              <span class="micro-name">{{ row.label }}</span>
+              <span class="micro-value">{{ row.avg }} {{ row.unit }}</span>
+            </div>
+            <div class="micro-bar-track">
+              <div class="micro-bar" :style="{ width: row.percent + '%' }"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Stats -->
       <div class="stats-grid">
         <div class="stat-card">
@@ -101,7 +118,7 @@ import { useRouter } from "vue-router";
 import { isAuthenticated } from "@/services/authService.ts";
 import { getNutritionOverTime } from "@/services/foodDashboardService.ts";
 import { toLocalIsoDate } from "@/utility/date.ts";
-import type { NutritionOverTimeDay } from "@/types/foodType.ts";
+import type { NutritionOverTimeDay, Nutrient } from "@/types/foodType.ts";
 
 const router = useRouter();
 
@@ -110,6 +127,53 @@ const data = ref<NutritionOverTimeDay[]>([]);
 const loading = ref(false);
 const weekOffset = ref(0);
 const monthOffset = ref(0);
+
+type NutrientKey = Exclude<keyof Nutrient, "id" | "foodId">;
+type NutrientDef = { label: string; unit: string };
+
+const micronutrientMeta: Partial<Record<NutrientKey, NutrientDef>> = {
+  vitamin_a: { label: "Vitamin A", unit: "µg" },
+  vitamin_d: { label: "Vitamin D", unit: "µg" },
+  vitamin_e: { label: "Vitamin E", unit: "mg" },
+  vitamin_k: { label: "Vitamin K", unit: "µg" },
+  vitamin_c: { label: "Vitamin C", unit: "mg" },
+  vitamin_b1: { label: "Vitamin B1", unit: "mg" },
+  vitamin_b2: { label: "Vitamin B2", unit: "mg" },
+  vitamin_b3: { label: "Vitamin B3", unit: "mg" },
+  vitamin_b5: { label: "Vitamin B5", unit: "mg" },
+  vitamin_b6: { label: "Vitamin B6", unit: "mg" },
+  vitamin_b7: { label: "Vitamin B7", unit: "µg" },
+  vitamin_b9: { label: "Vitamin B9", unit: "µg" },
+  vitamin_b12: { label: "Vitamin B12", unit: "µg" },
+  choline: { label: "Choline", unit: "mg" },
+  calcium: { label: "Calcium", unit: "mg" },
+  phosphorus: { label: "Phosphorus", unit: "mg" },
+  magnesium: { label: "Magnesium", unit: "mg" },
+  sodium: { label: "Sodium", unit: "mg" },
+  potassium: { label: "Potassium", unit: "mg" },
+  chloride: { label: "Chloride", unit: "mg" },
+  sulfur: { label: "Sulfur", unit: "mg" },
+  iron: { label: "Iron", unit: "mg" },
+  zinc: { label: "Zinc", unit: "mg" },
+  selenium: { label: "Selenium", unit: "µg" },
+  iodine: { label: "Iodine", unit: "µg" },
+  copper: { label: "Copper", unit: "mg" },
+  manganese: { label: "Manganese", unit: "mg" },
+  chromium: { label: "Chromium", unit: "µg" },
+  molybdenum: { label: "Molybdenum", unit: "µg" },
+  fluoride: { label: "Fluoride", unit: "mg" },
+  omega_3: { label: "Omega-3", unit: "mg" },
+  omega_6: { label: "Omega-6", unit: "mg" },
+  omega_9: { label: "Omega-9", unit: "mg" },
+  caffeine: { label: "Caffeine", unit: "mg" },
+};
+
+function fallbackLabelFromKey(key: string): string {
+  return key
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
 
 const svgWidth = 700;
 const svgHeight = 200;
@@ -242,6 +306,45 @@ const avgProtein = computed(() => avg(data.value.map((d) => Math.round(d.totals.
 const avgCarbs = computed(() => avg(data.value.map((d) => Math.round(d.totals.carbs_g))));
 const avgFat = computed(() => avg(data.value.map((d) => Math.round(d.totals.fat_g))));
 
+const micronutrientRows = computed(() => {
+  const dayCount = data.value.length || 1;
+  const nutrientKeys = new Set<string>();
+  for (const day of data.value) {
+    const totals = (day.nutrientTotals ?? {}) as Record<string, unknown>;
+    for (const [key, value] of Object.entries(totals)) {
+      if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+        nutrientKeys.add(key);
+      }
+    }
+  }
+
+  const rows = [...nutrientKeys]
+    .map((key) => {
+      const sum = data.value.reduce((acc, day) => {
+        const totals = (day.nutrientTotals ?? {}) as Record<string, unknown>;
+        return acc + Number(totals[key] ?? 0);
+      }, 0);
+      const avgVal = sum / dayCount;
+      const meta = micronutrientMeta[key as NutrientKey];
+      return {
+        key,
+        label: meta?.label ?? fallbackLabelFromKey(key),
+        unit: meta?.unit ?? "mg",
+        avgRaw: avgVal,
+        avg: avgVal >= 100 ? Math.round(avgVal) : Math.round(avgVal * 10) / 10,
+      };
+    })
+    .filter((row) => row.avgRaw > 0)
+    .sort((a, b) => b.avgRaw - a.avgRaw)
+    .slice(0, 10);
+
+  const maxVal = Math.max(...rows.map((r) => r.avgRaw), 0);
+  return rows.map((row) => ({
+    ...row,
+    percent: maxVal > 0 ? Math.max(6, Math.round((row.avgRaw / maxVal) * 100)) : 0,
+  }));
+});
+
 const goalHitRate = computed(() => {
   if (!calorieGoal.value) return 0;
   const logged = data.value.filter((d) => d.totals.calories > 0);
@@ -351,6 +454,54 @@ h1 { margin-bottom: 18px; }
 .bar-chart { width: 100%; display: block; }
 
 .chart-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+
+.micro-empty {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  padding: 6px 0;
+}
+
+.micro-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.micro-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.micro-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.micro-name {
+  color: var(--text-main);
+  font-size: 0.86rem;
+}
+
+.micro-value {
+  color: var(--primary);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.micro-bar-track {
+  height: 7px;
+  background: var(--bg-surface-secondary);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.micro-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 999px;
+}
 
 .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--text-secondary); }
 .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
