@@ -48,6 +48,10 @@ export interface Food {
   carbs_g: number;
   fat_g: number;
   fiber_g: number;
+  sugar_g?: number;
+  saturated_fat_g?: number;
+  unsaturated_fat_g?: number;
+  salt_g?: number;
   defaultAmount?: number;
   defaultUnit?: PortionUnit;
   density_g_per_ml?: number;
@@ -81,6 +85,10 @@ export interface MacroTotals {
   carbs_g: number;
   fat_g: number;
   fiber_g: number;
+  sugar_g: number;
+  saturated_fat_g: number;
+  unsaturated_fat_g: number;
+  salt_g: number;
 }
 
 // New goal format from API
@@ -96,6 +104,10 @@ export interface DashboardGoals {
   carbs_g: GoalProgress | null;
   fat_g: GoalProgress | null;
   fiber_g: GoalProgress | null;
+  sugar_g: GoalProgress | null;
+  saturated_fat_g: GoalProgress | null;
+  unsaturated_fat_g: GoalProgress | null;
+  salt_g: GoalProgress | null;
 }
 
 export interface DailyDashboard {
@@ -127,6 +139,10 @@ export interface UserGoals {
   carbs_g?: number;
   fat_g?: number;
   fiber_g?: number;
+  sugar_g?: number;
+  saturated_fat_g?: number;
+  unsaturated_fat_g?: number;
+  salt_g?: number;
 }
 
 // NRV
@@ -169,6 +185,10 @@ export interface CreateFoodRequest {
   carbs_g: number;
   fat_g: number;
   fiber_g: number;
+  sugar_g?: number;
+  saturated_fat_g?: number;
+  unsaturated_fat_g?: number;
+  salt_g?: number;
   defaultAmount?: number;
   defaultUnit?: PortionUnit;
   density_g_per_ml?: number;

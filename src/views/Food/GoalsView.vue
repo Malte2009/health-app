@@ -35,6 +35,22 @@
             <div class="goal-value fiber-color">{{ goals.fiber_g }}g</div>
             <div class="goal-label">Fiber</div>
           </div>
+          <div v-if="goals.sugar_g" class="goal-card">
+            <div class="goal-value sugar-color">{{ goals.sugar_g }}g</div>
+            <div class="goal-label">Sugar</div>
+          </div>
+          <div v-if="goals.saturated_fat_g" class="goal-card">
+            <div class="goal-value sat-fat-color">{{ goals.saturated_fat_g }}g</div>
+            <div class="goal-label">Sat Fat</div>
+          </div>
+          <div v-if="goals.unsaturated_fat_g" class="goal-card">
+            <div class="goal-value unsat-fat-color">{{ goals.unsaturated_fat_g }}g</div>
+            <div class="goal-label">Unsat Fat</div>
+          </div>
+          <div v-if="goals.salt_g" class="goal-card">
+            <div class="goal-value salt-color">{{ goals.salt_g }}g</div>
+            <div class="goal-label">Salt</div>
+          </div>
         </div>
 
         <div class="goals-actions">
@@ -68,6 +84,22 @@
           <div class="form-field">
             <label>Fiber (g)</label>
             <input v-model.number="form.fiber_g" type="number" min="0" step="1" placeholder="e.g. 30" />
+          </div>
+          <div class="form-field">
+            <label>Sugar (g)</label>
+            <input v-model.number="form.sugar_g" type="number" min="0" step="1" placeholder="e.g. 50" />
+          </div>
+          <div class="form-field">
+            <label>Saturated Fat (g)</label>
+            <input v-model.number="form.saturated_fat_g" type="number" min="0" step="1" placeholder="e.g. 20" />
+          </div>
+          <div class="form-field">
+            <label>Unsaturated Fat (g)</label>
+            <input v-model.number="form.unsaturated_fat_g" type="number" min="0" step="1" placeholder="e.g. 40" />
+          </div>
+          <div class="form-field">
+            <label>Salt (g)</label>
+            <input v-model.number="form.salt_g" type="number" min="0" step="0.1" placeholder="e.g. 5" />
           </div>
         </div>
 
@@ -108,7 +140,17 @@ const editing = ref(false);
 const showDeleteConfirm = ref(false);
 const goals = ref<UserGoals>({});
 
-const hasGoals = computed(() => goals.value?.calories || goals.value?.protein_g || goals.value?.carbs_g || goals.value?.fat_g || goals.value?.fiber_g);
+const hasGoals = computed(() =>
+  goals.value?.calories ||
+  goals.value?.protein_g ||
+  goals.value?.carbs_g ||
+  goals.value?.fat_g ||
+  goals.value?.fiber_g ||
+  goals.value?.sugar_g ||
+  goals.value?.saturated_fat_g ||
+  goals.value?.unsaturated_fat_g ||
+  goals.value?.salt_g,
+);
 
 const form = ref<Partial<UserGoals>>({});
 
@@ -119,6 +161,10 @@ function startEditing() {
     carbs_g: goals.value.carbs_g ?? 0,
     fat_g: goals.value.fat_g ?? 0,
     fiber_g: goals.value.fiber_g ?? 0,
+    sugar_g: goals.value.sugar_g ?? 0,
+    saturated_fat_g: goals.value.saturated_fat_g ?? 0,
+    unsaturated_fat_g: goals.value.unsaturated_fat_g ?? 0,
+    salt_g: goals.value.salt_g ?? 0,
   };
   editing.value = true;
 }
@@ -135,6 +181,10 @@ async function saveGoals() {
     carbs_g: form.value.carbs_g || undefined,
     fat_g: form.value.fat_g || undefined,
     fiber_g: form.value.fiber_g || undefined,
+    sugar_g: form.value.sugar_g || undefined,
+    saturated_fat_g: form.value.saturated_fat_g || undefined,
+    unsaturated_fat_g: form.value.unsaturated_fat_g || undefined,
+    salt_g: form.value.salt_g || undefined,
   };
 
   let result;
@@ -244,6 +294,10 @@ h1 { margin-bottom: 24px; }
 .accent-color { color: var(--accent); }
 .fat-color { color: #f97316; }
 .fiber-color { color: #38bdf8; }
+.sugar-color { color: #ff5f6d; }
+.sat-fat-color { color: #ea580c; }
+.unsat-fat-color { color: #ca8a04; }
+.salt-color { color: #64748b; }
 
 .goals-actions {
   display: flex;

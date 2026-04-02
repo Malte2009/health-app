@@ -51,6 +51,22 @@
             <input v-model.number="newFood.fiber_g" type="number" min="0" step="0.1" />
           </div>
           <div class="form-field">
+            <label>Sugar (g per 100g)</label>
+            <input v-model.number="newFood.sugar_g" type="number" min="0" step="0.1" />
+          </div>
+          <div class="form-field">
+            <label>Saturated Fat (g per 100g)</label>
+            <input v-model.number="newFood.saturated_fat_g" type="number" min="0" step="0.1" />
+          </div>
+          <div class="form-field">
+            <label>Unsaturated Fat (g per 100g)</label>
+            <input v-model.number="newFood.unsaturated_fat_g" type="number" min="0" step="0.1" />
+          </div>
+          <div class="form-field">
+            <label>Salt (g per 100g)</label>
+            <input v-model.number="newFood.salt_g" type="number" min="0" step="0.01" />
+          </div>
+          <div class="form-field">
             <label>Default Amount</label>
             <input v-model.number="newFood.defaultAmount" type="number" min="0" step="0.1" placeholder="e.g. 250" />
           </div>
@@ -133,6 +149,13 @@
           </div>
         </div>
 
+        <div v-if="expandedNutritionId === food.id" class="extended-macros">
+          <span v-if="food.sugar_g != null" class="macro-badge sugar">Sugar {{ food.sugar_g }}g</span>
+          <span v-if="food.saturated_fat_g != null" class="macro-badge sat-fat">Sat Fat {{ food.saturated_fat_g }}g</span>
+          <span v-if="food.unsaturated_fat_g != null" class="macro-badge unsat-fat">Unsat Fat {{ food.unsaturated_fat_g }}g</span>
+          <span v-if="food.salt_g != null" class="macro-badge salt">Salt {{ food.salt_g }}g</span>
+        </div>
+
         <div v-if="food.nutrients" class="nutrient-preview">
           <span v-for="n in topNutrients(food)" :key="n.label" class="nutrient-chip">
             {{ n.label }}: {{ n.value }}{{ n.unit }}
@@ -150,6 +173,11 @@
             class="btn btn-secondary btn-sm"
             @click="startEdit(food)"
           >Edit</button>
+          <button
+            v-if="editingId !== food.id"
+            class="btn btn-secondary btn-sm"
+            @click="toggleNutritionDetails(food.id)"
+          >{{ expandedNutritionId === food.id ? 'Hide details' : 'Show details' }}</button>
           <button
             v-if="editingId !== food.id"
             class="btn btn-danger btn-sm"
@@ -183,6 +211,22 @@
             <div class="form-field">
               <label>Fiber (g)</label>
               <input v-model.number="editData.fiber_g" type="number" min="0" step="0.1" />
+            </div>
+            <div class="form-field">
+              <label>Sugar (g)</label>
+              <input v-model.number="editData.sugar_g" type="number" min="0" step="0.1" />
+            </div>
+            <div class="form-field">
+              <label>Saturated Fat (g)</label>
+              <input v-model.number="editData.saturated_fat_g" type="number" min="0" step="0.1" />
+            </div>
+            <div class="form-field">
+              <label>Unsaturated Fat (g)</label>
+              <input v-model.number="editData.unsaturated_fat_g" type="number" min="0" step="0.1" />
+            </div>
+            <div class="form-field">
+              <label>Salt (g)</label>
+              <input v-model.number="editData.salt_g" type="number" min="0" step="0.01" />
             </div>
             <div class="form-field">
               <label>Default Amount</label>
@@ -296,6 +340,7 @@ const createError = ref("");
 const editError = ref("");
 const editingId = ref<string | null>(null);
 const deleteId = ref<string | null>(null);
+const expandedNutritionId = ref<string | null>(null);
 
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -306,6 +351,10 @@ const defaultFood = (): CreateFoodRequest => ({
   carbs_g: 0,
   fat_g: 0,
   fiber_g: 0,
+  sugar_g: 0,
+  saturated_fat_g: 0,
+  unsaturated_fat_g: 0,
+  salt_g: 0,
 });
 
 const newFood = ref<CreateFoodRequest>(defaultFood());
@@ -350,6 +399,16 @@ function validatePortionFields(payload: Partial<CreateFoodRequest>): string | nu
   return null;
 }
 
+function validateFatSplitFields(payload: Partial<CreateFoodRequest>): string | null {
+  const saturated = Number(payload.saturated_fat_g ?? 0);
+  const unsaturated = Number(payload.unsaturated_fat_g ?? 0);
+  const fat = Number(payload.fat_g ?? 0);
+  if (saturated + unsaturated > fat) {
+    return "Saturated fat + unsaturated fat must be less than or equal to total fat.";
+  }
+  return null;
+}
+
 function onSearchInput() {
   if (debounceTimer) clearTimeout(debounceTimer);
   if (searchQuery.value.length < 1) {
@@ -372,6 +431,10 @@ async function startEdit(food: Food) {
     carbs_g: food.carbs_g,
     fat_g: food.fat_g,
     fiber_g: food.fiber_g,
+    sugar_g: food.sugar_g,
+    saturated_fat_g: food.saturated_fat_g,
+    unsaturated_fat_g: food.unsaturated_fat_g,
+    salt_g: food.salt_g,
     defaultAmount: food.defaultAmount,
     defaultUnit: food.defaultUnit,
     density_g_per_ml: food.density_g_per_ml,
@@ -401,6 +464,12 @@ async function submitCreate() {
     saving.value = false;
     return;
   }
+  const fatSplitError = validateFatSplitFields(payload);
+  if (fatSplitError) {
+    createError.value = fatSplitError;
+    saving.value = false;
+    return;
+  }
 
   const result = await createFood(payload);
   saving.value = false;
@@ -421,6 +490,12 @@ async function submitEdit(id: string) {
   const portionError = validatePortionFields(foodPayload);
   if (portionError) {
     editError.value = portionError;
+    saving.value = false;
+    return;
+  }
+  const fatSplitError = validateFatSplitFields(foodPayload);
+  if (fatSplitError) {
+    editError.value = fatSplitError;
     saving.value = false;
     return;
   }
@@ -495,6 +570,10 @@ function sanitizeNutrients(values: Partial<Record<NutrientValueKey, number>>): P
 
 function confirmDelete(id: string) {
   deleteId.value = id;
+}
+
+function toggleNutritionDetails(id: string) {
+  expandedNutritionId.value = expandedNutritionId.value === id ? null : id;
 }
 
 function cancelEdit() {
@@ -574,7 +653,7 @@ const minerals: NutrientField[] = [
   { key: "manganese", label: "Manganese", unit: "mg" },
   { key: "chromium", label: "Chromium", unit: "µg" },
   { key: "molybdenum", label: "Molybdenum", unit: "µg" },
-  { key: "fluoride", label: "Fluoride", unit: "mg" },
+  { key: "fluoride", label: "Fluoride", unit: "mcg" },
 ];
 
 const fattyAcids: NutrientField[] = [
@@ -850,6 +929,26 @@ h1 {
   color: #38bdf8;
 }
 
+.macro-badge.sugar {
+  background: rgba(255, 95, 109, 0.15);
+  color: #ff5f6d;
+}
+
+.macro-badge.sat-fat {
+  background: rgba(251, 146, 60, 0.2);
+  color: #ea580c;
+}
+
+.macro-badge.unsat-fat {
+  background: rgba(234, 179, 8, 0.2);
+  color: #ca8a04;
+}
+
+.macro-badge.salt {
+  background: rgba(148, 163, 184, 0.2);
+  color: #64748b;
+}
+
 .macro-badge.muted {
   background: transparent;
   color: var(--text-secondary);
@@ -882,6 +981,13 @@ h1 {
   display: flex;
   gap: 8px;
   margin-top: 12px;
+}
+
+.extended-macros {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 8px;
 }
 
 .edit-form {

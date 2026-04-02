@@ -45,6 +45,10 @@
             <span class="macro-badge protein">P {{ Math.round(recipe.nutrition.protein_g) }}g</span>
             <span class="macro-badge carbs">C {{ Math.round(recipe.nutrition.carbs_g) }}g</span>
             <span class="macro-badge fat">F {{ Math.round(recipe.nutrition.fat_g) }}g</span>
+            <span class="macro-badge sugar">Su {{ Math.round(recipe.nutrition.sugar_g ?? 0) }}g</span>
+            <span class="macro-badge sat-fat">Sat {{ Math.round(recipe.nutrition.saturated_fat_g ?? 0) }}g</span>
+            <span class="macro-badge unsat-fat">Unsat {{ Math.round(recipe.nutrition.unsaturated_fat_g ?? 0) }}g</span>
+            <span class="macro-badge salt">Salt {{ Math.round((recipe.nutrition.salt_g ?? 0) * 100) / 100 }}g</span>
           </div>
         </div>
 
@@ -431,6 +435,10 @@ h1 { margin-bottom: 20px; }
 .macro-badge.protein { background: rgba(47, 213, 114, 0.15); color: var(--success); }
 .macro-badge.carbs { background: rgba(255, 209, 102, 0.15); color: var(--accent); }
 .macro-badge.fat { background: rgba(249, 115, 22, 0.15); color: #f97316; }
+.macro-badge.sugar { background: rgba(255, 95, 109, 0.15); color: #ff5f6d; }
+.macro-badge.sat-fat { background: rgba(251, 146, 60, 0.2); color: #ea580c; }
+.macro-badge.unsat-fat { background: rgba(234, 179, 8, 0.2); color: #ca8a04; }
+.macro-badge.salt { background: rgba(148, 163, 184, 0.2); color: #64748b; }
 
 /* Ingredients */
 .ingredients-section {

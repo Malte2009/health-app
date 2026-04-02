@@ -40,6 +40,10 @@ function normalizeDailyDashboardResponse(payload: unknown): DailyDashboard | voi
     carbs_g: null,
     fat_g: null,
     fiber_g: null,
+    sugar_g: null,
+    saturated_fat_g: null,
+    unsaturated_fat_g: null,
+    salt_g: null,
   };
 
   return {

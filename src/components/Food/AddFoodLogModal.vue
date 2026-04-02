@@ -20,7 +20,7 @@
 
         <div v-if="!selectedFood">
           <div v-if="loading" class="status-msg">Searching...</div>
-          <div v-else-if="searchResults.length === 0 && searchQuery.length >= 2" class="status-msg">No foods found.</div>
+          <div v-else-if="searchResults.length === 0 && searchQuery.length >= 1" class="status-msg">No foods found.</div>
           <div v-else class="results-list">
             <div v-for="food in searchResults" :key="food.id" class="result-item" @click="selectFood(food)">
               <div class="result-name">{{ food.name }}</div>
@@ -60,6 +60,15 @@
               <div class="calc-item"><div class="calc-value carbs-color">{{ calcCarbs }}g</div><div class="calc-label">Carbs</div></div>
               <div class="calc-item"><div class="calc-value fat-color">{{ calcFat }}g</div><div class="calc-label">Fat</div></div>
               <div class="calc-item"><div class="calc-value fiber-color">{{ calcFiber }}g</div><div class="calc-label">Fiber</div></div>
+            </div>
+            <button class="details-toggle" @click="showAdvancedMacros = !showAdvancedMacros">
+              {{ showAdvancedMacros ? "Hide details" : "Show details" }}
+            </button>
+            <div v-if="showAdvancedMacros" class="calc-row details-row">
+              <div class="calc-item"><div class="calc-value sugar-color">{{ calcSugar }}g</div><div class="calc-label">Sugar</div></div>
+              <div class="calc-item"><div class="calc-value sat-fat-color">{{ calcSatFat }}g</div><div class="calc-label">Sat Fat</div></div>
+              <div class="calc-item"><div class="calc-value unsat-fat-color">{{ calcUnsatFat }}g</div><div class="calc-label">Unsat Fat</div></div>
+              <div class="calc-item"><div class="calc-value salt-color">{{ calcSalt }}g</div><div class="calc-label">Salt</div></div>
             </div>
           </div>
 
@@ -131,6 +140,7 @@ const amount = ref<number>(100);
 const unit = ref<PortionUnit>("G");
 const loading = ref(false);
 const saving = ref(false);
+const showAdvancedMacros = ref(false);
 
 // Recipes
 const recipes = ref<MealRecipe[]>([]);
@@ -143,7 +153,7 @@ let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 function onSearchInput() {
   if (debounceTimer) clearTimeout(debounceTimer);
-  if (searchQuery.value.length < 2) { searchResults.value = []; return; }
+  if (searchQuery.value.length < 1) { searchResults.value = []; return; }
   debounceTimer = setTimeout(async () => {
     loading.value = true;
     searchResults.value = await searchFoods(searchQuery.value);
@@ -155,6 +165,7 @@ function selectFood(food: Food) {
   selectedFood.value = food;
   amount.value = food.defaultAmount && food.defaultAmount > 0 ? food.defaultAmount : 100;
   unit.value = food.defaultUnit ?? "G";
+  showAdvancedMacros.value = false;
 }
 
 const effectiveWeight = computed(() => {
@@ -170,6 +181,10 @@ const calcProtein = computed(() => selectedFood.value ? Math.round(((selectedFoo
 const calcCarbs = computed(() => selectedFood.value ? Math.round(((selectedFood.value.carbs_g * effectiveWeight.value) / 100) * 10) / 10 : 0);
 const calcFat = computed(() => selectedFood.value ? Math.round(((selectedFood.value.fat_g * effectiveWeight.value) / 100) * 10) / 10 : 0);
 const calcFiber = computed(() => selectedFood.value ? Math.round(((selectedFood.value.fiber_g * effectiveWeight.value) / 100) * 10) / 10 : 0);
+const calcSugar = computed(() => selectedFood.value ? Math.round((((selectedFood.value.sugar_g ?? 0) * effectiveWeight.value) / 100) * 10) / 10 : 0);
+const calcSatFat = computed(() => selectedFood.value ? Math.round((((selectedFood.value.saturated_fat_g ?? 0) * effectiveWeight.value) / 100) * 10) / 10 : 0);
+const calcUnsatFat = computed(() => selectedFood.value ? Math.round((((selectedFood.value.unsaturated_fat_g ?? 0) * effectiveWeight.value) / 100) * 10) / 10 : 0);
+const calcSalt = computed(() => selectedFood.value ? Math.round((((selectedFood.value.salt_g ?? 0) * effectiveWeight.value) / 100) * 100) / 100 : 0);
 
 async function logFood() {
   if (!selectedFood.value || amount.value <= 0) return;
@@ -418,6 +433,7 @@ async function logRecipe() {
 }
 
 .calc-row { display: flex; justify-content: space-between; gap: 6px; }
+.details-row { margin-top: 10px; }
 .calc-item { text-align: center; flex: 1; }
 .calc-value { font-size: 1.15rem; font-weight: 700; color: var(--text-main); }
 .calc-label { font-size: 0.72rem; color: var(--text-secondary); margin-top: 2px; }
@@ -426,6 +442,24 @@ async function logRecipe() {
 .carbs-color { color: var(--accent); }
 .fat-color { color: #f97316; }
 .fiber-color { color: #38bdf8; }
+.sugar-color { color: #ff5f6d; }
+.sat-fat-color { color: #ea580c; }
+.unsat-fat-color { color: #ca8a04; }
+.salt-color { color: #64748b; }
+
+.details-toggle {
+  margin-top: 10px;
+  width: 100%;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.details-toggle:hover { color: var(--text-main); }
 
 .log-btn {
   width: 100%;

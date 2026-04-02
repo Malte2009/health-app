@@ -82,6 +82,11 @@
       </div>
 
       <!-- Stats -->
+      <div class="details-toggle-row">
+        <button class="details-toggle-btn" @click="showExtendedStats = !showExtendedStats">
+          {{ showExtendedStats ? 'Hide detail stats' : 'Show detail stats' }}
+        </button>
+      </div>
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value primary-color">{{ avgCalories }}</div>
@@ -98,6 +103,22 @@
         <div class="stat-card">
           <div class="stat-value fat-color">{{ avgFat }}g</div>
           <div class="stat-label">Avg Fat / Day</div>
+        </div>
+        <div v-if="showExtendedStats" class="stat-card">
+          <div class="stat-value sugar-color">{{ avgSugar }}g</div>
+          <div class="stat-label">Avg Sugar / Day</div>
+        </div>
+        <div v-if="showExtendedStats" class="stat-card">
+          <div class="stat-value sat-fat-color">{{ avgSatFat }}g</div>
+          <div class="stat-label">Avg Sat Fat / Day</div>
+        </div>
+        <div v-if="showExtendedStats" class="stat-card">
+          <div class="stat-value unsat-fat-color">{{ avgUnsatFat }}g</div>
+          <div class="stat-label">Avg Unsat Fat / Day</div>
+        </div>
+        <div v-if="showExtendedStats" class="stat-card">
+          <div class="stat-value salt-color">{{ avgSalt }}g</div>
+          <div class="stat-label">Avg Salt / Day</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">{{ daysLogged }}</div>
@@ -127,6 +148,7 @@ const data = ref<NutritionOverTimeDay[]>([]);
 const loading = ref(false);
 const weekOffset = ref(0);
 const monthOffset = ref(0);
+const showExtendedStats = ref(false);
 
 type NutrientKey = Exclude<keyof Nutrient, "id" | "foodId">;
 type NutrientDef = { label: string; unit: string };
@@ -161,7 +183,7 @@ const micronutrientMeta: Partial<Record<NutrientKey, NutrientDef>> = {
   manganese: { label: "Manganese", unit: "mg" },
   chromium: { label: "Chromium", unit: "µg" },
   molybdenum: { label: "Molybdenum", unit: "µg" },
-  fluoride: { label: "Fluoride", unit: "mg" },
+  fluoride: { label: "Fluoride", unit: "mcg" },
   omega_3: { label: "Omega-3", unit: "mg" },
   omega_6: { label: "Omega-6", unit: "mg" },
   omega_9: { label: "Omega-9", unit: "mg" },
@@ -305,6 +327,10 @@ const avgCalories = computed(() => avg(data.value.map((d) => d.totals.calories))
 const avgProtein = computed(() => avg(data.value.map((d) => Math.round(d.totals.protein_g))));
 const avgCarbs = computed(() => avg(data.value.map((d) => Math.round(d.totals.carbs_g))));
 const avgFat = computed(() => avg(data.value.map((d) => Math.round(d.totals.fat_g))));
+const avgSugar = computed(() => avg(data.value.map((d) => Math.round(d.totals.sugar_g ?? 0))));
+const avgSatFat = computed(() => avg(data.value.map((d) => Math.round(d.totals.saturated_fat_g ?? 0))));
+const avgUnsatFat = computed(() => avg(data.value.map((d) => Math.round(d.totals.unsaturated_fat_g ?? 0))));
+const avgSalt = computed(() => avg(data.value.map((d) => Math.round((d.totals.salt_g ?? 0) * 10) / 10)));
 
 const micronutrientRows = computed(() => {
   const dayCount = data.value.length || 1;
@@ -512,6 +538,24 @@ h1 { margin-bottom: 18px; }
   gap: 12px;
 }
 
+.details-toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.details-toggle-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 8px;
+  padding: 7px 12px;
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.details-toggle-btn:hover { color: var(--text-main); }
+
 .stat-card {
   background: var(--bg-surface);
   border: 1px solid var(--border);
@@ -528,6 +572,10 @@ h1 { margin-bottom: 18px; }
 .accent-color { color: var(--accent); }
 .fat-color { color: #f97316; }
 .danger-color { color: var(--danger); }
+.sugar-color { color: #ff5f6d; }
+.sat-fat-color { color: #ea580c; }
+.unsat-fat-color { color: #ca8a04; }
+.salt-color { color: #64748b; }
 
 @media (max-width: 640px) {
   .food-progress { padding: 12px 8px 36px; }

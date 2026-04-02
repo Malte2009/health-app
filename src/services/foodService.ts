@@ -14,6 +14,10 @@ function normalizeFood(item: unknown): Food {
     carbs_g: Number(src.carbs_g ?? src.carbsG ?? 0),
     fat_g: Number(src.fat_g ?? src.fatG ?? 0),
     fiber_g: Number(src.fiber_g ?? src.fiberG ?? 0),
+    sugar_g: src.sugar_g != null ? Number(src.sugar_g) : src.sugarG != null ? Number(src.sugarG) : undefined,
+    saturated_fat_g: src.saturated_fat_g != null ? Number(src.saturated_fat_g) : src.saturatedFatG != null ? Number(src.saturatedFatG) : undefined,
+    unsaturated_fat_g: src.unsaturated_fat_g != null ? Number(src.unsaturated_fat_g) : src.unsaturatedFatG != null ? Number(src.unsaturatedFatG) : undefined,
+    salt_g: src.salt_g != null ? Number(src.salt_g) : src.saltG != null ? Number(src.saltG) : undefined,
     defaultAmount: src.defaultAmount != null ? Number(src.defaultAmount) : src.default_amount != null ? Number(src.default_amount) : undefined,
     defaultUnit: typeof src.defaultUnit === "string"
       ? src.defaultUnit as Food["defaultUnit"]

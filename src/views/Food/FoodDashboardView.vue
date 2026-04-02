@@ -77,6 +77,7 @@
             </div>
             <div class="meal-actions">
               <button class="add-food-btn" @click="openAddFood(meal.id)">+ Food</button>
+              <button class="add-food-btn" @click="toggleMealDetails(meal.id)">{{ isMealDetailsOpen(meal.id) ? 'Hide details' : 'Details' }}</button>
               <button class="delete-meal-btn" @click="confirmDeleteMeal(meal.id)">&#10005;</button>
             </div>
           </div>
@@ -91,6 +92,10 @@
                   <span class="macro-pill protein-pill">Protein {{ calcFoodLogMacro(fl, 'protein') }} g</span>
                   <span class="macro-pill carbs-pill">Carbs {{ calcFoodLogMacro(fl, 'carbs') }} g</span>
                   <span class="macro-pill fat-pill">Fats {{ calcFoodLogMacro(fl, 'fat') }} g</span>
+                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill sugar-pill">Sugar {{ calcFoodLogMacro(fl, 'sugar') }} g</span>
+                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill sat-fat-pill">Sat {{ calcFoodLogMacro(fl, 'satFat') }} g</span>
+                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill unsat-fat-pill">Unsat {{ calcFoodLogMacro(fl, 'unsatFat') }} g</span>
+                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill salt-pill">Salt {{ calcFoodLogMacro(fl, 'salt') }} g</span>
                 </div>
               </div>
               <button v-if="foodLogId(fl)" class="delete-food-log-btn" @click="deleteFoodLogItem(meal.id, foodLogId(fl) as string)">&#10005;</button>
@@ -184,7 +189,7 @@ const deleteMealId = ref<string | null>(null);
 const creatingMeal = ref(false);
 
 const ALL_MEAL_TYPES: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACK", "OTHER"];
-type MacroKey = keyof Pick<MacroTotals, "protein_g" | "carbs_g" | "fat_g" | "fiber_g">;
+type MacroKey = keyof Pick<MacroTotals, "protein_g" | "carbs_g" | "fat_g" | "fiber_g" | "sugar_g" | "saturated_fat_g" | "unsaturated_fat_g" | "salt_g">;
 type NutrientValueKey = Exclude<keyof Nutrient, "id" | "foodId">;
 
 const meals = computed<MealLog[]>(() => dashboard.value?.meals ?? []);
@@ -224,7 +229,18 @@ function macroGoalWidth(key: MacroKey): string {
   const cal = totals?.calories ?? 0;
   if (!cal) return "0%";
   const val = totals[key] ?? 0;
-  const kcalFactor = key === "fat_g" ? 9 : 4;
+  const kcalFactorMap: Record<MacroKey, number> = {
+    protein_g: 4,
+    carbs_g: 4,
+    fat_g: 9,
+    fiber_g: 2,
+    sugar_g: 4,
+    saturated_fat_g: 9,
+    unsaturated_fat_g: 9,
+    salt_g: 0,
+  };
+  const kcalFactor = kcalFactorMap[key] ?? 0;
+  if (kcalFactor === 0) return "0%";
   return Math.min(100, Math.round(((val * kcalFactor) / Math.max(cal, 1)) * 100)) + "%";
 }
 
@@ -234,6 +250,16 @@ const macroList: { key: MacroKey; label: string; barClass: string; colorClass: s
   { key: "fat_g", label: "Fat", barClass: "fat-bar", colorClass: "fat-color" },
   { key: "fiber_g", label: "Fiber", barClass: "fiber-bar", colorClass: "fiber-color" },
 ];
+
+const expandedMealDetailsId = ref<string | null>(null);
+
+function toggleMealDetails(mealId: string) {
+  expandedMealDetailsId.value = expandedMealDetailsId.value === mealId ? null : mealId;
+}
+
+function isMealDetailsOpen(mealId: string): boolean {
+  return expandedMealDetailsId.value === mealId;
+}
 
 const ringCircumference = 2 * Math.PI * 54;
 
@@ -292,12 +318,20 @@ function calcFoodLogCalories(fl: FoodLog): number {
   return Math.round((calories * foodLogWeight(fl)) / 100);
 }
 
-function calcFoodLogMacro(fl: FoodLog, type: "protein" | "carbs" | "fat"): string {
+function calcFoodLogMacro(fl: FoodLog, type: "protein" | "carbs" | "fat" | "sugar" | "satFat" | "unsatFat" | "salt"): string {
   const base = type === "protein"
     ? Number(foodField(fl, "protein_g", "proteinG"))
     : type === "carbs"
       ? Number(foodField(fl, "carbs_g", "carbsG"))
-      : Number(foodField(fl, "fat_g", "fatG"));
+      : type === "fat"
+        ? Number(foodField(fl, "fat_g", "fatG"))
+        : type === "sugar"
+          ? Number(foodField(fl, "sugar_g", "sugarG"))
+          : type === "satFat"
+            ? Number(foodField(fl, "saturated_fat_g", "saturatedFatG"))
+            : type === "unsatFat"
+              ? Number(foodField(fl, "unsaturated_fat_g", "unsaturatedFatG"))
+              : Number(foodField(fl, "salt_g", "saltG"));
   return (Math.round((base * foodLogWeight(fl)) / 10) / 10).toString();
 }
 
@@ -470,7 +504,7 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
       { key: "zinc", label: "Zinc", unit: "mg" }, { key: "selenium", label: "Selenium", unit: "µg" },
       { key: "iodine", label: "Iodine", unit: "µg" }, { key: "copper", label: "Copper", unit: "mg" },
       { key: "manganese", label: "Manganese", unit: "mg" }, { key: "chromium", label: "Chromium", unit: "µg" },
-      { key: "molybdenum", label: "Molybdenum", unit: "µg" }, { key: "fluoride", label: "Fluoride", unit: "mg" },
+      { key: "molybdenum", label: "Molybdenum", unit: "µg" }, { key: "fluoride", label: "Fluoride", unit: "mcg" },
     ],
   },
   {
@@ -630,6 +664,10 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
 .carbs-bar { background: var(--accent); }
 .fat-bar { background: #f97316; }
 .fiber-bar { background: #38bdf8; }
+.sugar-bar { background: #ff5f6d; }
+.sat-fat-bar { background: #ea580c; }
+.unsat-fat-bar { background: #ca8a04; }
+.salt-bar { background: #64748b; }
 
 .macro-value {
   font-size: 0.82rem;
@@ -650,6 +688,10 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
 .fat-color { color: #f97316; }
 .fiber-color { color: #38bdf8; }
 .kcal-color { color: var(--primary); }
+.sugar-color { color: #ff5f6d; }
+.sat-fat-color { color: #ea580c; }
+.unsat-fat-color { color: #ca8a04; }
+.salt-color { color: #64748b; }
 
 /* Add Meal Row */
 .add-meal-row {
@@ -838,6 +880,26 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
 .fat-pill {
   color: #f97316;
   background: rgba(249, 115, 22, 0.14);
+}
+
+.sugar-pill {
+  color: #ff5f6d;
+  background: rgba(255, 95, 109, 0.14);
+}
+
+.sat-fat-pill {
+  color: #ea580c;
+  background: rgba(251, 146, 60, 0.2);
+}
+
+.unsat-fat-pill {
+  color: #ca8a04;
+  background: rgba(234, 179, 8, 0.2);
+}
+
+.salt-pill {
+  color: #64748b;
+  background: rgba(148, 163, 184, 0.2);
 }
 
 .delete-food-log-btn {
