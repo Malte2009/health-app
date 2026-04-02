@@ -403,7 +403,7 @@ function validateFatSplitFields(payload: Partial<CreateFoodRequest>): string | n
   const saturated = Number(payload.saturated_fat_g ?? 0);
   const unsaturated = Number(payload.unsaturated_fat_g ?? 0);
   const fat = Number(payload.fat_g ?? 0);
-  if (saturated + unsaturated > fat) {
+  if (saturated + unsaturated > fat + 0.001) {
     return "Saturated fat + unsaturated fat must be less than or equal to total fat.";
   }
   return null;
