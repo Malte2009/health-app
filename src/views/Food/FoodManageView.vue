@@ -520,7 +520,7 @@ function topNutrients(food: Food): { label: string; value: number; unit: string 
     { key: "caffeine", label: "Caffeine", unit: "mg" },
     { key: "iron", label: "Iron", unit: "mg" },
     { key: "calcium", label: "Ca", unit: "mg" },
-    { key: "omega_3", label: "ω3", unit: "g" },
+    { key: "omega_3", label: "ω3", unit: "mg" },
   ];
   return map
     .map((n) => ({ ...n, value: food.nutrients?.[n.key] }))
@@ -578,9 +578,9 @@ const minerals: NutrientField[] = [
 ];
 
 const fattyAcids: NutrientField[] = [
-  { key: "omega_3", label: "Omega-3", unit: "g" },
-  { key: "omega_6", label: "Omega-6", unit: "g" },
-  { key: "omega_9", label: "Omega-9", unit: "g" },
+  { key: "omega_3", label: "Omega-3", unit: "mg" },
+  { key: "omega_6", label: "Omega-6", unit: "mg" },
+  { key: "omega_9", label: "Omega-9", unit: "mg" },
 ];
 </script>
 

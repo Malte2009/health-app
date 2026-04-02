@@ -476,8 +476,8 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   {
     title: "Fatty Acids",
     items: [
-      { key: "omega_3", label: "Omega-3", unit: "g" }, { key: "omega_6", label: "Omega-6", unit: "g" },
-      { key: "omega_9", label: "Omega-9", unit: "g" },
+      { key: "omega_3", label: "Omega-3", unit: "mg" }, { key: "omega_6", label: "Omega-6", unit: "mg" },
+      { key: "omega_9", label: "Omega-9", unit: "mg" },
     ],
   },
 ];
