@@ -67,15 +67,18 @@
       <!-- Micronutrient Averages -->
       <div class="chart-card">
         <div class="chart-title">Micronutrients (Average / Day)</div>
-        <div v-if="micronutrientRows.length === 0" class="micro-empty">No micronutrient intake logged in this period.</div>
-        <div v-else class="micro-list">
-          <div v-for="row in micronutrientRows" :key="row.key" class="micro-row">
-            <div class="micro-head">
-              <span class="micro-name">{{ row.label }}</span>
-              <span class="micro-value">{{ row.avg }} {{ row.unit }}</span>
-            </div>
-            <div class="micro-bar-track">
-              <div class="micro-bar" :style="{ width: row.percent + '%' }"></div>
+        <div class="micro-content">
+          <div v-for="group in nutrientGroups" :key="group.title" class="micro-group">
+            <h4 class="micro-group-title">{{ group.title }}</h4>
+            <div class="micro-grid">
+              <div v-for="n in group.items" :key="n.key" class="micro-item">
+                <div class="micro-top">
+                  <span class="micro-name">{{ n.label }}</span>
+                  <span class="micro-val" :class="{ 'micro-zero': nutrientAvg(n.key) == null }">
+                    {{ nutrientAvg(n.key) != null ? nutrientAvg(n.key) + ' ' + n.unit : '—' }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -151,9 +154,10 @@ const monthOffset = ref(0);
 const showExtendedStats = ref(false);
 
 type NutrientKey = Exclude<keyof Nutrient, "id" | "foodId">;
-type NutrientDef = { label: string; unit: string };
+type NutrientMeta = { label: string; unit: string };
+type NutrientDef = { key: NutrientKey; label: string; unit: string };
 
-const micronutrientMeta: Partial<Record<NutrientKey, NutrientDef>> = {
+const micronutrientMeta: Partial<Record<NutrientKey, NutrientMeta>> = {
   vitamin_a: { label: "Vitamin A", unit: "µg" },
   vitamin_d: { label: "Vitamin D", unit: "µg" },
   vitamin_e: { label: "Vitamin E", unit: "mg" },
@@ -189,14 +193,6 @@ const micronutrientMeta: Partial<Record<NutrientKey, NutrientDef>> = {
   omega_9: { label: "Omega-9", unit: "mg" },
   caffeine: { label: "Caffeine", unit: "mg" },
 };
-
-function fallbackLabelFromKey(key: string): string {
-  return key
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
 const svgWidth = 700;
 const svgHeight = 200;
 const barAreaLeft = 28;
@@ -332,44 +328,62 @@ const avgSatFat = computed(() => avg(data.value.map((d) => Math.round(d.totals.s
 const avgUnsatFat = computed(() => avg(data.value.map((d) => Math.round(d.totals.unsaturated_fat_g ?? 0))));
 const avgSalt = computed(() => avg(data.value.map((d) => Math.round((d.totals.salt_g ?? 0) * 10) / 10)));
 
-const micronutrientRows = computed(() => {
+const nutrientAverages = computed<Partial<Record<NutrientKey, number>>>(() => {
   const dayCount = data.value.length || 1;
-  const nutrientKeys = new Set<string>();
-  for (const day of data.value) {
-    const totals = (day.nutrientTotals ?? {}) as Record<string, unknown>;
-    for (const [key, value] of Object.entries(totals)) {
-      if (typeof value === "number" && Number.isFinite(value) && value > 0) {
-        nutrientKeys.add(key);
-      }
-    }
+  const out: Partial<Record<NutrientKey, number>> = {};
+  for (const key of Object.keys(micronutrientMeta) as NutrientKey[]) {
+    const sum = data.value.reduce((acc, day) => {
+      const totals = (day.nutrientTotals ?? {}) as Record<string, unknown>;
+      const val = Number(totals[key] ?? 0);
+      return acc + (Number.isFinite(val) ? val : 0);
+    }, 0);
+    const avgVal = sum / dayCount;
+    out[key] = avgVal >= 100 ? Math.round(avgVal) : Math.round(avgVal * 10) / 10;
   }
-
-  const rows = [...nutrientKeys]
-    .map((key) => {
-      const sum = data.value.reduce((acc, day) => {
-        const totals = (day.nutrientTotals ?? {}) as Record<string, unknown>;
-        return acc + Number(totals[key] ?? 0);
-      }, 0);
-      const avgVal = sum / dayCount;
-      const meta = micronutrientMeta[key as NutrientKey];
-      return {
-        key,
-        label: meta?.label ?? fallbackLabelFromKey(key),
-        unit: meta?.unit ?? "mg",
-        avgRaw: avgVal,
-        avg: avgVal >= 100 ? Math.round(avgVal) : Math.round(avgVal * 10) / 10,
-      };
-    })
-    .filter((row) => row.avgRaw > 0)
-    .sort((a, b) => b.avgRaw - a.avgRaw)
-    .slice(0, 10);
-
-  const maxVal = Math.max(...rows.map((r) => r.avgRaw), 0);
-  return rows.map((row) => ({
-    ...row,
-    percent: maxVal > 0 ? Math.max(6, Math.round((row.avgRaw / maxVal) * 100)) : 0,
-  }));
+  return out;
 });
+
+function nutrientAvg(key: NutrientKey): number | null {
+  const val = nutrientAverages.value[key];
+  if (typeof val !== "number" || val <= 0) return null;
+  return val;
+}
+
+const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
+  {
+    title: "Vitamins",
+    items: [
+      { key: "vitamin_a", label: "Vitamin A", unit: "µg" }, { key: "vitamin_d", label: "Vitamin D", unit: "µg" },
+      { key: "vitamin_e", label: "Vitamin E", unit: "mg" }, { key: "vitamin_k", label: "Vitamin K", unit: "µg" },
+      { key: "vitamin_c", label: "Vitamin C", unit: "mg" }, { key: "vitamin_b1", label: "B1", unit: "mg" },
+      { key: "vitamin_b2", label: "B2", unit: "mg" }, { key: "vitamin_b3", label: "B3", unit: "mg" },
+      { key: "vitamin_b5", label: "B5", unit: "mg" }, { key: "vitamin_b6", label: "B6", unit: "mg" },
+      { key: "vitamin_b7", label: "B7", unit: "µg" }, { key: "vitamin_b9", label: "B9", unit: "µg" },
+      { key: "vitamin_b12", label: "B12", unit: "µg" }, { key: "choline", label: "Choline", unit: "mg" },
+      { key: "caffeine", label: "Caffeine", unit: "mg" },
+    ],
+  },
+  {
+    title: "Minerals",
+    items: [
+      { key: "calcium", label: "Calcium", unit: "mg" }, { key: "phosphorus", label: "Phosphorus", unit: "mg" },
+      { key: "magnesium", label: "Magnesium", unit: "mg" }, { key: "sodium", label: "Sodium", unit: "mg" },
+      { key: "potassium", label: "Potassium", unit: "mg" }, { key: "chloride", label: "Chloride", unit: "mg" },
+      { key: "sulfur", label: "Sulfur", unit: "mg" }, { key: "iron", label: "Iron", unit: "mg" },
+      { key: "zinc", label: "Zinc", unit: "mg" }, { key: "selenium", label: "Selenium", unit: "µg" },
+      { key: "iodine", label: "Iodine", unit: "µg" }, { key: "copper", label: "Copper", unit: "mg" },
+      { key: "manganese", label: "Manganese", unit: "mg" }, { key: "chromium", label: "Chromium", unit: "µg" },
+      { key: "molybdenum", label: "Molybdenum", unit: "µg" }, { key: "fluoride", label: "Fluoride", unit: "mcg" },
+    ],
+  },
+  {
+    title: "Fatty Acids",
+    items: [
+      { key: "omega_3", label: "Omega-3", unit: "mg" }, { key: "omega_6", label: "Omega-6", unit: "mg" },
+      { key: "omega_9", label: "Omega-9", unit: "mg" },
+    ],
+  },
+];
 
 const goalHitRate = computed(() => {
   if (!calorieGoal.value) return 0;
@@ -481,52 +495,54 @@ h1 { margin-bottom: 18px; }
 
 .chart-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
 
-.micro-empty {
+.micro-content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.micro-group-title {
+  font-size: 0.78rem;
+  font-weight: 700;
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  padding: 6px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0 0 8px;
 }
 
-.micro-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.micro-row {
-  display: flex;
-  flex-direction: column;
+.micro-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 6px;
 }
 
-.micro-head {
+.micro-item {
+  padding: 6px 10px;
+  background: var(--bg-surface-secondary);
+  border-radius: 6px;
+}
+
+.micro-top {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  gap: 8px;
 }
 
 .micro-name {
-  color: var(--text-main);
-  font-size: 0.86rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
 }
 
-.micro-value {
-  color: var(--primary);
-  font-size: 0.84rem;
+.micro-val {
+  font-size: 0.78rem;
   font-weight: 600;
+  color: var(--primary);
 }
 
-.micro-bar-track {
-  height: 7px;
-  background: var(--bg-surface-secondary);
-  border-radius: 999px;
-  overflow: hidden;
-}
-
-.micro-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--accent));
-  border-radius: 999px;
+.micro-zero {
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--text-secondary); }
