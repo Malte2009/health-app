@@ -79,9 +79,20 @@
             </div>
             <div v-if="selectedIngFood" class="ing-confirm">
               <span class="ing-selected-name">{{ selectedIngFood.name }}</span>
-              <input v-model.number="ingredientWeight" class="ing-weight-input" type="number" min="1" placeholder="g" />
-              <button class="btn btn-primary btn-sm" :disabled="!ingredientWeight || saving" @click="doAddIngredient(recipe.id)">Add</button>
+              <input v-model.number="ingredientAmount" class="ing-weight-input" type="number" min="0.1" step="0.1" placeholder="Amount" />
+              <select v-model="ingredientUnit" class="ing-unit-select">
+                <option value="G">g</option>
+                <option value="ML">ml</option>
+                <option value="PORTION">portion</option>
+              </select>
+              <button class="btn btn-primary btn-sm" :disabled="ingredientEffectiveWeight <= 0 || saving" @click="doAddIngredient(recipe.id)">Add</button>
               <button class="btn btn-secondary btn-sm" @click="clearIngredientForm">Cancel</button>
+            </div>
+            <div v-if="selectedIngFood && ingredientUnit === 'ML' && !selectedIngFood.density_g_per_ml" class="ing-hint">
+              Missing density (g/ml). Please switch to grams or choose another food.
+            </div>
+            <div v-if="selectedIngFood && ingredientUnit === 'PORTION' && !selectedIngFood.g_per_portion" class="ing-hint">
+              Missing grams per portion. Please switch to grams or choose another food.
             </div>
           </div>
 
@@ -139,14 +150,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { isAuthenticated } from "@/services/authService.ts";
 import { getMealRecipes, createMealRecipe, deleteMealRecipe, addIngredient, deleteIngredient, logMealRecipe } from "@/services/mealRecipeService.ts";
 import { getMealLogs } from "@/services/mealLogService.ts";
 import { searchFoods } from "@/services/foodService.ts";
 import { toLocalIsoDate } from "@/utility/date.ts";
-import type { MealRecipe, MealLog, Food, MealType } from "@/types/foodType.ts";
+import type { MealRecipe, MealLog, Food, MealType, PortionUnit } from "@/types/foodType.ts";
 
 const router = useRouter();
 
@@ -165,7 +176,8 @@ const addingTo = ref<string | null>(null);
 const ingredientSearch = ref("");
 const ingredientResults = ref<Food[]>([]);
 const selectedIngFood = ref<Food | null>(null);
-const ingredientWeight = ref(100);
+const ingredientAmount = ref(100);
+const ingredientUnit = ref<PortionUnit>("G");
 
 // Log
 const logRecipe = ref<MealRecipe | null>(null);
@@ -199,7 +211,8 @@ function startAddIngredient(recipeId: string) {
   ingredientSearch.value = "";
   ingredientResults.value = [];
   selectedIngFood.value = null;
-  ingredientWeight.value = 100;
+  ingredientAmount.value = 100;
+  ingredientUnit.value = "G";
 }
 
 function clearIngredientForm() {
@@ -223,12 +236,30 @@ function selectIngredientFood(food: Food) {
   selectedIngFood.value = food;
   ingredientResults.value = [];
   ingredientSearch.value = food.name;
+  ingredientAmount.value = food.defaultAmount && food.defaultAmount > 0 ? food.defaultAmount : 100;
+  ingredientUnit.value = food.defaultUnit ?? "G";
 }
 
+function ingredientWeightInGrams(food: Food, amount: number, unit: PortionUnit): number {
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  if (unit === "G") return amount;
+  if (unit === "ML") {
+    const density = food.density_g_per_ml ?? 0;
+    return density > 0 ? amount * density : 0;
+  }
+  const gramsPerPortion = food.g_per_portion ?? 0;
+  return gramsPerPortion > 0 ? amount * gramsPerPortion : 0;
+}
+
+const ingredientEffectiveWeight = computed(() => {
+  if (!selectedIngFood.value) return 0;
+  return ingredientWeightInGrams(selectedIngFood.value, ingredientAmount.value, ingredientUnit.value);
+});
+
 async function doAddIngredient(recipeId: string) {
-  if (!selectedIngFood.value || !ingredientWeight.value) return;
+  if (!selectedIngFood.value || ingredientEffectiveWeight.value <= 0) return;
   saving.value = true;
-  await addIngredient(recipeId, { foodId: selectedIngFood.value.id, weight_g: ingredientWeight.value });
+  await addIngredient(recipeId, { foodId: selectedIngFood.value.id, weight_g: ingredientEffectiveWeight.value });
   saving.value = false;
   // Reload recipes to get updated ingredient list
   await loadRecipes();
@@ -565,6 +596,22 @@ h1 { margin-bottom: 20px; }
   padding: 6px 10px;
   outline: none;
   min-height: 36px;
+}
+
+.ing-unit-select {
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-main);
+  font-size: 0.9rem;
+  padding: 6px 10px;
+  min-height: 36px;
+}
+
+.ing-hint {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
 }
 
 .add-ing-btn {

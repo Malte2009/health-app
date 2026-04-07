@@ -171,7 +171,7 @@ import { useRouter } from "vue-router";
 import { isAuthenticated } from "@/services/authService.ts";
 import { getDailyDashboard } from "@/services/foodDashboardService.ts";
 import { getNrvProgress } from "@/services/nrvService.ts";
-import { createMealLog, deleteMealLog, deleteFoodLog } from "@/services/mealLogService.ts";
+import { createMealLog, updateMealLog, deleteMealLog, deleteFoodLog } from "@/services/mealLogService.ts";
 import { toLocalIsoDate } from "@/utility/date.ts";
 import type { DailyDashboard, MealLog, FoodLog, MealType, Nutrient, GoalProgress, NrvProgressItem, MacroTotals } from "@/types/foodType.ts";
 import AddFoodLogModal from "@/components/Food/AddFoodLogModal.vue";
@@ -441,8 +441,18 @@ async function deleteFoodLogItem(mealLogId: string, foodLogId: string) {
 
 async function addMeal(type: MealType) {
   creatingMeal.value = true;
-  await createMealLog({ type, date: selectedDate.value });
-  creatingMeal.value = false;
+  try {
+    const created = await createMealLog({ type, date: selectedDate.value });
+
+    // Some backends default create-date to today; patching keeps the meal on the selected day.
+    const createdId = (created as MealLog & { meal_log_id?: string } | void)?.id
+      ?? (created as MealLog & { meal_log_id?: string } | void)?.meal_log_id;
+    if (createdId) {
+      await updateMealLog(createdId, { date: selectedDate.value });
+    }
+  } finally {
+    creatingMeal.value = false;
+  }
   await loadDashboard();
 }
 
