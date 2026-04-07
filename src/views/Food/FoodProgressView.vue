@@ -78,6 +78,14 @@
                     {{ nutrientAvg(n.key) != null ? nutrientAvg(n.key) + ' ' + n.unit : '—' }}
                   </span>
                 </div>
+                <div v-if="nrvData[n.key]" class="nrv-bar-track">
+                  <div
+                    class="nrv-bar"
+                    :style="{ width: Math.min(100, nrvData[n.key].progress_percent) + '%' }"
+                    :class="{ 'nrv-full': nrvData[n.key].progress_percent >= 100 }"
+                  ></div>
+                  <span class="nrv-pct">{{ Math.round(nrvData[n.key].progress_percent) }}%</span>
+                </div>
               </div>
             </div>
           </div>
@@ -141,8 +149,9 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { isAuthenticated } from "@/services/authService.ts";
 import { getNutritionOverTime } from "@/services/foodDashboardService.ts";
+import { getNrvProgress } from "@/services/nrvService.ts";
 import { toLocalIsoDate } from "@/utility/date.ts";
-import type { NutritionOverTimeDay, Nutrient } from "@/types/foodType.ts";
+import type { NutritionOverTimeDay, Nutrient, NrvProgressItem } from "@/types/foodType.ts";
 
 const router = useRouter();
 
@@ -152,6 +161,7 @@ const loading = ref(false);
 const weekOffset = ref(0);
 const monthOffset = ref(0);
 const showExtendedStats = ref(false);
+const nrvData = ref<Record<string, NrvProgressItem>>({});
 
 type NutrientKey = Exclude<keyof Nutrient, "id" | "foodId">;
 type NutrientMeta = { label: string; unit: string };
@@ -312,7 +322,8 @@ function currentMonth(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-const daysLogged = computed(() => data.value.filter((d) => d.totals.calories > 0).length);
+const loggedDays = computed(() => data.value.filter((d) => d.totals.calories > 0));
+const daysLogged = computed(() => loggedDays.value.length);
 
 function avg(vals: number[]): number {
   const nz = vals.filter((v) => v > 0);
@@ -329,10 +340,10 @@ const avgUnsatFat = computed(() => avg(data.value.map((d) => Math.round(d.totals
 const avgSalt = computed(() => avg(data.value.map((d) => Math.round((d.totals.salt_g ?? 0) * 10) / 10)));
 
 const nutrientAverages = computed<Partial<Record<NutrientKey, number>>>(() => {
-  const dayCount = data.value.length || 1;
+  const dayCount = loggedDays.value.length || 1;
   const out: Partial<Record<NutrientKey, number>> = {};
   for (const key of Object.keys(micronutrientMeta) as NutrientKey[]) {
-    const sum = data.value.reduce((acc, day) => {
+    const sum = loggedDays.value.reduce((acc, day) => {
       const totals = (day.nutrientTotals ?? {}) as Record<string, unknown>;
       const val = Number(totals[key] ?? 0);
       return acc + (Number.isFinite(val) ? val : 0);
@@ -412,7 +423,21 @@ async function loadData() {
   }
 
   data.value = (await getNutritionOverTime(startDate, endDate))?.days ?? [];
+  await loadNrvForAverages();
   loading.value = false;
+}
+
+async function loadNrvForAverages() {
+  const payload: Record<string, number> = {};
+  for (const [key, value] of Object.entries(nutrientAverages.value) as [NutrientKey, number | undefined][]) {
+    if (typeof value === "number" && value > 0) payload[key] = value;
+  }
+  if (Object.keys(payload).length === 0) {
+    nrvData.value = {};
+    return;
+  }
+  const result = await getNrvProgress(payload);
+  nrvData.value = result ?? {};
 }
 
 watch([viewMode, weekOffset, monthOffset], loadData);
@@ -543,6 +568,32 @@ h1 { margin-bottom: 18px; }
 .micro-zero {
   color: var(--text-secondary);
   font-weight: 400;
+}
+
+.nrv-bar-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 3px;
+}
+
+.nrv-bar {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.nrv-bar.nrv-full { background: var(--success); }
+
+.nrv-pct {
+  position: absolute;
+  right: 0;
+  top: -13px;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
 }
 
 .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--text-secondary); }
