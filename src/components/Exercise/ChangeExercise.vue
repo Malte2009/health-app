@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { changeExerciseLog } from "@/services/exerciseLogService.ts";
+import { updateExerciseLog } from "@/services/exerciseLogService.ts";
 import type { changeExerciseLogRequest, exerciseLog } from "@/types/exerciseLogType.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
@@ -69,7 +69,7 @@ async function submit() {
     notes: (document.getElementById("exerciseLogNotes") as HTMLInputElement).value || "",
   };
 
-  const changedExerciseLog = await changeExerciseLog(exerciseLogData);
+  const changedExerciseLog = await updateExerciseLog(exerciseLogData);
 
   if (!changedExerciseLog) {
     console.error("Failed to change exercise");

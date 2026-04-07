@@ -64,7 +64,7 @@
                   v-for="(set, setIndex) in exercise.sets"
                   :key="set.id"
                 >
-                  <p v-if="set?.type != 'Pause'">{{ set.reps + set.repUnit}} | {{ set.weight }}kg</p>
+                  <p v-if="set?.type != 'Pause'">{{ set.reps + set.repUnit }} | {{ set.weight }}kg</p>
                   <p v-if="set?.type === 'Pause'">{{ set.reps + set.repUnit }}</p>
                 </td>
                 <td @click="addSetToExercise(exercise.id)" class="add-Button">+</td>
@@ -156,14 +156,14 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { useTrainingStore } from "@/stores/trainingStore.ts";
+import { useTrainingLogStore } from "@/stores/trainingStore.ts";
 import { onBeforeMount, ref } from "vue";
 import AddExercise from "@/components/Exercise/AddExercise.vue";
 import AddSet from "@/components/Set/AddSet.vue";
 import ChangeSet from "@/components/Set/ChangeSet.vue";
 import ChangeExercise from "@/components/Exercise/ChangeExercise.vue";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
-import { getTrainingById, updateTraining } from "@/services/trainingService.ts";
+import { getTrainingLogById, updateTrainingLog } from "@/services/trainingService.ts";
 import { deleteExerciseLogRequest } from "@/services/exerciseLogService.ts";
 import { deleteSetRequest } from "@/services/setService.ts";
 import { useTypeStore } from "@/stores/type.ts";
@@ -171,7 +171,7 @@ import { getDateString } from "@/utility/date.ts";
 
 const isMobile = window.innerWidth <= 768;
 
-const trainingStore = useTrainingStore();
+const trainingLogStore = useTrainingLogStore();
 const typeStore = useTypeStore();
 const router = useRouter();
 const route = useRoute();
@@ -274,7 +274,7 @@ function onExerciseDrop(targetIndex: number) {
 
   trainingStore.changeTraining(trainingsId, training.value);
 
-  updateTraining(trainingsId, training.value);
+  updateTrainingLog(trainingsId, training.value);
 
   draggingExerciseIndex.value = null;
 }
@@ -301,7 +301,7 @@ function onSetDrop(targetExerciseIndex: number, targetSetIndex: number) {
     set.order = index;
   });
 
-  updateTraining(trainingsId, training.value);
+  updateTrainingLog(trainingsId, training.value);
 
   draggingSetIndex.value = null;
 }
@@ -430,7 +430,7 @@ function reloadTrainingFromStore() {
 onBeforeMount(async () => {
   typeStore.checkTypes();
   if (!training.value) {
-    const getTraining = await getTrainingById(trainingsId);
+    const getTraining = await getTrainingLogById(trainingsId);
 
     if (getTraining) {
       training.value = getTraining;

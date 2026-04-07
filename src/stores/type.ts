@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { getTrainingNames } from "@/services/trainingService.ts";
+import { getTrainingLogNames } from "@/services/trainingService.ts";
 import { getSetTypes, getSetUnits } from "@/services/setService.ts";
 import { getExerciseNames } from "@/services/exerciseService.ts";
 
@@ -54,7 +54,7 @@ export const useTypeStore = defineStore("typeStore", {
       this.setTypes = [];
     },
     async loadTypes() {
-      this.trainingNames = await getTrainingNames();
+      this.trainingNames = await getTrainingLogNames();
       this.setTypes = await getSetTypes();
       this.exerciseTypes = await getExerciseNames() || [];
       this.setRepUnitTypes = await getSetUnits();

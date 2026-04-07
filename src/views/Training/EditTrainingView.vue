@@ -52,7 +52,7 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { getTrainingLogsWithExercises, updateTraining } from "@/services/trainingService.ts";
+import { getTrainingLogsWithExercises, updateTrainingLog } from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
@@ -159,7 +159,7 @@ async function submit() {
   }
 
   try {
-    await updateTraining(trainingsId, newTraining);
+    await updateTrainingLog(trainingsId, newTraining);
   } catch (error) {
     console.error("Failed to update training:", error);
     return;

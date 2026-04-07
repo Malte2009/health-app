@@ -1,23 +1,16 @@
-import type { set } from "@/types/setType.ts";
+import type { setLog } from "@/types/setType.ts";
 
 export type exerciseLog = {
   id: string;
   userId: string;
   trainingId: string;
-  name: string;
   createdAt: Date;
-  changedAt: Date | null;
-  order: number;
-  notes: string | null;
-
-  sets: set[];
-};
-
-export type createExerciseLogRequest = {
+  changedAt?: Date;
   name: string;
-  trainingId: string;
   order: number;
   notes?: string;
+
+  setLogs: setLog[];
 };
 
 export type changeExerciseLogRequest = {

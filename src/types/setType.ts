@@ -1,14 +1,13 @@
-export type set = {
+export type setLog = {
   id: string;
-  type?: string;
+  userId: string;
+  exerciseLogId: string;
   createdAt: Date;
   changedAt?: Date;
   order: number;
   reps: number;
-  weight: number;
-  exerciseLogId: string;
-  userId: string;
   repUnit: string;
+  weight: number;
 };
 
 export type createSetRequestType = {

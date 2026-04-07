@@ -22,7 +22,7 @@ export const getTrainingLogsWithExercises = async (): Promise<getTrainingRespons
   }
 };
 
-export const getTrainingById = async (id: string): Promise<getTrainingResponseType | void> => {
+export const getTrainingLogById = async (id: string): Promise<trainingLog | void> => {
   try {
     return (await api.get(`/training/getTraining/${id}`)).data;
   } catch (error) {
@@ -30,7 +30,7 @@ export const getTrainingById = async (id: string): Promise<getTrainingResponseTy
   }
 };
 
-export const getTrainingNames= async (): Promise<string[]> => {
+export const getTrainingLogNames= async (): Promise<string[]> => {
   try {
     return (await api.get("/training/getTrainingNames")).data;
   } catch (error) {
@@ -39,7 +39,7 @@ export const getTrainingNames= async (): Promise<string[]> => {
   }
 };
 
-export const updateTraining = async (id: string, training: trainingLog): Promise<trainingLog | void> => {
+export const updateTrainingLog = async (id: string, training: trainingLog): Promise<trainingLog | void> => {
   try {
     return (await api.patch(`/training/updateTraining/${id}`, training)).data;
   } catch (error) {
@@ -55,7 +55,7 @@ export const createTrainingLog = async (training: createTrainingLogRequestType):
   }
 };
 
-export const deleteTrainingRequest = async (id: string): Promise<void> => {
+export const deleteTrainingLog = async (id: string): Promise<void> => {
   try {
     await api.delete(`/training/deleteTraining/${id}`);
   } catch (error) {

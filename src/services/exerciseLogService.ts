@@ -1,5 +1,4 @@
 import api from "./api";
-import type { changeExerciseLogRequest, createExerciseLogRequest, exerciseLog } from "@/types/exerciseLogType.ts";
 
 export const getExerciseLogById = async (id: string): Promise<exerciseLog | void> => {
   try {
@@ -9,17 +8,17 @@ export const getExerciseLogById = async (id: string): Promise<exerciseLog | void
   }
 };
 
-export const changeExerciseLog = async (exercise: changeExerciseLogRequest): Promise<exerciseLog | void> => {
+export const updateExerciseLog = async (exerciseId: string, name?: string, notes?: string, order?: number): Promise<exerciseLog | void> => {
   try {
-    return (await api.patch(`/exerciseLog/changeExerciseLog/${exercise.id}`, exercise)).data;
+    return (await api.patch(`/exerciseLog/changeExerciseLog/${exerciseId}`, { name, notes, order, })).data;
   } catch (error) {
     console.error(error);
   }
 };
 
-export const createExerciseLog = async (exercise: createExerciseLogRequest): Promise<exerciseLog | void> => {
+export const createExerciseLog = async (trainingLogId: string, name: string, order: number, notes?: string): Promise<exerciseLog | void> => {
   try {
-    return (await api.post("/exerciseLog/createExerciseLog", exercise)).data;
+    return (await api.post("/exerciseLog/createExerciseLog", { trainingId: trainingLogId, name, order, notes})).data;
   } catch (error) {
     console.error(error);
   }

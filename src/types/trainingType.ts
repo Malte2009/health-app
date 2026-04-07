@@ -12,10 +12,10 @@ export type trainingLog = {
   caloriesBurned?: number;
   duration?: number;
   avgHeartRate?: number;
-  pauses?: number;
-  pauseLength?: number;
+  pauses: number;
+  pauseLength: number;
 
-  exerciseLogs?: exerciseLog[];
+  exerciseLogs: exerciseLog[];
 };
 
 export type createTrainingLogRequestType = {

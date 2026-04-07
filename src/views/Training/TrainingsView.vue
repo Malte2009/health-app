@@ -61,7 +61,7 @@
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import type { trainingLog } from "@/types/trainingType.ts";
-import { deleteTrainingRequest, getTrainingLogs } from "@/services/trainingService.ts";
+import { deleteTrainingLog, getTrainingLogs } from "@/services/trainingService.ts";
 import { useTrainingLogStore } from "@/stores/trainingStore.ts";
 import { getDateString } from "@/utility/date.ts";
 import { isAuthenticated } from "@/services/authService.ts";
@@ -70,12 +70,12 @@ const isMobile = window.innerWidth <= 768;
 const showConfirmDelete = ref(false);
 const deleteTrainingId = ref<string>("");
 const router = useRouter();
-const trainingsStore = useTrainingLogStore();
+const trainingStore = useTrainingLogStore();
 const trainingLogs = ref([] as trainingLog[]);
 
 async function confirmDelete(id: string) {
   try {
-    await deleteTrainingRequest(id);
+    await deleteTrainingLog(id);
     trainingLogs.value = trainingLogs.value.filter((trainingLog) => trainingLog.id !== id);
   } catch (error) {
     console.error("Error deleting training:", error);
