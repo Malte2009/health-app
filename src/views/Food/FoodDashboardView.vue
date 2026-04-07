@@ -359,14 +359,22 @@ function foodLogWeight(fl: FoodLog): number {
     const density = Number(foodField(fl, "density_g_per_ml", "densityGPerMl"));
     if (density > 0) return amount * density;
   }
+  if (amount > 0 && unit === "PORTION") {
+    const gramsPerPortion = Number(foodField(fl, "g_per_portion", "gPerPortion"));
+    if (gramsPerPortion > 0) return amount * gramsPerPortion;
+  }
 
   const defaultAmount = Number(foodField(fl, "default_amount", "defaultAmount"));
-  const defaultUnitRaw = foodTextField(fl, "defaultUnit", "defaultUnit");
+  const defaultUnitRaw = foodTextField(fl, "default_unit", "defaultUnit");
   const defaultUnit = defaultUnitRaw.toUpperCase();
   if (defaultAmount > 0 && defaultUnit === "G") return defaultAmount;
   if (defaultAmount > 0 && defaultUnit === "ML") {
     const density = Number(foodField(fl, "density_g_per_ml", "densityGPerMl"));
     if (density > 0) return defaultAmount * density;
+  }
+  if (defaultAmount > 0 && defaultUnit === "PORTION") {
+    const gramsPerPortion = Number(foodField(fl, "g_per_portion", "gPerPortion"));
+    if (gramsPerPortion > 0) return defaultAmount * gramsPerPortion;
   }
 
   return 0;
@@ -399,8 +407,8 @@ function foodTextField(fl: FoodLog, snake: string, camel: string): string {
 function foodLogAmountDisplay(fl: FoodLog): string {
   const amount = Number((fl as FoodLog & { amount?: number }).amount ?? 0);
   const unit = ((fl as FoodLog & { unit?: string }).unit ?? "").toString().toUpperCase();
-  if (amount > 0 && (unit === "G" || unit === "ML")) {
-    return `${Math.round(amount * 10) / 10} ${unit === "G" ? "g" : "ml"}`;
+  if (amount > 0 && (unit === "G" || unit === "ML" || unit === "PORTION")) {
+    return `${Math.round(amount * 10) / 10} ${unit === "G" ? "g" : unit === "ML" ? "ml" : "portion"}`;
   }
   return `${Math.round(foodLogWeight(fl) * 10) / 10} g`;
 }

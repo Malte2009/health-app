@@ -11,6 +11,14 @@ function normalizeFoodLog(log: unknown): FoodLog {
     mealLogId: String(src.mealLogId ?? src.meal_log_id ?? ""),
     foodId: String(src.foodId ?? src.food_id ?? ""),
     weight_g: Number(src.weight_g ?? src.weightG ?? 0),
+    amount: src.amount != null ? Number(src.amount) : undefined,
+    unit: typeof src.unit === "string"
+      ? src.unit as FoodLog["unit"]
+      : typeof src.portionUnit === "string"
+        ? src.portionUnit as FoodLog["unit"]
+        : typeof src.portion_unit === "string"
+          ? src.portion_unit as FoodLog["unit"]
+          : undefined,
     date: String(src.date ?? ""),
     food,
   };

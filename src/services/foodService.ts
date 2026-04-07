@@ -29,6 +29,11 @@ function normalizeFood(item: unknown): Food {
       : src.densityGPerMl != null
         ? Number(src.densityGPerMl)
         : undefined,
+    g_per_portion: src.g_per_portion != null
+      ? Number(src.g_per_portion)
+      : src.gPerPortion != null
+        ? Number(src.gPerPortion)
+        : undefined,
     nutrients: nutrients ? (nutrients as Partial<Nutrient>) : undefined,
   };
 }
@@ -95,7 +100,7 @@ export const getMyFoods = async (): Promise<Food[]> => {
 
 export const getFoodById = async (id: string): Promise<Food | void> => {
   try {
-    return (await api.get(`/foods/${id}`)).data;
+    return normalizeFood((await api.get(`/foods/${id}`)).data);
   } catch (error) {
     console.error(error);
   }
@@ -103,7 +108,7 @@ export const getFoodById = async (id: string): Promise<Food | void> => {
 
 export const createFood = async (food: CreateFoodRequest): Promise<Food | void> => {
   try {
-    return (await api.post("/foods", food)).data;
+    return normalizeFood((await api.post("/foods", food)).data);
   } catch (error) {
     console.error(error);
   }
@@ -111,7 +116,7 @@ export const createFood = async (food: CreateFoodRequest): Promise<Food | void> 
 
 export const updateFood = async (id: string, food: Partial<CreateFoodRequest>): Promise<Food | void> => {
   try {
-    return (await api.patch(`/foods/${id}`, food)).data;
+    return normalizeFood((await api.patch(`/foods/${id}`, food)).data);
   } catch (error) {
     console.error(error);
   }

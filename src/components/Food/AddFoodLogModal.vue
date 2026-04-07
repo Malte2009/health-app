@@ -47,10 +47,14 @@
             <select v-model="unit" class="unit-select">
               <option value="G">g</option>
               <option value="ML">ml</option>
+              <option value="PORTION">portion</option>
             </select>
           </div>
-          <div v-if="unit === 'ML' && !selectedFood.density_g_per_ml" class="status-msg density-hint">
+          <div v-if="unit === 'ML' && !selectedFood?.density_g_per_ml" class="status-msg density-hint">
             This food has no density (g/ml). Weight will fallback to backend defaults.
+          </div>
+          <div v-if="unit === 'PORTION' && !selectedFood?.g_per_portion" class="status-msg density-hint">
+            This food has no grams-per-portion data. Weight will fallback to backend defaults.
           </div>
 
           <div class="calculated-macros">
@@ -171,9 +175,14 @@ function selectFood(food: Food) {
 const effectiveWeight = computed(() => {
   if (!selectedFood.value) return 0;
   if (unit.value === "G") return amount.value;
-  const density = selectedFood.value.density_g_per_ml;
-  if (!density || density <= 0) return 0;
-  return amount.value * density;
+  if (unit.value === "ML") {
+    const density = selectedFood.value.density_g_per_ml;
+    if (!density || density <= 0) return 0;
+    return amount.value * density;
+  }
+  const gramsPerPortion = selectedFood.value.g_per_portion;
+  if (!gramsPerPortion || gramsPerPortion <= 0) return 0;
+  return amount.value * gramsPerPortion;
 });
 
 const calcCalories = computed(() => selectedFood.value ? Math.round((selectedFood.value.calories_per_100g * effectiveWeight.value) / 100) : 0);

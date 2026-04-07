@@ -76,11 +76,16 @@
               <option :value="undefined">None</option>
               <option value="G">g</option>
               <option value="ML">ml</option>
+              <option value="PORTION">portion</option>
             </select>
           </div>
           <div class="form-field">
             <label>Density (g/ml)</label>
             <input v-model.number="newFood.density_g_per_ml" type="number" min="0" step="0.001" :disabled="newFood.defaultUnit !== 'ML'" />
+          </div>
+          <div class="form-field">
+            <label>Grams per Portion (g/portion)</label>
+            <input v-model.number="newFood.g_per_portion" type="number" min="0" step="0.1" :disabled="newFood.defaultUnit !== 'PORTION'" />
           </div>
         </div>
 
@@ -163,8 +168,9 @@
         </div>
 
         <div v-if="food.defaultAmount && food.defaultUnit" class="portion-preview">
-          Default portion: {{ food.defaultAmount }} {{ food.defaultUnit === "G" ? "g" : "ml" }}
+          Default portion: {{ food.defaultAmount }} {{ food.defaultUnit === "G" ? "g" : food.defaultUnit === "ML" ? "ml" : "portion" }}
           <span v-if="food.defaultUnit === 'ML' && food.density_g_per_ml">(density {{ food.density_g_per_ml }} g/ml)</span>
+          <span v-if="food.defaultUnit === 'PORTION' && food.g_per_portion">({{ food.g_per_portion }} g/portion)</span>
         </div>
 
         <div class="food-card-actions">
@@ -238,11 +244,16 @@
                 <option :value="undefined">None</option>
                 <option value="G">g</option>
                 <option value="ML">ml</option>
+                <option value="PORTION">portion</option>
               </select>
             </div>
             <div class="form-field">
               <label>Density (g/ml)</label>
               <input v-model.number="editData.density_g_per_ml" type="number" min="0" step="0.001" :disabled="editData.defaultUnit !== 'ML'" />
+            </div>
+            <div class="form-field">
+              <label>Grams per Portion (g/portion)</label>
+              <input v-model.number="editData.g_per_portion" type="number" min="0" step="0.1" :disabled="editData.defaultUnit !== 'PORTION'" />
             </div>
           </div>
 
@@ -378,10 +389,21 @@ function normalizePortionFields(payload: Partial<CreateFoodRequest>): Partial<Cr
   const amount = typeof out.defaultAmount === "number" ? out.defaultAmount : undefined;
   const unit = out.defaultUnit as PortionUnit | undefined;
   const density = typeof out.density_g_per_ml === "number" ? out.density_g_per_ml : undefined;
+  const gramsPerPortion = typeof out.g_per_portion === "number" ? out.g_per_portion : undefined;
 
   out.defaultAmount = amount && amount > 0 ? amount : undefined;
   out.defaultUnit = unit;
   out.density_g_per_ml = density && density > 0 ? density : undefined;
+  out.g_per_portion = gramsPerPortion && gramsPerPortion > 0 ? gramsPerPortion : undefined;
+
+  if (out.defaultUnit === "ML") {
+    out.g_per_portion = undefined;
+  } else if (out.defaultUnit === "PORTION") {
+    out.density_g_per_ml = undefined;
+  } else {
+    out.density_g_per_ml = undefined;
+    out.g_per_portion = undefined;
+  }
   return out;
 }
 
@@ -389,12 +411,16 @@ function validatePortionFields(payload: Partial<CreateFoodRequest>): string | nu
   const amount = payload.defaultAmount;
   const unit = payload.defaultUnit;
   const density = payload.density_g_per_ml;
+  const gramsPerPortion = payload.g_per_portion;
 
   if ((amount == null) !== (unit == null)) {
     return "Default amount and unit must be set together.";
   }
   if (unit === "ML" && (density == null || density <= 0)) {
     return "Density (g/ml) is required when default unit is ml.";
+  }
+  if (unit === "PORTION" && (gramsPerPortion == null || gramsPerPortion <= 0)) {
+    return "Grams per portion (g/portion) is required when default unit is portion.";
   }
   return null;
 }
@@ -438,6 +464,7 @@ async function startEdit(food: Food) {
     defaultAmount: food.defaultAmount,
     defaultUnit: food.defaultUnit,
     density_g_per_ml: food.density_g_per_ml,
+    g_per_portion: food.g_per_portion,
   };
 
   const nutrients = food.nutrients ?? (await getFoodNutrients(food.id));

@@ -37,7 +37,7 @@ export interface Nutrient {
   caffeine?: number;
 }
 
-export type PortionUnit = "G" | "ML";
+export type PortionUnit = "G" | "ML" | "PORTION";
 
 export interface Food {
   id: string;
@@ -55,6 +55,7 @@ export interface Food {
   defaultAmount?: number;
   defaultUnit?: PortionUnit;
   density_g_per_ml?: number;
+  g_per_portion?: number;
   nutrients?: Nutrient;
 }
 
@@ -192,6 +193,7 @@ export interface CreateFoodRequest {
   defaultAmount?: number;
   defaultUnit?: PortionUnit;
   density_g_per_ml?: number;
+  g_per_portion?: number;
   nutrients?: Partial<Nutrient>;
 }
 
