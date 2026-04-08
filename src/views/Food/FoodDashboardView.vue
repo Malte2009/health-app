@@ -68,8 +68,8 @@
       </div>
 
       <!-- Meal Cards -->
-      <div class="meals-section">
-        <div v-for="meal in meals" :key="meal.id" class="meal-card">
+      <div class="meals-section" id="meals-section">
+        <div v-for="meal in meals" :key="meal.id" class="meal-card" draggable="true" :order="meal.order" :id="meal.id">
           <div class="meal-header">
             <div class="meal-title">
               <span class="meal-icon">{{ mealIcon(meal.type) }}</span>
@@ -93,6 +93,7 @@
                   <span class="macro-pill protein-pill">Protein {{ calcFoodLogMacro(fl, "protein") }} g</span>
                   <span class="macro-pill carbs-pill">Carbs {{ calcFoodLogMacro(fl, "carbs") }} g</span>
                   <span class="macro-pill fat-pill">Fats {{ calcFoodLogMacro(fl, "fat") }} g</span>
+                  <span class="macro-pill">Order {{ meal.order }}</span>
                   <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill sugar-pill">Sugar {{ calcFoodLogMacro(fl, "sugar") }} g</span>
                   <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill sat-fat-pill">Sat {{ calcFoodLogMacro(fl, "satFat") }} g</span>
                   <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill unsat-fat-pill">Unsat {{ calcFoodLogMacro(fl, "unsatFat") }} g</span>
@@ -447,14 +448,7 @@ async function deleteFoodLogItem(mealLogId: string, foodLogId: string) {
 async function addMeal(type: MealType) {
   creatingMeal.value = true;
   try {
-    const created = await createMealLog({ type, date: selectedDate.value });
-
-    // Some backends default create-date to today; patching keeps the meal on the selected day.
-    const createdId =
-      (created as (MealLog & { meal_log_id?: string }) | void)?.id ?? (created as (MealLog & { meal_log_id?: string }) | void)?.meal_log_id;
-    if (createdId) {
-      await updateMealLog(createdId, { date: selectedDate.value });
-    }
+    await createMealLog({ type, date: selectedDate.value, order: meals.value.length });
   } finally {
     creatingMeal.value = false;
   }
@@ -494,13 +488,109 @@ async function loadDashboard() {
 
 watch(selectedDate, loadDashboard);
 
+watch(meals, starDragListeners)
+
+const draggedElement = ref<HTMLElement | null>(null);
+
+async function starDragListeners() {
+
+  await sleep(10);
+
+  const meals = document.getElementsByClassName("meal-card");
+
+  for (const meal of meals) {
+    meal.addEventListener("dragstart", () => {
+      draggedElement.value = meal as HTMLElement;
+      (meal as HTMLElement).style.display = "none";
+
+      (meal as HTMLElement).addEventListener("dragend", async () => {
+        draggedElement.value = null;
+        (meal as HTMLElement).style.display = "block";
+      }, { once: true });
+    });
+
+    meal.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const target = event.target;
+
+      const element = findMealCard(target as HTMLElement);
+
+      element?.classList.remove("drag-over");
+
+      if (!element) return;
+
+      if (draggedElement.value) {
+
+        console.log("Target: ", element);
+        console.log("Dragged element: ", draggedElement.value);
+
+        const elementOrder = element.getAttribute("order") as unknown as number;
+        const draggedOrder = draggedElement.value.getAttribute("order") as unknown as number;
+
+        if (elementOrder > draggedOrder) {
+          element.insertAdjacentElement("afterend", draggedElement.value);
+        } else {
+          element.insertAdjacentElement("beforebegin", draggedElement.value);
+        }
+
+        draggedElement.value.setAttribute("order", String(Array.from(draggedElement.value.parentElement!.children).indexOf(draggedElement.value)));
+        element.setAttribute("order", String(Array.from(element.parentElement!.children).indexOf(element)));
+
+        updateMealLog(draggedElement.value.id, {order: Array.from(draggedElement.value!.parentElement!.children).indexOf(draggedElement.value!) });
+        updateMealLog(element.id, {order: Array.from(element!.parentElement!.children).indexOf(element!) });
+
+        draggedElement.value = null;
+      }
+    });
+
+    meal.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      const target = event.target;
+
+      if (target == null) return;
+
+      const element = findMealCard(target as HTMLElement);
+
+      element?.classList.add("drag-over");
+    });
+
+    meal.addEventListener("dragleave", (event) => {
+      event.preventDefault();
+      const target = event.target;
+
+      if (target == null) return;
+
+      const element = findMealCard(target as HTMLElement);
+
+      element?.classList.remove("drag-over");
+    });
+  }
+}
+
+function findMealCard(element: HTMLElement): HTMLElement | null {
+  while (element && element.parentElement && !element.classList.contains("meal-card")) {
+    element = element.parentElement;
+  }
+
+  if (element && element.classList.contains("meal-card")) {
+    return element;
+  }
+
+  return null;
+}
+
 onMounted(async () => {
   if (!(await isAuthenticated())) {
     await router.push({ name: "login" });
     return;
   }
   await loadDashboard();
+  starDragListeners();
 });
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 // Nutrient definitions grouped
 type NutrientDef = { key: NutrientValueKey; label: string; unit: string };
@@ -520,7 +610,6 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
       { key: "vitamin_b5", label: "B5", unit: "mg" },
       { key: "vitamin_b6", label: "B6", unit: "mg" },
       { key: "vitamin_b7", label: "B7", unit: "µg" },
-      { key: "vitamin_b9", label: "B9", unit: "µg" },
       { key: "vitamin_b12", label: "B12", unit: "µg" },
       { key: "choline", label: "Choline", unit: "mg" },
       { key: "caffeine", label: "Caffeine", unit: "mg" },
@@ -847,6 +936,11 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
+}
+
+.meal-card.drag-over {
+  border-color: var(--primary);
+  //background: rgba(0, 191, 174, 0.1);
 }
 
 .meal-header {

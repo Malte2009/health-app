@@ -76,6 +76,7 @@ export interface MealLog {
   id: string;
   userId?: string;
   type: MealType;
+  order: number;
   date?: string;
   foodLogs?: FoodLog[];
 }
@@ -198,7 +199,8 @@ export interface CreateFoodRequest {
 }
 
 export interface CreateMealLogRequest {
-  type: MealType;
+  type?: MealType;
+  order?: number;
   date?: string;
 }
 

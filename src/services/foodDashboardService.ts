@@ -33,6 +33,7 @@ function normalizeMealLog(log: unknown): MealLog {
     type: String(src.type ?? "OTHER") as MealType,
     date: src.date ? String(src.date) : undefined,
     foodLogs: Array.isArray(rawFoodLogs) ? rawFoodLogs.map((item) => normalizeFoodLog(item)) : [],
+    order: src.order ? Number(src.order) : 0,
   };
 }
 
