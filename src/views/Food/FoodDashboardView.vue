@@ -93,7 +93,6 @@
                   <span class="macro-pill protein-pill">Protein {{ calcFoodLogMacro(fl, "protein") }} g</span>
                   <span class="macro-pill carbs-pill">Carbs {{ calcFoodLogMacro(fl, "carbs") }} g</span>
                   <span class="macro-pill fat-pill">Fats {{ calcFoodLogMacro(fl, "fat") }} g</span>
-                  <span class="macro-pill">Order {{ meal.order }}</span>
                   <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill sugar-pill">Sugar {{ calcFoodLogMacro(fl, "sugar") }} g</span>
                   <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill sat-fat-pill">Sat {{ calcFoodLogMacro(fl, "satFat") }} g</span>
                   <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill unsat-fat-pill">Unsat {{ calcFoodLogMacro(fl, "unsatFat") }} g</span>
