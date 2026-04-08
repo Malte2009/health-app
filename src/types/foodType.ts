@@ -59,7 +59,7 @@ export interface Food {
   nutrients?: Nutrient;
 }
 
-export type MealType = "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK" | "OTHER";
+export type MealType = "SUPPLEMENTS" | "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK" | "OTHER";
 
 export interface FoodLog {
   id: string;

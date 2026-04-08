@@ -20,9 +20,13 @@
           <svg class="calorie-ring" viewBox="0 0 128 128" width="120" height="120">
             <circle cx="64" cy="64" r="54" fill="none" stroke="var(--border)" stroke-width="10" />
             <circle
-              cx="64" cy="64" r="54" fill="none"
+              cx="64"
+              cy="64"
+              r="54"
+              fill="none"
               :stroke="calorieProgress > 1 ? 'var(--danger)' : 'var(--primary)'"
-              stroke-width="10" stroke-linecap="round"
+              stroke-width="10"
+              stroke-linecap="round"
               :stroke-dasharray="ringCircumference"
               :stroke-dashoffset="ringDashoffset"
               transform="rotate(-90 64 64)"
@@ -33,10 +37,8 @@
             <text x="64" y="76" text-anchor="middle" font-size="10" fill="var(--text-secondary)">kcal</text>
           </svg>
           <div class="calorie-goal-text">
-            <span :class="calorieProgress > 1 ? 'over-goal' : ''">
-              {{ calGoal?.achieved ?? 0 }} / {{ calGoal?.target ?? '—' }} kcal
-            </span>
-            <span class="goal-percent">{{ calGoal?.progress_percent != null ? Math.round(calGoal.progress_percent) + '%' : '' }}</span>
+            <span :class="calorieProgress > 1 ? 'over-goal' : ''"> {{ calGoal?.achieved ?? 0 }} / {{ calGoal?.target ?? "—" }} kcal </span>
+            <span class="goal-percent">{{ calGoal?.progress_percent != null ? Math.round(calGoal.progress_percent) + "%" : "" }}</span>
           </div>
         </div>
 
@@ -59,10 +61,9 @@
       <div class="add-meal-row">
         <span class="section-label">Meals</span>
         <div class="meal-type-buttons">
-          <button
-            v-for="type in availableMealTypes" :key="type"
-            class="add-meal-btn" :disabled="creatingMeal" @click="addMeal(type)"
-          >{{ mealIcon(type) }} {{ formatMealType(type) }}</button>
+          <button v-for="type in availableMealTypes" :key="type" class="add-meal-btn" :disabled="creatingMeal" @click="addMeal(type)">
+            {{ mealIcon(type) }} {{ formatMealType(type) }}
+          </button>
         </div>
       </div>
 
@@ -77,7 +78,7 @@
             </div>
             <div class="meal-actions">
               <button class="add-food-btn" @click="openAddFood(meal.id)">+ Food</button>
-              <button class="add-food-btn" @click="toggleMealDetails(meal.id)">{{ isMealDetailsOpen(meal.id) ? 'Hide details' : 'Details' }}</button>
+              <button class="add-food-btn" @click="toggleMealDetails(meal.id)">{{ isMealDetailsOpen(meal.id) ? "Hide details" : "Details" }}</button>
               <button class="delete-meal-btn" @click="confirmDeleteMeal(meal.id)">&#10005;</button>
             </div>
           </div>
@@ -89,13 +90,13 @@
                 <div class="food-log-macros">
                   <span class="macro-pill weight-pill">{{ foodLogAmountDisplay(fl) }}</span>
                   <span class="macro-pill kcal-pill">{{ calcFoodLogCalories(fl) }} kcal</span>
-                  <span class="macro-pill protein-pill">Protein {{ calcFoodLogMacro(fl, 'protein') }} g</span>
-                  <span class="macro-pill carbs-pill">Carbs {{ calcFoodLogMacro(fl, 'carbs') }} g</span>
-                  <span class="macro-pill fat-pill">Fats {{ calcFoodLogMacro(fl, 'fat') }} g</span>
-                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill sugar-pill">Sugar {{ calcFoodLogMacro(fl, 'sugar') }} g</span>
-                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill sat-fat-pill">Sat {{ calcFoodLogMacro(fl, 'satFat') }} g</span>
-                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill unsat-fat-pill">Unsat {{ calcFoodLogMacro(fl, 'unsatFat') }} g</span>
-                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill salt-pill">Salt {{ calcFoodLogMacro(fl, 'salt') }} g</span>
+                  <span class="macro-pill protein-pill">Protein {{ calcFoodLogMacro(fl, "protein") }} g</span>
+                  <span class="macro-pill carbs-pill">Carbs {{ calcFoodLogMacro(fl, "carbs") }} g</span>
+                  <span class="macro-pill fat-pill">Fats {{ calcFoodLogMacro(fl, "fat") }} g</span>
+                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill sugar-pill">Sugar {{ calcFoodLogMacro(fl, "sugar") }} g</span>
+                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill sat-fat-pill">Sat {{ calcFoodLogMacro(fl, "satFat") }} g</span>
+                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill unsat-fat-pill">Unsat {{ calcFoodLogMacro(fl, "unsatFat") }} g</span>
+                  <span v-if="isMealDetailsOpen(meal.id)" class="macro-pill salt-pill">Salt {{ calcFoodLogMacro(fl, "salt") }} g</span>
                 </div>
               </div>
               <button v-if="foodLogId(fl)" class="delete-food-log-btn" @click="deleteFoodLogItem(meal.id, foodLogId(fl) as string)">&#10005;</button>
@@ -104,16 +105,14 @@
           <div v-else class="meal-empty">No foods logged yet.</div>
         </div>
 
-        <div v-if="meals.length === 0" class="no-meals">
-          No meals logged for this day. Add a meal above to get started.
-        </div>
+        <div v-if="meals.length === 0" class="no-meals">No meals logged for this day. Add a meal above to get started.</div>
       </div>
 
       <!-- Micronutrients Panel with NRV Progress -->
       <div class="micro-panel">
         <button class="micro-toggle" @click="toggleMicros">
           <span>Micronutrients</span>
-          <span class="toggle-icon">{{ showMicros ? '▲' : '▼' }}</span>
+          <span class="toggle-icon">{{ showMicros ? "▲" : "▼" }}</span>
         </button>
 
         <div v-if="showMicros" class="micro-content">
@@ -124,7 +123,7 @@
                 <div class="micro-top">
                   <span class="micro-name">{{ n.label }}</span>
                   <span class="micro-val" :class="{ 'micro-zero': !nutrientVal(n.key) }">
-                    {{ nutrientVal(n.key) != null ? nutrientVal(n.key) + ' ' + n.unit : '—' }}
+                    {{ nutrientVal(n.key) != null ? nutrientVal(n.key) + " " + n.unit : "—" }}
                   </span>
                 </div>
                 <!-- NRV bar -->
@@ -155,13 +154,7 @@
     </div>
 
     <!-- Add Food Modal -->
-    <AddFoodLogModal
-      v-if="addFoodMealId"
-      :meal-log-id="addFoodMealId"
-      :date="selectedDate"
-      @close="addFoodMealId = null"
-      @logged="onFoodLogged"
-    />
+    <AddFoodLogModal v-if="addFoodMealId" :meal-log-id="addFoodMealId" :date="selectedDate" @close="addFoodMealId = null" @logged="onFoodLogged" />
   </div>
 </template>
 
@@ -188,8 +181,11 @@ const addFoodMealId = ref<string | null>(null);
 const deleteMealId = ref<string | null>(null);
 const creatingMeal = ref(false);
 
-const ALL_MEAL_TYPES: MealType[] = ["BREAKFAST", "LUNCH", "DINNER", "SNACK", "OTHER"];
-type MacroKey = keyof Pick<MacroTotals, "protein_g" | "carbs_g" | "fat_g" | "fiber_g" | "sugar_g" | "saturated_fat_g" | "unsaturated_fat_g" | "salt_g">;
+const ALL_MEAL_TYPES: MealType[] = ["SUPPLEMENTS", "BREAKFAST", "LUNCH", "DINNER", "SNACK", "OTHER"];
+type MacroKey = keyof Pick<
+  MacroTotals,
+  "protein_g" | "carbs_g" | "fat_g" | "fiber_g" | "sugar_g" | "saturated_fat_g" | "unsaturated_fat_g" | "salt_g"
+>;
 type NutrientValueKey = Exclude<keyof Nutrient, "id" | "foodId">;
 
 const meals = computed<MealLog[]>(() => dashboard.value?.meals ?? []);
@@ -288,10 +284,12 @@ function changeDate(delta: number) {
   if (newDate <= todayStr) selectedDate.value = newDate;
 }
 
-function goToToday() { selectedDate.value = todayStr; }
+function goToToday() {
+  selectedDate.value = todayStr;
+}
 
 function mealIcon(type: MealType): string {
-  return { BREAKFAST: "🌅", LUNCH: "☀️", DINNER: "🌙", SNACK: "🍎", OTHER: "🍽️" }[type];
+  return { SUPPLEMENTS: "💊", BREAKFAST: "🌅", LUNCH: "☀️", DINNER: "🌙", SNACK: "🍎", OTHER: "🍽️" }[type];
 }
 
 function formatMealType(type: MealType): string {
@@ -303,9 +301,10 @@ function mealCalories(meal: MealLog): number {
 }
 
 function mealFoodLogs(meal: MealLog): FoodLog[] {
-  const raw = (meal as MealLog & { food_logs?: FoodLog[]; foods?: FoodLog[] }).foodLogs
-    ?? (meal as MealLog & { food_logs?: FoodLog[]; foods?: FoodLog[] }).food_logs
-    ?? (meal as MealLog & { food_logs?: FoodLog[]; foods?: FoodLog[] }).foods;
+  const raw =
+    (meal as MealLog & { food_logs?: FoodLog[]; foods?: FoodLog[] }).foodLogs ??
+    (meal as MealLog & { food_logs?: FoodLog[]; foods?: FoodLog[] }).food_logs ??
+    (meal as MealLog & { food_logs?: FoodLog[]; foods?: FoodLog[] }).foods;
   return Array.isArray(raw) ? raw : [];
 }
 
@@ -319,19 +318,20 @@ function calcFoodLogCalories(fl: FoodLog): number {
 }
 
 function calcFoodLogMacro(fl: FoodLog, type: "protein" | "carbs" | "fat" | "sugar" | "satFat" | "unsatFat" | "salt"): string {
-  const base = type === "protein"
-    ? Number(foodField(fl, "protein_g", "proteinG"))
-    : type === "carbs"
-      ? Number(foodField(fl, "carbs_g", "carbsG"))
-      : type === "fat"
-        ? Number(foodField(fl, "fat_g", "fatG"))
-        : type === "sugar"
-          ? Number(foodField(fl, "sugar_g", "sugarG"))
-          : type === "satFat"
-            ? Number(foodField(fl, "saturated_fat_g", "saturatedFatG"))
-            : type === "unsatFat"
-              ? Number(foodField(fl, "unsaturated_fat_g", "unsaturatedFatG"))
-              : Number(foodField(fl, "salt_g", "saltG"));
+  const base =
+    type === "protein"
+      ? Number(foodField(fl, "protein_g", "proteinG"))
+      : type === "carbs"
+        ? Number(foodField(fl, "carbs_g", "carbsG"))
+        : type === "fat"
+          ? Number(foodField(fl, "fat_g", "fatG"))
+          : type === "sugar"
+            ? Number(foodField(fl, "sugar_g", "sugarG"))
+            : type === "satFat"
+              ? Number(foodField(fl, "saturated_fat_g", "saturatedFatG"))
+              : type === "unsatFat"
+                ? Number(foodField(fl, "unsaturated_fat_g", "unsaturatedFatG"))
+                : Number(foodField(fl, "salt_g", "saltG"));
   return (Math.round((base * foodLogWeight(fl)) / 10) / 10).toString();
 }
 
@@ -343,9 +343,10 @@ function foodLogId(fl: FoodLog): string | null {
 }
 
 function foodLogWeight(fl: FoodLog): number {
-  const rawWeight = (fl as FoodLog & { weightG?: number; weight?: number }).weight_g
-    ?? (fl as FoodLog & { weightG?: number; weight?: number }).weightG
-    ?? (fl as FoodLog & { weightG?: number; weight?: number }).weight;
+  const rawWeight =
+    (fl as FoodLog & { weightG?: number; weight?: number }).weight_g ??
+    (fl as FoodLog & { weightG?: number; weight?: number }).weightG ??
+    (fl as FoodLog & { weightG?: number; weight?: number }).weight;
   const weight = Number(rawWeight ?? 0);
   if (Number.isFinite(weight) && weight > 0) return weight;
 
@@ -424,8 +425,12 @@ function nutrientVal(key: NutrientValueKey): number | null {
   return Math.round(v * 10) / 10;
 }
 
-function openAddFood(mealId: string) { addFoodMealId.value = mealId; }
-function confirmDeleteMeal(id: string) { deleteMealId.value = id; }
+function openAddFood(mealId: string) {
+  addFoodMealId.value = mealId;
+}
+function confirmDeleteMeal(id: string) {
+  deleteMealId.value = id;
+}
 
 async function doDeleteMeal() {
   if (!deleteMealId.value) return;
@@ -445,8 +450,8 @@ async function addMeal(type: MealType) {
     const created = await createMealLog({ type, date: selectedDate.value });
 
     // Some backends default create-date to today; patching keeps the meal on the selected day.
-    const createdId = (created as MealLog & { meal_log_id?: string } | void)?.id
-      ?? (created as MealLog & { meal_log_id?: string } | void)?.meal_log_id;
+    const createdId =
+      (created as (MealLog & { meal_log_id?: string }) | void)?.id ?? (created as (MealLog & { meal_log_id?: string }) | void)?.meal_log_id;
     if (createdId) {
       await updateMealLog(createdId, { date: selectedDate.value });
     }
@@ -456,7 +461,9 @@ async function addMeal(type: MealType) {
   await loadDashboard();
 }
 
-async function onFoodLogged() { await loadDashboard(); }
+async function onFoodLogged() {
+  await loadDashboard();
+}
 
 async function toggleMicros() {
   showMicros.value = !showMicros.value;
@@ -502,33 +509,49 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   {
     title: "Vitamins",
     items: [
-      { key: "vitamin_a", label: "Vitamin A", unit: "µg" }, { key: "vitamin_d", label: "Vitamin D", unit: "µg" },
-      { key: "vitamin_e", label: "Vitamin E", unit: "mg" }, { key: "vitamin_k", label: "Vitamin K", unit: "µg" },
-      { key: "vitamin_c", label: "Vitamin C", unit: "mg" }, { key: "vitamin_b1", label: "B1", unit: "mg" },
-      { key: "vitamin_b2", label: "B2", unit: "mg" }, { key: "vitamin_b3", label: "B3", unit: "mg" },
-      { key: "vitamin_b5", label: "B5", unit: "mg" }, { key: "vitamin_b6", label: "B6", unit: "mg" },
-      { key: "vitamin_b7", label: "B7", unit: "µg" }, { key: "vitamin_b9", label: "B9", unit: "µg" },
-      { key: "vitamin_b12", label: "B12", unit: "µg" }, { key: "choline", label: "Choline", unit: "mg" },
+      { key: "vitamin_a", label: "Vitamin A", unit: "µg" },
+      { key: "vitamin_d", label: "Vitamin D", unit: "µg" },
+      { key: "vitamin_e", label: "Vitamin E", unit: "mg" },
+      { key: "vitamin_k", label: "Vitamin K", unit: "µg" },
+      { key: "vitamin_c", label: "Vitamin C", unit: "mg" },
+      { key: "vitamin_b1", label: "B1", unit: "mg" },
+      { key: "vitamin_b2", label: "B2", unit: "mg" },
+      { key: "vitamin_b3", label: "B3", unit: "mg" },
+      { key: "vitamin_b5", label: "B5", unit: "mg" },
+      { key: "vitamin_b6", label: "B6", unit: "mg" },
+      { key: "vitamin_b7", label: "B7", unit: "µg" },
+      { key: "vitamin_b9", label: "B9", unit: "µg" },
+      { key: "vitamin_b12", label: "B12", unit: "µg" },
+      { key: "choline", label: "Choline", unit: "mg" },
       { key: "caffeine", label: "Caffeine", unit: "mg" },
     ],
   },
   {
     title: "Minerals",
     items: [
-      { key: "calcium", label: "Calcium", unit: "mg" }, { key: "phosphorus", label: "Phosphorus", unit: "mg" },
-      { key: "magnesium", label: "Magnesium", unit: "mg" }, { key: "sodium", label: "Sodium", unit: "mg" },
-      { key: "potassium", label: "Potassium", unit: "mg" }, { key: "chloride", label: "Chloride", unit: "mg" },
-      { key: "sulfur", label: "Sulfur", unit: "mg" }, { key: "iron", label: "Iron", unit: "mg" },
-      { key: "zinc", label: "Zinc", unit: "mg" }, { key: "selenium", label: "Selenium", unit: "µg" },
-      { key: "iodine", label: "Iodine", unit: "µg" }, { key: "copper", label: "Copper", unit: "mg" },
-      { key: "manganese", label: "Manganese", unit: "mg" }, { key: "chromium", label: "Chromium", unit: "µg" },
-      { key: "molybdenum", label: "Molybdenum", unit: "µg" }, { key: "fluoride", label: "Fluoride", unit: "mcg" },
+      { key: "calcium", label: "Calcium", unit: "mg" },
+      { key: "phosphorus", label: "Phosphorus", unit: "mg" },
+      { key: "magnesium", label: "Magnesium", unit: "mg" },
+      { key: "sodium", label: "Sodium", unit: "mg" },
+      { key: "potassium", label: "Potassium", unit: "mg" },
+      { key: "chloride", label: "Chloride", unit: "mg" },
+      { key: "sulfur", label: "Sulfur", unit: "mg" },
+      { key: "iron", label: "Iron", unit: "mg" },
+      { key: "zinc", label: "Zinc", unit: "mg" },
+      { key: "selenium", label: "Selenium", unit: "µg" },
+      { key: "iodine", label: "Iodine", unit: "µg" },
+      { key: "copper", label: "Copper", unit: "mg" },
+      { key: "manganese", label: "Manganese", unit: "mg" },
+      { key: "chromium", label: "Chromium", unit: "µg" },
+      { key: "molybdenum", label: "Molybdenum", unit: "µg" },
+      { key: "fluoride", label: "Fluoride", unit: "mcg" },
     ],
   },
   {
     title: "Fatty Acids",
     items: [
-      { key: "omega_3", label: "Omega-3", unit: "mg" }, { key: "omega_6", label: "Omega-6", unit: "mg" },
+      { key: "omega_3", label: "Omega-3", unit: "mg" },
+      { key: "omega_6", label: "Omega-6", unit: "mg" },
       { key: "omega_9", label: "Omega-9", unit: "mg" },
     ],
   },
@@ -564,8 +587,13 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   flex-shrink: 0;
 }
 
-.date-btn:hover:not(:disabled) { background: var(--bg-surface-secondary); }
-.date-btn:disabled { opacity: 0.3; cursor: default; }
+.date-btn:hover:not(:disabled) {
+  background: var(--bg-surface-secondary);
+}
+.date-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
 
 .date-display {
   display: flex;
@@ -596,7 +624,9 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   min-height: 32px;
 }
 
-.today-btn:hover { background: #00a495; }
+.today-btn:hover {
+  background: #00a495;
+}
 
 .loading-state {
   text-align: center;
@@ -637,8 +667,13 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   color: var(--text-secondary);
 }
 
-.over-goal { color: var(--danger); font-weight: 600; }
-.goal-percent { font-size: 0.75rem; }
+.over-goal {
+  color: var(--danger);
+  font-weight: 600;
+}
+.goal-percent {
+  font-size: 0.75rem;
+}
 
 /* Macro Bars */
 .macro-bars {
@@ -678,14 +713,30 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   min-width: 2px;
 }
 
-.protein-bar { background: var(--success); }
-.carbs-bar { background: var(--accent); }
-.fat-bar { background: #f97316; }
-.fiber-bar { background: #38bdf8; }
-.sugar-bar { background: #ff5f6d; }
-.sat-fat-bar { background: #ea580c; }
-.unsat-fat-bar { background: #ca8a04; }
-.salt-bar { background: #64748b; }
+.protein-bar {
+  background: var(--success);
+}
+.carbs-bar {
+  background: var(--accent);
+}
+.fat-bar {
+  background: #f97316;
+}
+.fiber-bar {
+  background: #38bdf8;
+}
+.sugar-bar {
+  background: #ff5f6d;
+}
+.sat-fat-bar {
+  background: #ea580c;
+}
+.unsat-fat-bar {
+  background: #ca8a04;
+}
+.salt-bar {
+  background: #64748b;
+}
 
 .macro-value {
   font-size: 0.82rem;
@@ -701,15 +752,33 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   font-size: 0.75rem;
 }
 
-.protein-color { color: var(--success); }
-.carbs-color { color: var(--accent); }
-.fat-color { color: #f97316; }
-.fiber-color { color: #38bdf8; }
-.kcal-color { color: var(--primary); }
-.sugar-color { color: #ff5f6d; }
-.sat-fat-color { color: #ea580c; }
-.unsat-fat-color { color: #ca8a04; }
-.salt-color { color: #64748b; }
+.protein-color {
+  color: var(--success);
+}
+.carbs-color {
+  color: var(--accent);
+}
+.fat-color {
+  color: #f97316;
+}
+.fiber-color {
+  color: #38bdf8;
+}
+.kcal-color {
+  color: var(--primary);
+}
+.sugar-color {
+  color: #ff5f6d;
+}
+.sat-fat-color {
+  color: #ea580c;
+}
+.unsat-fat-color {
+  color: #ca8a04;
+}
+.salt-color {
+  color: #64748b;
+}
 
 /* Add Meal Row */
 .add-meal-row {
@@ -742,11 +811,19 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   font-size: 0.82rem;
   cursor: pointer;
   min-height: 36px;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 
-.add-meal-btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
-.add-meal-btn:disabled { opacity: 0.5; cursor: default; }
+.add-meal-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.add-meal-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
 
 /* Meals */
 .meals-section {
@@ -790,9 +867,19 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   min-width: 0;
 }
 
-.meal-icon { font-size: 1.1rem; }
-.meal-name { font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
-.meal-kcal { font-size: 0.82rem; color: var(--primary); font-weight: 600; }
+.meal-icon {
+  font-size: 1.1rem;
+}
+.meal-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-main);
+}
+.meal-kcal {
+  font-size: 0.82rem;
+  color: var(--primary);
+  font-weight: 600;
+}
 
 .meal-actions {
   display: flex;
@@ -813,7 +900,9 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   transition: background 0.15s;
 }
 
-.add-food-btn:hover { background: #00a495; }
+.add-food-btn:hover {
+  background: #00a495;
+}
 
 .delete-meal-btn {
   background: none;
@@ -824,13 +913,20 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   height: 34px;
   cursor: pointer;
   font-size: 0.82rem;
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 
-.delete-meal-btn:hover { border-color: var(--danger); color: var(--danger); }
+.delete-meal-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
 
 /* Food Logs */
-.food-logs-list { padding: 4px 0; }
+.food-logs-list {
+  padding: 4px 0;
+}
 
 .food-log-item {
   display: flex;
@@ -840,7 +936,9 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   border-bottom: 1px solid var(--border);
 }
 
-.food-log-item:last-child { border-bottom: none; }
+.food-log-item:last-child {
+  border-bottom: none;
+}
 
 .food-log-left {
   flex: 1;
@@ -937,7 +1035,9 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   justify-content: center;
 }
 
-.delete-food-log-btn:hover { color: var(--danger); }
+.delete-food-log-btn:hover {
+  color: var(--danger);
+}
 
 .meal-empty {
   padding: 12px 14px;
@@ -969,9 +1069,14 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   transition: background 0.15s;
 }
 
-.micro-toggle:hover { background: var(--bg-surface-secondary); }
+.micro-toggle:hover {
+  background: var(--bg-surface-secondary);
+}
 
-.toggle-icon { font-size: 0.75rem; color: var(--text-secondary); }
+.toggle-icon {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
 
 .micro-content {
   padding: 12px 16px;
@@ -1009,9 +1114,19 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   margin-bottom: 2px;
 }
 
-.micro-name { font-size: 0.78rem; color: var(--text-secondary); }
-.micro-val { font-size: 0.78rem; font-weight: 600; color: var(--primary); }
-.micro-zero { color: var(--text-secondary); font-weight: 400; }
+.micro-name {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.micro-val {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+.micro-zero {
+  color: var(--text-secondary);
+  font-weight: 400;
+}
 
 /* NRV Progress Bar */
 .nrv-bar-track {
@@ -1030,7 +1145,9 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   transition: width 0.4s ease;
 }
 
-.nrv-bar.nrv-full { background: var(--success); }
+.nrv-bar.nrv-full {
+  background: var(--success);
+}
 
 .nrv-pct {
   position: absolute;
@@ -1061,8 +1178,15 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.confirm-modal p { color: var(--text-main); margin-bottom: 20px; }
-.confirm-actions { display: flex; gap: 12px; justify-content: center; }
+.confirm-modal p {
+  color: var(--text-main);
+  margin-bottom: 20px;
+}
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
 
 .btn {
   padding: 10px 20px;
@@ -1075,14 +1199,27 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   min-height: 44px;
 }
 
-.btn-danger { background: var(--danger); color: #fff; }
-.btn-danger:hover { background: #e83f60; }
-.btn-secondary { background: var(--bg-surface-secondary); color: var(--text-secondary); border: 1px solid var(--border); }
-.btn-secondary:hover { color: var(--text-main); }
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+.btn-danger:hover {
+  background: #e83f60;
+}
+.btn-secondary {
+  background: var(--bg-surface-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+.btn-secondary:hover {
+  color: var(--text-main);
+}
 
 /* Mobile */
 @media (max-width: 640px) {
-  .food-dashboard { padding: 12px 8px 36px; }
+  .food-dashboard {
+    padding: 12px 8px 36px;
+  }
 
   .summary-card {
     flex-direction: column;
@@ -1090,9 +1227,13 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
     gap: 16px;
   }
 
-  .calorie-ring-section { align-items: center; }
+  .calorie-ring-section {
+    align-items: center;
+  }
 
-  .date-text { font-size: 0.88rem; }
+  .date-text {
+    font-size: 0.88rem;
+  }
 
   .micro-grid {
     grid-template-columns: 1fr;
