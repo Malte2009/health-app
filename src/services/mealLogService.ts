@@ -25,6 +25,7 @@ function normalizeMealLog(log: unknown): MealLog {
     userId: src.userId ? String(src.userId) : src.user_id ? String(src.user_id) : undefined,
     type: String(src.type ?? "OTHER") as MealLog["type"],
     date: src.date ? String(src.date) : undefined,
+    order: src.order ? Number(src.order) : 0,
     foodLogs,
   };
 }
