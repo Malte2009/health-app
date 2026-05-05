@@ -24,12 +24,39 @@
         <div class="chart-title">Calories</div>
         <div class="chart-area">
           <svg :viewBox="`0 0 ${svgWidth} ${svgHeight}`" class="bar-chart" preserveAspectRatio="xMidYMid meet">
-            <line v-if="calorieGoal > 0" :x1="barAreaLeft" :y1="goalY" :x2="svgWidth - 10" :y2="goalY" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="6 4" />
+            <line
+              v-if="calorieGoal > 0"
+              :x1="barAreaLeft"
+              :y1="goalY"
+              :x2="svgWidth - 10"
+              :y2="goalY"
+              stroke="var(--accent)"
+              stroke-width="1.5"
+              stroke-dasharray="6 4"
+            />
             <text v-if="calorieGoal > 0" :x="svgWidth - 8" :y="goalY + 4" font-size="9" fill="var(--accent)" text-anchor="end">Goal</text>
             <g v-for="(item, i) in data" :key="item.date">
-              <rect :x="barX(i)" :y="barY(item.totals.calories)" :width="barWidth" :height="barHeight(item.totals.calories)" :fill="barColor(item)" rx="3" />
-              <text v-if="item.totals.calories > 0" :x="barX(i) + barWidth / 2" :y="barY(item.totals.calories) - 4" text-anchor="middle" font-size="7" fill="var(--text-secondary)">{{ item.totals.calories }}</text>
-              <text :x="barX(i) + barWidth / 2" :y="svgHeight - 4" text-anchor="middle" font-size="8" fill="var(--text-secondary)">{{ xLabel(item.date) }}</text>
+              <rect
+                :x="barX(i)"
+                :y="barY(item.totals.calories)"
+                :width="barWidth"
+                :height="barHeight(item.totals.calories)"
+                :fill="barColor(item)"
+                rx="3"
+              />
+              <text
+                v-if="item.totals.calories > 0"
+                :x="barX(i) + barWidth / 2"
+                :y="barY(item.totals.calories) - 4"
+                text-anchor="middle"
+                font-size="7"
+                fill="var(--text-secondary)"
+              >
+                {{ item.totals.calories }}
+              </text>
+              <text :x="barX(i) + barWidth / 2" :y="svgHeight - 4" text-anchor="middle" font-size="8" fill="var(--text-secondary)">
+                {{ xLabel(item.date) }}
+              </text>
             </g>
             <line :x1="barAreaLeft" y1="10" :x2="barAreaLeft" :y2="svgHeight - 20" stroke="var(--border)" stroke-width="1" />
             <line :x1="barAreaLeft" :y1="svgHeight - 20" :x2="svgWidth - 10" :y2="svgHeight - 20" stroke="var(--border)" stroke-width="1" />
@@ -51,7 +78,9 @@
               <rect :x="barX(i)" :y="macroBarY(item, 'protein')" :width="barWidth" :height="macroBarH(item, 'protein')" fill="var(--success)" />
               <rect :x="barX(i)" :y="macroBarY(item, 'carbs')" :width="barWidth" :height="macroBarH(item, 'carbs')" fill="var(--accent)" />
               <rect :x="barX(i)" :y="macroBarY(item, 'fat')" :width="barWidth" :height="macroBarH(item, 'fat')" fill="#f97316" />
-              <text :x="barX(i) + barWidth / 2" :y="svgHeight - 4" text-anchor="middle" font-size="8" fill="var(--text-secondary)">{{ xLabel(item.date) }}</text>
+              <text :x="barX(i) + barWidth / 2" :y="svgHeight - 4" text-anchor="middle" font-size="8" fill="var(--text-secondary)">
+                {{ xLabel(item.date) }}
+              </text>
             </g>
             <line :x1="barAreaLeft" y1="10" :x2="barAreaLeft" :y2="svgHeight - 20" stroke="var(--border)" stroke-width="1" />
             <line :x1="barAreaLeft" :y1="svgHeight - 20" :x2="svgWidth - 10" :y2="svgHeight - 20" stroke="var(--border)" stroke-width="1" />
@@ -75,7 +104,7 @@
                 <div class="micro-top">
                   <span class="micro-name">{{ n.label }}</span>
                   <span class="micro-val" :class="{ 'micro-zero': nutrientAvg(n.key) == null }">
-                    {{ nutrientAvg(n.key) != null ? nutrientAvg(n.key) + ' ' + n.unit : '—' }}
+                    {{ nutrientAvg(n.key) != null ? nutrientAvg(n.key) + " " + n.unit : "—" }}
                   </span>
                 </div>
                 <div v-if="nrvData[n.key]" class="nrv-bar-track">
@@ -93,42 +122,115 @@
       </div>
 
       <!-- Stats -->
-      <div class="details-toggle-row">
-        <button class="details-toggle-btn" @click="showExtendedStats = !showExtendedStats">
-          {{ showExtendedStats ? 'Hide detail stats' : 'Show detail stats' }}
-        </button>
-      </div>
       <div class="stats-grid">
         <div class="stat-card">
-          <div class="stat-value primary-color">{{ avgCalories }}</div>
+          <div
+            class="stat-value"
+            :class="
+              inGoalRange(goals.calories, avgCalories)
+                ? 'success-color'
+                : kindaInGoalRange(goals.calories, avgCalories)
+                  ? 'accent-color'
+                  : 'danger-color'
+            "
+          >
+            {{ avgCalories }}
+          </div>
           <div class="stat-label">Avg Calories / Day</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value success-color">{{ avgProtein }}g</div>
+          <div
+            class="stat-value"
+            :class="
+              inGoalRange(goals.protein_g, avgProtein)
+                ? 'success-color'
+                : kindaInGoalRange(goals.protein_g, avgProtein)
+                  ? 'accent-color'
+                  : 'danger-color'
+            "
+          >
+            {{ avgProtein }}g
+          </div>
           <div class="stat-label">Avg Protein / Day</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value accent-color">{{ avgCarbs }}g</div>
+          <div
+            class="stat-value"
+            :class="
+              inGoalRange(goals.carbs_g, avgCarbs) ? 'success-color' : kindaInGoalRange(goals.carbs_g, avgCarbs) ? 'accent-color' : 'danger-color'
+            "
+          >
+            {{ avgCarbs }}g
+          </div>
           <div class="stat-label">Avg Carbs / Day</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value fat-color">{{ avgFat }}g</div>
+          <div
+            class="stat-value"
+            :class="inGoalRange(goals.fat_g, avgFat) ? 'success-color' : kindaInGoalRange(goals.fat_g, avgFat) ? 'accent-color' : 'danger-color'"
+          >
+            {{ avgFat }}g
+          </div>
           <div class="stat-label">Avg Fat / Day</div>
         </div>
-        <div v-if="showExtendedStats" class="stat-card">
-          <div class="stat-value sugar-color">{{ avgSugar }}g</div>
+        <div class="stat-card">
+          <div
+            class="stat-value"
+            :class="
+              inGoalRange(goals.sugar_g, avgSugar, true)
+                ? 'success-color'
+                : kindaInGoalRange(goals.sugar_g, avgSugar, true)
+                  ? 'accent-color'
+                  : 'danger-color'
+            "
+          >
+            {{ avgSugar }}g
+          </div>
           <div class="stat-label">Avg Sugar / Day</div>
         </div>
-        <div v-if="showExtendedStats" class="stat-card">
-          <div class="stat-value sat-fat-color">{{ avgSatFat }}g</div>
+        <div class="stat-card">
+          <div
+            class="stat-value"
+            :class="
+              inGoalRange(goals.saturated_fat_g, avgSatFat, true)
+                ? 'success-color'
+                : kindaInGoalRange(goals.saturated_fat_g, avgSatFat, true)
+                  ? 'accent-color'
+                  : 'danger-color'
+            "
+          >
+            {{ avgSatFat }}g
+          </div>
           <div class="stat-label">Avg Sat Fat / Day</div>
         </div>
-        <div v-if="showExtendedStats" class="stat-card">
-          <div class="stat-value unsat-fat-color">{{ avgUnsatFat }}g</div>
+        <div class="stat-card">
+          <div
+            class="stat-value"
+            :class="
+              inGoalRange(goals.unsaturated_fat_g, avgUnsatFat)
+                ? 'success-color'
+                : kindaInGoalRange(goals.unsaturated_fat_g, avgUnsatFat)
+                  ? 'accent-color'
+                  : 'danger-color'
+            "
+          >
+            {{ avgUnsatFat }}g
+          </div>
           <div class="stat-label">Avg Unsat Fat / Day</div>
         </div>
-        <div v-if="showExtendedStats" class="stat-card">
-          <div class="stat-value salt-color">{{ avgSalt }}g</div>
+        <div class="stat-card">
+          <div
+            class="stat-value"
+            :class="
+              inGoalRange(goals.salt_g, avgSalt, true)
+                ? 'success-color'
+                : kindaInGoalRange(goals.salt_g, avgSalt, true)
+                  ? 'accent-color'
+                  : 'danger-color'
+            "
+          >
+            {{ avgSalt }}g
+          </div>
           <div class="stat-label">Avg Salt / Day</div>
         </div>
         <div class="stat-card">
@@ -136,8 +238,15 @@
           <div class="stat-label">Days Logged</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" :class="goalHitRate >= 80 ? 'success-color' : goalHitRate >= 50 ? 'accent-color' : 'danger-color'">{{ goalHitRate }}%</div>
-          <div class="stat-label">Within Calorie Goal</div>
+          <div
+            class="stat-value"
+            :class="
+              inGoalRange(goals.fiber_g, avgFiber) ? 'success-color' : kindaInGoalRange(goals.fiber_g, avgFiber) ? 'accent-color' : 'danger-color'
+            "
+          >
+            {{ avgFiber }}
+          </div>
+          <div class="stat-label">Avg Fiber / Day</div>
         </div>
       </div>
     </div>
@@ -151,7 +260,8 @@ import { isAuthenticated } from "@/services/authService.ts";
 import { getNutritionOverTime } from "@/services/foodDashboardService.ts";
 import { getNrvProgress } from "@/services/nrvService.ts";
 import { toLocalIsoDate } from "@/utility/date.ts";
-import type { NutritionOverTimeDay, Nutrient, NrvProgressItem } from "@/types/foodType.ts";
+import type { NutritionOverTimeDay, Nutrient, NrvProgressItem, UserGoals } from "@/types/foodType.ts";
+import { getGoals } from "@/services/goalService.ts";
 
 const router = useRouter();
 
@@ -160,8 +270,8 @@ const data = ref<NutritionOverTimeDay[]>([]);
 const loading = ref(false);
 const weekOffset = ref(0);
 const monthOffset = ref(0);
-const showExtendedStats = ref(false);
 const nrvData = ref<Record<string, NrvProgressItem>>({});
+const goals = ref<UserGoals>({});
 
 type NutrientKey = Exclude<keyof Nutrient, "id" | "foodId">;
 type NutrientMeta = { label: string; unit: string };
@@ -268,12 +378,10 @@ function macroBarY(item: NutritionOverTimeDay, type: "protein" | "carbs" | "fat"
 
 function xLabel(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
-  return viewMode.value === "week"
-    ? new Intl.DateTimeFormat("en-GB", { weekday: "short" }).format(d)
-    : d.getDate().toString();
+  return viewMode.value === "week" ? new Intl.DateTimeFormat("en-GB", { weekday: "short" }).format(d) : d.getDate().toString();
 }
 
-const canNavigateNext = computed(() => viewMode.value === "week" ? weekOffset.value < 0 : monthOffset.value < 0);
+const canNavigateNext = computed(() => (viewMode.value === "week" ? weekOffset.value < 0 : monthOffset.value < 0));
 
 function navigatePrev() {
   if (viewMode.value === "week") {
@@ -334,6 +442,7 @@ const avgCalories = computed(() => avg(data.value.map((d) => d.totals.calories))
 const avgProtein = computed(() => avg(data.value.map((d) => Math.round(d.totals.protein_g))));
 const avgCarbs = computed(() => avg(data.value.map((d) => Math.round(d.totals.carbs_g))));
 const avgFat = computed(() => avg(data.value.map((d) => Math.round(d.totals.fat_g))));
+const avgFiber = computed(() => avg(data.value.map((d) => Math.round(d.totals.fiber_g))));
 const avgSugar = computed(() => avg(data.value.map((d) => Math.round(d.totals.sugar_g ?? 0))));
 const avgSatFat = computed(() => avg(data.value.map((d) => Math.round(d.totals.saturated_fat_g ?? 0))));
 const avgUnsatFat = computed(() => avg(data.value.map((d) => Math.round(d.totals.unsaturated_fat_g ?? 0))));
@@ -364,44 +473,79 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   {
     title: "Vitamins",
     items: [
-      { key: "vitamin_a", label: "Vitamin A", unit: "µg" }, { key: "vitamin_d", label: "Vitamin D", unit: "µg" },
-      { key: "vitamin_e", label: "Vitamin E", unit: "mg" }, { key: "vitamin_k", label: "Vitamin K", unit: "µg" },
-      { key: "vitamin_c", label: "Vitamin C", unit: "mg" }, { key: "vitamin_b1", label: "B1", unit: "mg" },
-      { key: "vitamin_b2", label: "B2", unit: "mg" }, { key: "vitamin_b3", label: "B3", unit: "mg" },
-      { key: "vitamin_b5", label: "B5", unit: "mg" }, { key: "vitamin_b6", label: "B6", unit: "mg" },
-      { key: "vitamin_b7", label: "B7", unit: "µg" }, { key: "vitamin_b9", label: "B9", unit: "µg" },
-      { key: "vitamin_b12", label: "B12", unit: "µg" }, { key: "choline", label: "Choline", unit: "mg" },
+      { key: "vitamin_a", label: "Vitamin A", unit: "µg" },
+      { key: "vitamin_d", label: "Vitamin D", unit: "µg" },
+      { key: "vitamin_e", label: "Vitamin E", unit: "mg" },
+      { key: "vitamin_k", label: "Vitamin K", unit: "µg" },
+      { key: "vitamin_c", label: "Vitamin C", unit: "mg" },
+      { key: "vitamin_b1", label: "B1", unit: "mg" },
+      { key: "vitamin_b2", label: "B2", unit: "mg" },
+      { key: "vitamin_b3", label: "B3", unit: "mg" },
+      { key: "vitamin_b5", label: "B5", unit: "mg" },
+      { key: "vitamin_b6", label: "B6", unit: "mg" },
+      { key: "vitamin_b7", label: "B7", unit: "µg" },
+      { key: "vitamin_b9", label: "B9", unit: "µg" },
+      { key: "vitamin_b12", label: "B12", unit: "µg" },
+      { key: "choline", label: "Choline", unit: "mg" },
       { key: "caffeine", label: "Caffeine", unit: "mg" },
     ],
   },
   {
     title: "Minerals",
     items: [
-      { key: "calcium", label: "Calcium", unit: "mg" }, { key: "phosphorus", label: "Phosphorus", unit: "mg" },
-      { key: "magnesium", label: "Magnesium", unit: "mg" }, { key: "sodium", label: "Sodium", unit: "mg" },
-      { key: "potassium", label: "Potassium", unit: "mg" }, { key: "chloride", label: "Chloride", unit: "mg" },
-      { key: "sulfur", label: "Sulfur", unit: "mg" }, { key: "iron", label: "Iron", unit: "mg" },
-      { key: "zinc", label: "Zinc", unit: "mg" }, { key: "selenium", label: "Selenium", unit: "µg" },
-      { key: "iodine", label: "Iodine", unit: "µg" }, { key: "copper", label: "Copper", unit: "mg" },
-      { key: "manganese", label: "Manganese", unit: "mg" }, { key: "chromium", label: "Chromium", unit: "µg" },
-      { key: "molybdenum", label: "Molybdenum", unit: "µg" }, { key: "fluoride", label: "Fluoride", unit: "mcg" },
+      { key: "calcium", label: "Calcium", unit: "mg" },
+      { key: "phosphorus", label: "Phosphorus", unit: "mg" },
+      { key: "magnesium", label: "Magnesium", unit: "mg" },
+      { key: "sodium", label: "Sodium", unit: "mg" },
+      { key: "potassium", label: "Potassium", unit: "mg" },
+      { key: "chloride", label: "Chloride", unit: "mg" },
+      { key: "sulfur", label: "Sulfur", unit: "mg" },
+      { key: "iron", label: "Iron", unit: "mg" },
+      { key: "zinc", label: "Zinc", unit: "mg" },
+      { key: "selenium", label: "Selenium", unit: "µg" },
+      { key: "iodine", label: "Iodine", unit: "µg" },
+      { key: "copper", label: "Copper", unit: "mg" },
+      { key: "manganese", label: "Manganese", unit: "mg" },
+      { key: "chromium", label: "Chromium", unit: "µg" },
+      { key: "molybdenum", label: "Molybdenum", unit: "µg" },
+      { key: "fluoride", label: "Fluoride", unit: "mcg" },
     ],
   },
   {
     title: "Fatty Acids",
     items: [
-      { key: "omega_3", label: "Omega-3", unit: "mg" }, { key: "omega_6", label: "Omega-6", unit: "mg" },
+      { key: "omega_3", label: "Omega-3", unit: "mg" },
+      { key: "omega_6", label: "Omega-6", unit: "mg" },
       { key: "omega_9", label: "Omega-9", unit: "mg" },
     ],
   },
 ];
 
-const goalHitRate = computed(() => {
-  if (!calorieGoal.value) return 0;
-  const logged = data.value.filter((d) => d.totals.calories > 0);
-  if (!logged.length) return 0;
-  return Math.round((logged.filter((d) => d.totals.calories <= calorieGoal.value * 1.05).length / logged.length) * 100);
-});
+function inGoalRange(goal: number | undefined, value: number, isUpperBound = false): boolean {
+  if (typeof goal !== "number" || goal <= 0) return true;
+
+  if (isUpperBound) {
+    if (value * 1.1 > goal) return false;
+  } else {
+    if (value * 1.1 < goal) return false;
+    if (value * 0.9 > goal) return false;
+  }
+
+  return true;
+}
+
+function kindaInGoalRange(goal: number | undefined, value: number, isUpperBound = false): boolean {
+  if (typeof goal !== "number" || goal <= 0) return true;
+
+  if (isUpperBound) {
+    if (value * 1.05 > goal) return false;
+  } else {
+    if (value * 1.05 < goal) return false;
+    if (value * 0.95 > goal) return false;
+  }
+
+  return true;
+}
 
 async function loadData() {
   loading.value = true;
@@ -415,7 +559,9 @@ async function loadData() {
     startDate = toLocalIsoDate(start);
     endDate = toLocalIsoDate(end);
   } else {
-    const [year, month] = currentMonth().split("-").map((v) => Number(v));
+    const [year, month] = currentMonth()
+      .split("-")
+      .map((v) => Number(v));
     const start = new Date(year, month - 1, 1);
     const end = new Date(year, month, 0);
     startDate = toLocalIsoDate(start);
@@ -443,8 +589,14 @@ async function loadNrvForAverages() {
 watch([viewMode, weekOffset, monthOffset], loadData);
 
 onMounted(async () => {
-  if (!(await isAuthenticated())) { await router.push({ name: "login" }); return; }
+  if (!(await isAuthenticated())) {
+    await router.push({ name: "login" });
+    return;
+  }
   await loadData();
+
+  const data = await getGoals();
+  if (data) goals.value = data;
 });
 </script>
 
@@ -455,9 +607,15 @@ onMounted(async () => {
   padding: 20px 12px 48px;
 }
 
-h1 { margin-bottom: 18px; }
+h1 {
+  margin-bottom: 18px;
+}
 
-.view-toggle { display: flex; gap: 6px; margin-bottom: 14px; }
+.view-toggle {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+}
 
 .view-toggle button {
   background: var(--bg-surface);
@@ -478,7 +636,12 @@ h1 { margin-bottom: 18px; }
   color: var(--primary);
 }
 
-.range-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.range-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
 
 .nav-btn {
   background: var(--bg-surface);
@@ -493,8 +656,13 @@ h1 { margin-bottom: 18px; }
   flex-shrink: 0;
 }
 
-.nav-btn:hover:not(:disabled) { background: var(--bg-surface-secondary); }
-.nav-btn:disabled { opacity: 0.3; cursor: default; }
+.nav-btn:hover:not(:disabled) {
+  background: var(--bg-surface-secondary);
+}
+.nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
 
 .range-label {
   font-size: 0.95rem;
@@ -504,7 +672,12 @@ h1 { margin-bottom: 18px; }
   text-align: center;
 }
 
-.loading-state, .empty-state { text-align: center; color: var(--text-secondary); padding: 48px 0; }
+.loading-state,
+.empty-state {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 48px 0;
+}
 
 .chart-card {
   background: var(--bg-surface);
@@ -514,11 +687,28 @@ h1 { margin-bottom: 18px; }
   margin-bottom: 16px;
 }
 
-.chart-title { font-weight: 700; color: var(--text-main); margin-bottom: 12px; font-size: 0.95rem; }
-.chart-area { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.bar-chart { width: 100%; display: block; }
+.chart-title {
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  font-size: 0.95rem;
+}
+.chart-area {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.bar-chart {
+  width: 100%;
+  display: block;
+}
 
-.chart-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
 
 .micro-content {
   display: flex;
@@ -586,7 +776,9 @@ h1 { margin-bottom: 18px; }
   transition: width 0.4s ease;
 }
 
-.nrv-bar.nrv-full { background: var(--success); }
+.nrv-bar.nrv-full {
+  background: var(--success);
+}
 
 .nrv-pct {
   position: absolute;
@@ -596,32 +788,25 @@ h1 { margin-bottom: 18px; }
   color: var(--text-secondary);
 }
 
-.legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--text-secondary); }
-.legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 12px;
 }
-
-.details-toggle-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
-}
-
-.details-toggle-btn {
-  background: none;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-  border-radius: 8px;
-  padding: 7px 12px;
-  cursor: pointer;
-  font-size: 0.82rem;
-}
-
-.details-toggle-btn:hover { color: var(--text-main); }
 
 .stat-card {
   background: var(--bg-surface);
@@ -631,23 +816,58 @@ h1 { margin-bottom: 18px; }
   text-align: center;
 }
 
-.stat-value { font-size: 1.6rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
-.stat-label { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.3; }
+.stat-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
 
-.primary-color { color: var(--primary); }
-.success-color { color: var(--success); }
-.accent-color { color: var(--accent); }
-.fat-color { color: #f97316; }
-.danger-color { color: var(--danger); }
-.sugar-color { color: #ff5f6d; }
-.sat-fat-color { color: #ea580c; }
-.unsat-fat-color { color: #ca8a04; }
-.salt-color { color: #64748b; }
+.primary-color {
+  color: var(--primary);
+}
+.success-color {
+  color: var(--success);
+}
+.accent-color {
+  color: var(--accent);
+}
+.fat-color {
+  color: #f97316;
+}
+.danger-color {
+  color: var(--danger);
+}
+.sugar-color {
+  color: #ff5f6d;
+}
+.sat-fat-color {
+  color: #ea580c;
+}
+.unsat-fat-color {
+  color: #ca8a04;
+}
+.salt-color {
+  color: #64748b;
+}
 
 @media (max-width: 640px) {
-  .food-progress { padding: 12px 8px 36px; }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .stat-value { font-size: 1.3rem; }
-  .range-label { font-size: 0.85rem; }
+  .food-progress {
+    padding: 12px 8px 36px;
+  }
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .stat-value {
+    font-size: 1.3rem;
+  }
+  .range-label {
+    font-size: 0.85rem;
+  }
 }
 </style>
