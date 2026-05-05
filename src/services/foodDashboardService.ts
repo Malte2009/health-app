@@ -122,3 +122,10 @@ export const getNutritionOverTime = async (startDate: string, endDate: string): 
   }
 };
 
+export const getTopFoods = async (days: number = 7): Promise<import("@/types/foodType").TopFoodsResponse | void> => {
+  try {
+    return (await api.get(`/dashboard/top-foods?days=${days}`)).data;
+  } catch (error) {
+    console.error(error);
+  }
+};

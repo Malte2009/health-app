@@ -249,6 +249,42 @@
           <div class="stat-label">Avg Fiber / Day</div>
         </div>
       </div>
+
+      <!-- Top Foods Section -->
+      <div class="chart-card mt-16">
+        <div class="flex-between">
+          <div class="chart-title mb-0">Top Foods</div>
+
+          <div class="top-foods-controls">
+            <select v-model="topFoodsDays" @change="loadTopFoods" class="period-select">
+              <option :value="7">Last 7 Days</option>
+              <option :value="30">Last 30 Days</option>
+              <option :value="90">Last 90 Days</option>
+              <option :value="365">Last Year</option>
+            </select>
+            <button class="copy-btn" @click="copyTopFoodsToClipboard" :disabled="!topFoods.length" title="Copy to Clipboard">
+              📋
+            </button>
+          </div>
+        </div>
+
+        <div v-if="topFoodsLoading" class="loading-state-small">Loading top foods...</div>
+        <div v-else-if="!topFoods.length" class="empty-state-small">No foods logged in this period.</div>
+        <div v-else class="top-foods-list">
+          <div class="total-tracked-info">Total days logged in period: {{ totalDaysTracked }}</div>
+          <div v-for="food in topFoods" :key="food.foodId" class="top-food-item">
+            <div class="tf-main">
+              <span class="tf-name">{{ food.name }}</span>
+              <span class="tf-kg">{{ food.kg.toFixed(2) }} kg</span>
+            </div>
+            <div class="tf-sub">
+              Logged {{ food.times }}x
+              • Avg Time: {{ food.averageIntakeTime ?? '--:--' }}
+              • {{ Math.round(food.macros.calories) }} kcal
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -257,10 +293,10 @@
 import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { isAuthenticated } from "@/services/authService.ts";
-import { getNutritionOverTime } from "@/services/foodDashboardService.ts";
+import { getNutritionOverTime, getTopFoods } from "@/services/foodDashboardService.ts";
 import { getNrvProgress } from "@/services/nrvService.ts";
 import { toLocalIsoDate } from "@/utility/date.ts";
-import type { NutritionOverTimeDay, Nutrient, NrvProgressItem, UserGoals } from "@/types/foodType.ts";
+import type { NutritionOverTimeDay, Nutrient, NrvProgressItem, UserGoals, TopFood } from "@/types/foodType.ts";
 import { getGoals } from "@/services/goalService.ts";
 
 const router = useRouter();
@@ -272,6 +308,10 @@ const weekOffset = ref(0);
 const monthOffset = ref(0);
 const nrvData = ref<Record<string, NrvProgressItem>>({});
 const goals = ref<UserGoals>({});
+const topFoods = ref<TopFood[]>([])
+const totalDaysTracked = ref(0)
+const topFoodsDays = ref(7)
+const topFoodsLoading = ref(false)
 
 type NutrientKey = Exclude<keyof Nutrient, "id" | "foodId">;
 type NutrientMeta = { label: string; unit: string };
@@ -586,6 +626,53 @@ async function loadNrvForAverages() {
   nrvData.value = result ?? {};
 }
 
+async function loadTopFoods() {
+  topFoodsLoading.value = true;
+  const result = await getTopFoods(topFoodsDays.value);
+  if (result) {
+    topFoods.value = result.topFoods || [];
+    totalDaysTracked.value = result.totalDaysTracked || 0;
+  } else {
+    topFoods.value = [];
+    totalDaysTracked.value = 0;
+  }
+  topFoodsLoading.value = false;
+}
+
+async function copyTopFoodsToClipboard() {
+  if (!topFoods.value.length) return;
+  try {
+    const text = JSON.stringify({ totalDaysTracked: totalDaysTracked.value, topFoods: topFoods.value }, null, 2);
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      alert("Top foods copied to clipboard!");
+    } else {
+      // Fallback for non-secure contexts
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      const successful = document.execCommand('copy');
+      textArea.remove();
+
+      if (successful) {
+        alert("Top foods copied to clipboard!");
+      } else {
+        alert("Failed to copy to clipboard.");
+      }
+    }
+  } catch (err) {
+    console.error("Failed to copy:", err);
+    alert("Failed to copy to clipboard.");
+  }
+}
+
 watch([viewMode, weekOffset, monthOffset], loadData);
 
 onMounted(async () => {
@@ -594,6 +681,7 @@ onMounted(async () => {
     return;
   }
   await loadData();
+  await loadTopFoods();
 
   const data = await getGoals();
   if (data) goals.value = data;
@@ -826,6 +914,112 @@ h1 {
   font-size: 0.75rem;
   color: var(--text-secondary);
   line-height: 1.3;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}
+
+.mb-0 {
+  margin-bottom: 0 !important;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.top-foods-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.period-select {
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  outline: none;
+}
+
+.copy-btn {
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.copy-btn:hover:not(:disabled) {
+  background: var(--border);
+}
+
+.copy-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.loading-state-small, .empty-state-small {
+  text-align: center;
+  padding: 20px 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.total-tracked-info {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+  font-weight: 500;
+  padding-left: 2px;
+}
+
+.top-foods-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.top-food-item {
+  background: var(--bg-surface-secondary);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.tf-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.tf-name {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 0.9rem;
+}
+
+.tf-kg {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.85rem;
+}
+
+.tf-sub {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
 .primary-color {

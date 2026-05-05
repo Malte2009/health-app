@@ -132,6 +132,21 @@ export interface NutritionOverTimeResponse {
   days: NutritionOverTimeDay[];
 }
 
+export interface TopFood {
+  foodId: string;
+  name: string;
+  kg: number;
+  times: number;
+  averageIntakeTime: string;
+  macros: MacroTotals;
+  micronutrients: Partial<Nutrient>;
+}
+
+export interface TopFoodsResponse {
+  totalDaysTracked: number;
+  topFoods: TopFood[];
+}
+
 // User goals CRUD
 export interface UserGoals {
   id?: string;
