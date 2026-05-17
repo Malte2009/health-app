@@ -32,7 +32,7 @@ export default [
   {
     path: "/hrv",
     name: "hrv",
-    component: () => import("@/views/HRV/HrvView.vue")
+    component: () => import("../views/HRV/HrvView.vue")
   },
   {
     path: "/hrv/:id",
