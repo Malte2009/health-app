@@ -64,7 +64,7 @@ function goHome() {
   router.push({ name: "home" });
 }
 
-const currentSection = computed<"training" | "food" | null>(() => {
+const currentSection = computed<"training" | "food" | "health" | null>(() => {
   const name = route.name as string;
   if (TRAINING_ROUTES.has(name)) return "training";
   if (FOOD_ROUTES.has(name)) return "food";

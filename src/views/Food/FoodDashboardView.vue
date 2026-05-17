@@ -939,7 +939,6 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
 
 .meal-card.drag-over {
   border-color: var(--primary);
-  //background: rgba(0, 191, 174, 0.1);
 }
 
 .meal-header {
