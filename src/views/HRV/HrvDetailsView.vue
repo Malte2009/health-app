@@ -13,6 +13,9 @@
         <button @click="applyFilters" :disabled="isLoading" class="apply-btn">
           {{ isLoading ? 'Loading...' : 'Apply Filters' }}
         </button>
+        <button @click="resetZoom" class="apply-btn" style="background-color: var(--bg-surface-secondary); color: var(--text-main);">
+          Reset Zoom
+        </button>
       </div>
       <div v-if="isLoading" class="loading-spinner"></div>
     </div>
@@ -188,21 +191,24 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, reactive, shallowRef } from "vue";
+import { onMounted, ref, reactive } from "vue";
 import { getHrvData, getHrvRecording, getHrvMetrics } from "@/services/hrvService.ts";
 import { useRoute } from "vue-router";
 import { roundTo } from "@/utility/math.ts";
 import Chart from "chart.js/auto";
+import zoomPlugin from "chartjs-plugin-zoom";
 
 Chart.defaults.color = '#e0e0e0';
 Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+Chart.register(zoomPlugin);
 
 const route = useRoute();
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const hrvRecording = ref<any>({});
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const loadedMetrics = ref<any>({});
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rrdata = ref<any>([]);
 
 const recordingId = route.params.id as string;
@@ -219,6 +225,22 @@ const filters = reactive({
 let rrChartInst: Chart | null = null;
 let hrChartInst: Chart | null = null;
 let hrvChartInst: Chart | null = null;
+
+const syncZoom = ({ chart }: { chart: Chart }) => {
+  const min = chart.scales.x?.min;
+  const max = chart.scales.x?.max;
+
+  const charts = [rrChartInst, hrChartInst, hrvChartInst];
+  charts.forEach(c => {
+    if (c && c !== chart) {
+      if (c.options.scales && c.options.scales.x) {
+        c.options.scales.x.min = min;
+        c.options.scales.x.max = max;
+        c.update('none');
+      }
+    }
+  });
+};
 
 const createChart = (canvasId: string, label: string, dataInstant: number[], dataSmoothed: number[], instantColor: string, smoothedColor: string, existingChart: Chart | null, times: number[]) => {
   if (existingChart) {
@@ -262,6 +284,18 @@ const createChart = (canvasId: string, label: string, dataInstant: number[], dat
           }
         }
       },
+      plugins: {
+        zoom: {
+          zoom: {
+            drag: {
+              enabled: true,
+            },
+            mode: 'x',
+            onZoom: syncZoom,
+            onZoomComplete: syncZoom
+          }
+        }
+      },
       animation: false
     }
   });
@@ -291,8 +325,8 @@ const loadData = async (filterString: string) => {
 
     const smooth = (data: number[], windowSize: number = 20) => {
       return data.map((_, idx, arr) => {
-        let start = Math.max(0, idx - windowSize + 1);
-        let windowSlice = arr.slice(start, idx + 1);
+        const start = Math.max(0, idx - windowSize + 1);
+        const windowSlice = arr.slice(start, idx + 1);
         return windowSlice.reduce((sum, val) => sum + val, 0) / windowSlice.length;
       });
     };
@@ -337,6 +371,12 @@ const applyFilters = async () => {
 
   const filterString = activeFilters.length > 0 ? activeFilters.join(',') : 'none';
   await loadData(filterString);
+};
+
+const resetZoom = () => {
+  rrChartInst?.resetZoom();
+  hrChartInst?.resetZoom();
+  hrvChartInst?.resetZoom();
 };
 
 onMounted(async () => {

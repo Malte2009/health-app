@@ -1,5 +1,12 @@
 <template>
   <div class="hrv-view">
+    <div v-if="showAddModal" class="modal-overlay">
+      <AddHrvRecording @close="showAddModal = false" @reload="handleReload" />
+    </div>
+    <div v-if="showEditModal" class="modal-overlay">
+      <ChangeHrvRecording :id="recordingToEditId" @close="showEditModal = false" @reload="handleReload" />
+    </div>
+
     <h1>HRV Recordings</h1>
 
     <div class="control-panel">
@@ -42,15 +49,16 @@
           <th v-if="showMore">Vagal Burst</th>
           <th v-if="showMore">PVC</th>
           <th>Artifact %</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td v-if="showMore" colspan="29">
-            <button class="button">Create New HRV Recording</button>
+          <td v-if="showMore" colspan="30">
+            <button class="button" @click="showAddModal = true">Create New HRV Recording</button>
           </td>
-          <td v-else colspan="14">
-            <button class="button">Create New HRV Recording</button>
+          <td v-else colspan="15">
+            <button class="button" @click="showAddModal = true">Create New HRV Recording</button>
           </td>
         </tr>
         <tr>
@@ -80,6 +88,7 @@
           <td v-if="showMore">{{ roundTo(averageValues?.preserved_vagal_burst, 2) }}</td>
           <td v-if="showMore">{{ roundTo(averageValues?.preserved_pvc, 2) }}</td>
           <td>{{ roundTo(averageValues?.artifact_percent, 2) || 0 }}</td>
+          <td></td>
         </tr>
         <tr v-for="recording in loadedRecordings" :key="recording.id">
           <td>{{ getDateString(recording?.date) }}</td>
@@ -111,6 +120,13 @@
           <td v-if="showMore">{{ roundTo(recording?.metric?.preserved_vagal_burst, 2) }}</td>
           <td v-if="showMore">{{ roundTo(recording?.metric?.preserved_pvc, 2) }}</td>
           <td>{{ roundTo(recording?.metric?.artifact_percent, 2) || 0 }}</td>
+          <td>
+            <div class="action-buttons">
+              <button class="button view-btn" @click="viewRecording(recording.id)">View</button>
+              <button class="button edit-btn" @click="editRecording(recording.id)">Edit</button>
+              <button class="button delete-btn" @click="deleteRecording(recording.id)">Delete</button>
+            </div>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -119,14 +135,22 @@
 
 <script setup lang="ts">
 import { onMounted, reactive, ref } from "vue";
-import { getHrvRecordings } from "@/services/hrvService.ts";
+import { getHrvRecordings, deleteHrvRecording } from "@/services/hrvService.ts";
+import { useRouter } from "vue-router";
 import { roundTo } from "@/utility/math.ts";
 import { getDateString } from "@/utility/date.ts";
+import AddHrvRecording from "@/components/HRV/AddHrvRecording.vue";
+import ChangeHrvRecording from "@/components/HRV/ChangeHrvRecording.vue";
+
+const router = useRouter();
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const loadedRecordings = ref<any[]>([]);
 
 const showMore = ref(true);
+const showAddModal = ref(false);
+const showEditModal = ref(false);
+const recordingToEditId = ref("");
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const recordings = ref<any[]>([]);
@@ -280,6 +304,30 @@ function calculateAverageValues() {
   }
 }
 
+async function viewRecording(id: string) {
+  router.push({ name: 'hrvDetails', params: { id } });
+}
+
+function editRecording(id: string) {
+  recordingToEditId.value = id;
+  showEditModal.value = true;
+}
+
+async function handleReload() {
+  recordings.value = await getHrvRecordings();
+  loadRecordings();
+  calculateAverageValues();
+}
+
+async function deleteRecording(id: string) {
+  if (confirm("Are you sure you want to delete this HRV recording?")) {
+    await deleteHrvRecording(id);
+    recordings.value = await getHrvRecordings();
+    loadRecordings();
+    calculateAverageValues();
+  }
+}
+
 onMounted(async () => {
   recordings.value = await getHrvRecordings();
 
@@ -312,6 +360,69 @@ onMounted(async () => {
 
 .hrv-table tbody tr:nth-child(even) {
   background-color: rgba(0, 0, 0, 0.05);
+}
+
+.button {
+  background-color: var(--primary);
+  color: var(--text-main);
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition:
+    background-color 0.2s,
+    transform 0.1s;
+  margin: 4px;
+}
+
+.button:hover {
+  background-color: #00a495; /* etwas dunklerer Ton von --primary */
+}
+
+.action-buttons {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.view-btn {
+  background-color: var(--primary);
+}
+
+.edit-btn {
+  background-color: var(--bg-surface-secondary);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+.edit-btn:hover {
+  background-color: var(--bg-surface);
+  color: var(--text-main);
+}
+
+.delete-btn {
+  background-color: var(--danger);
+  box-shadow: 0 2px 5px rgba(232, 63, 96, 0.2);
+  color: var(--text-main);
+}
+
+.delete-btn:hover {
+  background-color: #e83f60;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
 @media (prefers-color-scheme: dark) {
