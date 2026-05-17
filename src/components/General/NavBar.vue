@@ -6,7 +6,7 @@
       </button>
 
       <div :class="['section-pill', currentSection]">
-        {{ currentSection === 'training' ? 'Training' : 'Nutrition' }}
+        {{ currentSection === 'training' ? 'Training' : currentSection === 'food' ? 'Nutrition' : 'Health' }}
       </div>
 
       <div class="nav-scroll">
@@ -22,6 +22,16 @@
           <button :class="{ 'active-food': route.name === 'foodManage' }" @click="router.push({ name: 'foodManage' })">Foods</button>
           <button :class="{ 'active-food': route.name === 'foodRecipes' }" @click="router.push({ name: 'foodRecipes' })">Recipes</button>
           <button :class="{ 'active-food': route.name === 'foodGoals' }" @click="router.push({ name: 'foodGoals' })">Goals</button>
+        </template>
+
+        <template v-if="currentSection === 'health'">
+          <button :class="{ 'active-health': route.name === 'daily-tracking' }" @click="router.push({ name: 'daily-tracking' })">Daily</button>
+          <button :class="{ 'active-health': route.name === 'intake-log' }" @click="router.push({ name: 'intake-log' })">Intake</button>
+          <button :class="{ 'active-health': route.name === 'sleep-tracker' }" @click="router.push({ name: 'sleep-tracker' })">Sleep</button>
+          <button :class="{ 'active-health': route.name === 'vitals' }" @click="router.push({ name: 'vitals' })">Vitals</button>
+          <button :class="{ 'active-health': route.name === 'hrv' }" @click="router.push({ name: 'hrv' })">HRV</button>
+          <button :class="{ 'active-health': route.name === 'symptoms' }" @click="router.push({ name: 'symptoms' })">Symptoms</button>
+          <button :class="{ 'active-health': route.name === 'mcas' }" @click="router.push({ name: 'mcas' })">MCAS</button>
         </template>
       </div>
     </div>
@@ -45,6 +55,10 @@ const FOOD_ROUTES = new Set([
   "food", "foodProgress", "foodManage", "foodRecipes", "foodGoals",
 ]);
 
+const HEALTH_ROUTES = new Set([
+  "daily-tracking", "intake-log", "sleep-tracker", "vitals", "hrv", "symptoms", "mcas",
+]);
+
 function goHome() {
   localStorage.removeItem("lastRoute");
   router.push({ name: "home" });
@@ -54,6 +68,7 @@ const currentSection = computed<"training" | "food" | null>(() => {
   const name = route.name as string;
   if (TRAINING_ROUTES.has(name)) return "training";
   if (FOOD_ROUTES.has(name)) return "food";
+  if (HEALTH_ROUTES.has(name)) return "health";
   return null;
 });
 </script>
@@ -120,6 +135,11 @@ const currentSection = computed<"training" | "food" | null>(() => {
   color: var(--accent);
 }
 
+.section-pill.health {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
 .nav-scroll {
   display: flex;
   gap: 4px;
@@ -167,6 +187,13 @@ const currentSection = computed<"training" | "food" | null>(() => {
   background: #2a2418 !important;
   color: var(--accent) !important;
   box-shadow: 0 2px 8px 0 rgba(255, 209, 102, 0.2) !important;
+}
+
+/* Health active */
+.active-health {
+  background: #2e1c1c !important;
+  color: #ef4444 !important;
+  box-shadow: 0 2px 8px 0 rgba(239, 68, 68, 0.2) !important;
 }
 
 @media (max-width: 640px) {

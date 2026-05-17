@@ -6,6 +6,7 @@ import trainingRoutes from "@/router/training.routes.ts";
 import loginRoutes from "@/router/login.routes.ts";
 import exerciseRoutes from "@/router/exercise.routes.ts";
 import foodRoutes from "@/router/food.routes.ts";
+import healthTrackingRoutes from "@/router/healthTracking.routes.ts";
 
 const routes = [
   ...loginRoutes,
@@ -13,6 +14,7 @@ const routes = [
   ...bodyRoutes,
   ...exerciseRoutes,
   ...foodRoutes,
+  ...healthTrackingRoutes,
 ];
 
 const router = createRouter({

@@ -35,6 +35,22 @@
         </div>
         <div class="card-arrow">&#8594;</div>
       </div>
+
+      <div class="section-card health-card" @click="goToSection('daily-tracking')">
+        <div class="card-icon">&#10084;&#65039;</div>
+        <div class="card-content">
+          <h2 class="card-title">Health Tracking</h2>
+          <p class="card-desc">Monitor daily health, sleep, vitals, symptoms, allergies, and hydration logs.</p>
+        </div>
+        <div class="card-features">
+          <span class="feature-chip">Daily</span>
+          <span class="feature-chip">Sleep</span>
+          <span class="feature-chip">Vitals</span>
+          <span class="feature-chip">Symptoms</span>
+          <span class="feature-chip">MCAS</span>
+        </div>
+        <div class="card-arrow">&#8594;</div>
+      </div>
     </div>
   </div>
 </template>
@@ -132,6 +148,10 @@ onMounted(async () => {
   background: linear-gradient(90deg, var(--accent), #f97316);
 }
 
+.health-card::before {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
 .training-card:hover {
   border-color: #42a5f5;
   transform: translateY(-4px);
@@ -142,6 +162,12 @@ onMounted(async () => {
   border-color: var(--accent);
   transform: translateY(-4px);
   box-shadow: 0 8px 32px rgba(255, 209, 102, 0.15);
+}
+
+.health-card:hover {
+  border-color: #ef4444;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(239, 68, 68, 0.15);
 }
 
 .card-icon {
@@ -188,6 +214,11 @@ onMounted(async () => {
   color: var(--accent);
 }
 
+.health-card:hover .feature-chip {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
 .card-arrow {
   align-self: flex-end;
   font-size: 1.5rem;
@@ -205,6 +236,10 @@ onMounted(async () => {
 
 .nutrition-card:hover .card-arrow {
   color: var(--accent);
+}
+
+.health-card:hover .card-arrow {
+  color: #ef4444;
 }
 
 /* Mobile */
