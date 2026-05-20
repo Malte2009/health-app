@@ -9,6 +9,7 @@ export type set = {
   exerciseLogId: string;
   userId: string;
   repUnit: string;
+  setTime?: number;
 };
 
 export type createSetRequestType = {
@@ -17,6 +18,7 @@ export type createSetRequestType = {
   weight: number;
   exerciseLogId: string;
   repUnit: string;
+  setTime?: number;
 };
 
 export type changeSetRequestType = {
@@ -25,4 +27,5 @@ export type changeSetRequestType = {
   reps?: number;
   weight?: number;
   repUnit: string;
+  setTime?: number;
 };

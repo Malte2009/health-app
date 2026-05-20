@@ -19,7 +19,8 @@
         </select>
         <input placeholder="Repetition Unit" id="repUnit" name="repUnit" type="text" v-if="customRepUnitInput" @keydown.enter="changeFocus('reps')" />
         <input placeholder="Repetitions" id="reps" name="reps" type="number" @keydown.enter="changeFocus('weight')" />
-        <input placeholder="Weight (kg)" id="weight" name="weight" type="number" @keydown.enter="submit()" />
+        <input placeholder="Weight (kg)" id="weight" name="weight" type="number" @keydown.enter="changeFocus('set-length')" />
+        <input placeholder="Set Length (s)" id="set-length" name="set-length" type="number" @keydown.enter="submit()" />
         <button class="button" @click="submit">Submit</button>
       </div>
     </div>
@@ -89,6 +90,7 @@ async function submit() {
   const weight = parseFloat((document.getElementById("weight") as HTMLInputElement).value);
   let type = (document.getElementById("type-selection") as HTMLInputElement).value;
   let repUnit = (document.getElementById("repUnit-selection") as HTMLInputElement).value;
+  const setTime = parseFloat((document.getElementById("set-length") as HTMLInputElement).value);
 
   if (customTypeInput.value) type = (document.getElementById("type") as HTMLInputElement).value;
 
@@ -100,6 +102,7 @@ async function submit() {
     reps,
     weight,
     repUnit,
+    setTime
   };
 
   try {
@@ -219,6 +222,10 @@ async function loadOldSetData() {
       (document.getElementById("weight") as HTMLInputElement).value = setData.weight.toString();
       if (setData.repUnit) {
         (document.getElementById("repUnit-selection") as HTMLSelectElement).value = setData.repUnit;
+      }
+
+      if (setData.setTime) {
+        (document.getElementById("time") as HTMLInputElement).value = setData.setTime.toString();
       }
     }
   } catch (error) {

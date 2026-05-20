@@ -19,7 +19,8 @@
         </select>
         <input placeholder="Repetition Unit" id="repUnit" name="repUnit" type="text" v-if="customRepUnitInput" @keydown.enter="changeFocus('reps')" />
         <input placeholder="Repetitions" id="reps" name="reps" type="number" @keydown.enter="changeFocus('weight')" />
-        <input placeholder="Weight (kg)" id="weight" name="weight" type="number" @keydown.enter="submit()" />
+        <input placeholder="Weight (kg)" id="weight" name="weight" type="number" @keydown.enter="changeFocus('set-length')" />
+        <input placeholder="Set Length" id="set-length (s)" name="set-length" type="number" @keydown.enter="submit()" />
         <button class="button" @click="submit">Submit</button>
       </div>
     </div>
@@ -83,10 +84,9 @@ function checkSetUnitInput() {
 async function submit() {
   const reps = parseInt((document.getElementById("reps") as HTMLInputElement).value);
   const weight = parseFloat((document.getElementById("weight") as HTMLInputElement).value);
-  let type = (document.getElementById("type-selection") as HTMLInputElement).value;
+  const type = (document.getElementById("type-selection") as HTMLInputElement).value;
   let repUnit = (document.getElementById("repUnit-selection") as HTMLInputElement).value;
-
-  if (customTypeInput.value) type = (document.getElementById("type") as HTMLInputElement).value;
+  const setTime = parseFloat((document.getElementById("set-length") as HTMLInputElement).value);
 
   if (customRepUnitInput.value) repUnit = (document.getElementById("repUnit") as HTMLInputElement).value;
 
@@ -96,6 +96,7 @@ async function submit() {
     weight,
     exerciseLogId: props.exerciseLogId,
     repUnit,
+    setTime
   };
 
   try {
