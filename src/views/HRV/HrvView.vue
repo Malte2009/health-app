@@ -15,6 +15,10 @@
         <option selected value="standard">Standard Filtering</option>
         <option value="full">Full Filtering</option>
       </select>
+      <select name="context-filter" id="context-filter-select" v-model="selectedContext" @change="changeFilters" style="margin-left: 10px;">
+        <option value="">All Contexts</option>
+        <option v-for="context in availableContexts" :key="context" :value="context">{{ context }}</option>
+      </select>
     </div>
 
     <table class="hrv-table">
@@ -134,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { getHrvRecordings, deleteHrvRecording } from "@/services/hrvService.ts";
 import { useRouter } from "vue-router";
 import { roundTo } from "@/utility/math.ts";
@@ -154,6 +158,17 @@ const recordingToEditId = ref("");
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const recordings = ref<any[]>([]);
+
+const selectedContext = ref("");
+const availableContexts = computed(() => {
+  const contexts = new Set<string>();
+  for (const recording of recordings.value) {
+    if (recording.context) {
+      contexts.add(recording.context);
+    }
+  }
+  return Array.from(contexts).sort();
+});
 
 const averageValues = ref({
   mean_rr_ms: 0,
@@ -207,6 +222,10 @@ function changeFilters() {
 function loadRecordings() {
   loadedRecordings.value = [];
   for (const recording of recordings.value) {
+    if (selectedContext.value && recording.context !== selectedContext.value) {
+      continue;
+    }
+
     const newRecording = recording;
     for (let i = 0; i < recording.metrics.length; i++) {
       const metric = recording.metrics[i];
@@ -299,8 +318,9 @@ function calculateAverageValues() {
     }
   }
 
+  const count = loadedRecordings.value.length || 1;
   for (const [key] of Object.entries(averageValues.value)) {
-    averageValues.value[key as keyof typeof averageValues.value] /= loadedRecordings.value.length;
+    averageValues.value[key as keyof typeof averageValues.value] /= count;
   }
 }
 

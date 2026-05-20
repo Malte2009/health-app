@@ -85,23 +85,24 @@ onMounted(async () => {
 
 async function submit() {
   const queryParams = {
-    name: name.value,
-    date: date.value,
+    name: name.value || undefined,
+    date: date.value || undefined,
     startTime: startTime.value ? new Date(startTime.value).toISOString() : undefined,
     endTime: endTime.value ? new Date(endTime.value).toISOString() : undefined,
-    device: device.value,
-    context: context.value,
-    trainingLogId: trainingLogId.value,
-    sleepLogId: sleepLogId.value,
+    device: device.value || undefined,
+    context: context.value || undefined,
+    trainingLogId: trainingLogId.value || undefined,
+    sleepLogId: sleepLogId.value || undefined,
   };
 
   try {
-    const updated = await updateHrvRecording(props.id, rrdata.value || undefined, queryParams);
-    if (updated) {
-      emit("reload");
-      emit("close");
-    }
-  } catch (error) {
+    await updateHrvRecording(props.id, rrdata.value || undefined, queryParams);
+    console.log("Successfully submitted");
+    emit("reload");
+    emit("close");
+  } catch (error: any) {
+    const errorMsg = error.response?.data?.message || error.response?.data || error.message || String(error);
+    alert("Failed to edit HRV recording: " + errorMsg);
     console.error("Failed to edit HRV recording:", error);
   }
 }

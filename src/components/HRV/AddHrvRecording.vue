@@ -60,23 +60,23 @@ async function submit() {
   }
 
   const queryParams = {
-    name: name.value,
-    date: date.value,
-    startTime: new Date(startTime.value).toISOString(),
-    endTime: new Date(endTime.value).toISOString(),
-    device: device.value,
-    context: context.value,
-    trainingLogId: trainingLogId.value,
-    sleepLogId: sleepLogId.value,
+    name: name.value || undefined,
+    date: date.value || undefined,
+    startTime: startTime.value ? new Date(startTime.value).toISOString() : undefined,
+    endTime: endTime.value ? new Date(endTime.value).toISOString() : undefined,
+    device: device.value || undefined,
+    context: context.value || undefined,
+    trainingLogId: trainingLogId.value || undefined,
+    sleepLogId: sleepLogId.value || undefined,
   };
 
   try {
-    const newRecording = await createHrvRecording(rrdata.value, queryParams);
-    if (newRecording) {
-      emit("reload");
-      emit("close");
-    }
-  } catch (error) {
+    await createHrvRecording(rrdata.value, queryParams);
+    emit("reload");
+    emit("close");
+  } catch (error: any) {
+    const errorMsg = error.response?.data?.message || error.response?.data || error.message || String(error);
+    alert("Failed to create HRV recording: " + errorMsg);
     console.error("Failed to create HRV recording:", error);
   }
 }
