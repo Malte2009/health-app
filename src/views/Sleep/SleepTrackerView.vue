@@ -1,107 +1,456 @@
 <template>
   <div class="sleep-tracker">
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>{{ editId ? 'Edit Sleep Log' : 'Add Sleep Log' }}</h3>
+        <form @submit.prevent="submitForm">
+          <div class="form-group">
+            <label>Date:</label>
+            <input type="date" v-model="form.date" />
+          </div>
+          <div class="form-group">
+            <label>Bed Time:</label>
+            <input type="time" v-model="form.bedTime" />
+          </div>
+          <div class="form-group">
+            <label>Wake Time:</label>
+            <input type="time" v-model="form.wakeTime" />
+          </div>
+
+          <div class="form-group">
+            <label>Sleep Latency:</label>
+            <div class="duration-inputs">
+              <input type="number" v-model.number="form.sleepLatencyHours" min="0" placeholder="hrs" /> <span>h</span>
+              <input type="number" v-model.number="form.sleepLatencyMins" min="0" max="59" placeholder="mins" /> <span>m</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Wake Episodes:</label>
+            <input type="number" v-model.number="form.wakeEpisodes" />
+          </div>
+          <div class="form-group">
+            <label>Rested Score (1-10):</label>
+            <input type="range" min="1" max="10" v-model.number="form.restedScore" /> {{ form.restedScore }}
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label><input type="checkbox" v-model="form.morningHeadache" /> Morning Headache</label>
+          </div>
+          <div class="form-group checkbox-group">
+            <label><input type="checkbox" v-model="form.morningDizziness" /> Morning Dizziness</label>
+          </div>
+
+          <h3>Smartwatch Data (Read-only / Import)</h3>
+          <div class="form-group">
+            <label>Total Sleep:</label>
+            <div class="duration-inputs">
+              <input type="number" v-model.number="form.totalSleepHours" min="0" placeholder="hrs" /> <span>h</span>
+              <input type="number" v-model.number="form.totalSleepMins" min="0" max="59" placeholder="mins" /> <span>m</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Awake Time:</label>
+            <div class="duration-inputs">
+              <input type="number" v-model.number="form.awakeHours" min="0" placeholder="hrs" /> <span>h</span>
+              <input type="number" v-model.number="form.awakeMins" min="0" max="59" placeholder="mins" /> <span>m</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Light Sleep:</label>
+            <div class="duration-inputs">
+              <input type="number" v-model.number="form.lightSleepHours" min="0" placeholder="hrs" /> <span>h</span>
+              <input type="number" v-model.number="form.lightSleepMins" min="0" max="59" placeholder="mins" /> <span>m</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Deep Sleep:</label>
+            <div class="duration-inputs">
+              <input type="number" v-model.number="form.deepSleepHours" min="0" placeholder="hrs" /> <span>h</span>
+              <input type="number" v-model.number="form.deepSleepMins" min="0" max="59" placeholder="mins" /> <span>m</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>REM Sleep:</label>
+            <div class="duration-inputs">
+              <input type="number" v-model.number="form.remSleepHours" min="0" placeholder="hrs" /> <span>h</span>
+              <input type="number" v-model.number="form.remSleepMins" min="0" max="59" placeholder="mins" /> <span>m</span>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Turning Spike Count:</label>
+            <input type="number" v-model.number="form.turningSpikeCount" />
+          </div>
+          <div class="form-group">
+            <label>Turning Spike Max HR:</label>
+            <input type="number" v-model.number="form.turningSpikeMaxHr" />
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="button">Save Sleep</button>
+            <button type="button" class="button delete-btn" @click="showModal = false">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <h2>Sleep Tracker</h2>
-    <form @submit.prevent="submitForm">
-      <div class="form-group">
-        <label>Date:</label>
-        <input type="date" v-model="form.date" />
-      </div>
-      <div class="form-group">
-        <label>Bed Time:</label>
-        <input type="time" v-model="form.bedTime" />
-      </div>
-      <div class="form-group">
-        <label>Wake Time:</label>
-        <input type="time" v-model="form.wakeTime" />
-      </div>
 
-      <div class="form-group">
-        <label>Sleep Latency (Minutes):</label>
-        <input type="number" v-model.number="form.sleepLatencyMinutes" />
-      </div>
-      <div class="form-group">
-        <label>Wake Episodes:</label>
-        <input type="number" v-model.number="form.wakeEpisodes" />
-      </div>
-      <div class="form-group">
-        <label>Subjective Hours:</label>
-        <input type="number" step="0.1" v-model.number="form.subjectiveHours" />
-      </div>
-
-      <div class="form-group">
-        <label>Rested Score (1-10):</label>
-        <input type="range" min="1" max="10" v-model.number="form.restedScore" /> {{ form.restedScore }}
-      </div>
-
-      <div class="form-group">
-        <label><input type="checkbox" v-model="form.morningHeadache" /> Morning Headache</label>
-      </div>
-      <div class="form-group">
-        <label><input type="checkbox" v-model="form.morningDizziness" /> Morning Dizziness</label>
-      </div>
-
-      <h3>Smartwatch Data (Read-only / Import)</h3>
-      <div class="form-group">
-        <label>Total Sleep Minutes:</label>
-        <input type="number" v-model.number="form.totalSleepMinutes" />
-      </div>
-      <div class="form-group">
-        <label>Awake Minutes:</label>
-        <input type="number" v-model.number="form.awakeMinutes" />
-      </div>
-      <div class="form-group">
-        <label>Light Sleep Minutes:</label>
-        <input type="number" v-model.number="form.lightSleepMinutes" />
-      </div>
-      <div class="form-group">
-        <label>Deep Sleep Minutes:</label>
-        <input type="number" v-model.number="form.deepSleepMinutes" />
-      </div>
-      <div class="form-group">
-        <label>REM Sleep Minutes:</label>
-        <input type="number" v-model.number="form.remSleepMinutes" />
-      </div>
-      <div class="form-group">
-        <label>Turning Spike Count:</label>
-        <input type="number" v-model.number="form.turningSpikeCount" />
-      </div>
-      <div class="form-group">
-        <label>Turning Spike Max HR:</label>
-        <input type="number" v-model.number="form.turningSpikeMaxHr" />
-      </div>
-
-      <button type="submit">Save Sleep</button>
-    </form>
+    <div class="sleep-table-container">
+      <h3>Sleep History</h3>
+      <table class="sleep-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Bed Time</th>
+            <th>Wake Time</th>
+            <th>Total Sleep</th>
+            <th>Rested Score</th>
+            <th>Headache</th>
+            <th>Dizziness</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="8" style="text-align: center;">
+              <button class="button" @click="openAddModal" style="width: fit-content; margin: 10px auto;">Log Sleep Data</button>
+            </td>
+          </tr>
+          <tr>
+            <td>Average</td>
+            <td>{{ averageSleep.bedTime }}</td>
+            <td>{{ averageSleep.wakeTime }}</td>
+            <td>{{ formatMinutes(averageSleep.totalSleepMinutes) }}</td>
+            <td>{{ roundTo(averageSleep.restedScore, 2) }}</td>
+            <td colspan="3"></td>
+          </tr>
+          <tr v-for="log in sleepLogs" :key="log.id">
+            <td>{{ new Date(log.date).toLocaleDateString() }}</td>
+            <td>{{ log.bedTime ? formatTime(log.bedTime) : '' }}</td>
+            <td>{{ log.wakeTime ? formatTime(log.wakeTime) : '' }}</td>
+            <td>{{ log.totalSleepMinutes != null ? formatMinutes(log.totalSleepMinutes) : '' }}</td>
+            <td>{{ log.restedScore }}</td>
+            <td>{{ log.morningHeadache ? 'Yes' : 'No' }}</td>
+            <td>{{ log.morningDizziness ? 'Yes' : 'No' }}</td>
+            <td>
+              <button class="button" @click="openEditModal(log)" style="margin-right: 5px;">Edit</button>
+              <button v-if="log.hrvRecording" class="button" @click="goToHrv(log.hrvRecording.id)" style="margin-right: 5px; background-color: var(--secondary, #17a2b8);">HRV Report</button>
+              <button class="button delete-btn" @click="deleteSleep(log.id)">Delete</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
+import { getSleepLogs, createSleepLog, updateSleepLog, deleteSleepLog } from '@/services/sleepService';
+import { useRouter } from 'vue-router';
+import type { SleepLog } from '@/types/sleepType';
+import { roundTo } from '@/utility/math';
+import { toLocalIsoDate, createLocalTimeDate, toLocalTimeString, formatTime } from '@/utility/date';
+
+const router = useRouter();
 
 const form = ref({
-  date: new Date().toISOString().substring(0, 10),
+  date: toLocalIsoDate(),
   bedTime: '22:00',
   wakeTime: '07:00',
-  sleepLatencyMinutes: 15,
+  sleepLatencyHours: 0,
+  sleepLatencyMins: 15,
   wakeEpisodes: 0,
-  subjectiveHours: 8,
   restedScore: 5,
   morningHeadache: false,
   morningDizziness: false,
-  totalSleepMinutes: 0,
-  awakeMinutes: 0,
-  lightSleepMinutes: 0,
-  deepSleepMinutes: 0,
-  remSleepMinutes: 0,
+  totalSleepHours: 0,
+  totalSleepMins: 0,
+  awakeHours: 0,
+  awakeMins: 0,
+  lightSleepHours: 0,
+  lightSleepMins: 0,
+  deepSleepHours: 0,
+  deepSleepMins: 0,
+  remSleepHours: 0,
+  remSleepMins: 0,
   turningSpikeCount: 0,
   turningSpikeMaxHr: 0
 });
 
-const submitForm = () => {
-  console.log('Submit Sleep Log', form.value);
+const showModal = ref(false);
+const editId = ref<string | null>(null);
+
+const sleepLogs = ref<SleepLog[]>([]);
+
+const calculateAverageTime = (times: string[]) => {
+  if (!times.length) return "00:00";
+  let sumSin = 0;
+  let sumCos = 0;
+  times.forEach(t => {
+    const d = new Date(t);
+    const minutes = d.getHours() * 60 + d.getMinutes();
+    const angle = (minutes / (24 * 60)) * 2 * Math.PI;
+    sumSin += Math.sin(angle);
+    sumCos += Math.cos(angle);
+  });
+  const avgAngle = Math.atan2(sumSin / times.length, sumCos / times.length);
+  let avgMinutes = Math.round((avgAngle / (2 * Math.PI)) * 24 * 60);
+  if (avgMinutes < 0) avgMinutes += 24 * 60;
+  const h = Math.floor(avgMinutes / 60).toString().padStart(2, '0');
+  const m = (avgMinutes % 60).toString().padStart(2, '0');
+  return `${h}:${m}`;
 };
+
+const averageSleep = computed(() => {
+  if (sleepLogs.value.length === 0) return { totalSleepMinutes: 0, restedScore: 0, bedTime: "00:00", wakeTime: "00:00" };
+  const totalSleepMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.totalSleepMinutes || 0), 0) / sleepLogs.value.length;
+  const restedScore = sleepLogs.value.reduce((acc, log) => acc + (log.restedScore || 0), 0) / sleepLogs.value.length;
+  const avgBedTime = calculateAverageTime(sleepLogs.value.map(log => log.bedTime).filter((t): t is string => !!t));
+  const avgWakeTime = calculateAverageTime(sleepLogs.value.map(log => log.wakeTime).filter((t): t is string => !!t));
+  return { totalSleepMinutes, restedScore, bedTime: avgBedTime, wakeTime: avgWakeTime };
+});
+
+const formatMinutes = (minutes: number) => {
+  if (isNaN(minutes)) return "0h 0m";
+  const h = Math.floor(minutes / 60);
+  const m = Math.round(minutes % 60);
+  return `${h}h ${m}m`;
+};
+
+const loadData = async () => {
+  try {
+    const sl = await getSleepLogs();
+    sleepLogs.value = sl;
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const goToHrv = (id?: string) => {
+  if (id) router.push(`/hrv/${id}`);
+};
+
+const openAddModal = () => {
+  editId.value = null;
+  form.value = {
+    date: toLocalIsoDate(),
+    bedTime: '22:00',
+    wakeTime: '07:00',
+    sleepLatencyHours: 0,
+    sleepLatencyMins: 15,
+    wakeEpisodes: 0,
+    restedScore: 5,
+    morningHeadache: false,
+    morningDizziness: false,
+    totalSleepHours: 0,
+    totalSleepMins: 0,
+    awakeHours: 0,
+    awakeMins: 0,
+    lightSleepHours: 0,
+    lightSleepMins: 0,
+    deepSleepHours: 0,
+    deepSleepMins: 0,
+    remSleepHours: 0,
+    remSleepMins: 0,
+    turningSpikeCount: 0,
+    turningSpikeMaxHr: 0
+  };
+  showModal.value = true;
+};
+
+const openEditModal = (log: SleepLog) => {
+  editId.value = log.id;
+  form.value = {
+    ...log,
+    date: new Date(log.date).toISOString().substring(0, 10),
+    bedTime: log.bedTime ? toLocalTimeString(new Date(log.bedTime)) : '',
+    wakeTime: log.wakeTime ? toLocalTimeString(new Date(log.wakeTime)) : '',
+    sleepLatencyHours: Math.floor((log.sleepLatencyMinutes || 0) / 60),
+    sleepLatencyMins: Math.round((log.sleepLatencyMinutes || 0) % 60),
+    totalSleepHours: Math.floor((log.totalSleepMinutes || 0) / 60),
+    totalSleepMins: Math.round((log.totalSleepMinutes || 0) % 60),
+    awakeHours: Math.floor((log.awakeMinutes || 0) / 60),
+    awakeMins: Math.round((log.awakeMinutes || 0) % 60),
+    lightSleepHours: Math.floor((log.lightSleepMinutes || 0) / 60),
+    lightSleepMins: Math.round((log.lightSleepMinutes || 0) % 60),
+    deepSleepHours: Math.floor((log.deepSleepMinutes || 0) / 60),
+    deepSleepMins: Math.round((log.deepSleepMinutes || 0) % 60),
+    remSleepHours: Math.floor((log.remSleepMinutes || 0) / 60),
+    remSleepMins: Math.round((log.remSleepMinutes || 0) % 60)
+  } as any;
+  showModal.value = true;
+};
+
+const submitForm = async () => {
+  const data = {
+    ...form.value,
+    date: new Date(form.value.date).toISOString(),
+    bedTime: createLocalTimeDate(form.value.bedTime).toISOString(),
+    wakeTime: createLocalTimeDate(form.value.wakeTime).toISOString(),
+    sleepLatencyMinutes: (form.value.sleepLatencyHours || 0) * 60 + (form.value.sleepLatencyMins || 0),
+    totalSleepMinutes: (form.value.totalSleepHours || 0) * 60 + (form.value.totalSleepMins || 0),
+    awakeMinutes: (form.value.awakeHours || 0) * 60 + (form.value.awakeMins || 0),
+    lightSleepMinutes: (form.value.lightSleepHours || 0) * 60 + (form.value.lightSleepMins || 0),
+    deepSleepMinutes: (form.value.deepSleepHours || 0) * 60 + (form.value.deepSleepMins || 0),
+    remSleepMinutes: (form.value.remSleepHours || 0) * 60 + (form.value.remSleepMins || 0)
+  };
+  if (editId.value) {
+    await updateSleepLog(editId.value, data as any);
+  } else {
+    await createSleepLog(data as any);
+  }
+  showModal.value = false;
+  await loadData();
+};
+
+const deleteSleep = async (id: string) => {
+  if (confirm("Delete this sleep log?")) {
+    await deleteSleepLog(id);
+    await loadData();
+  }
+};
+
+onMounted(() => {
+  loadData();
+});
 </script>
 
 <style scoped>
 .form-group { margin-bottom: 1rem; }
+.sleep-table-container {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+.sleep-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-surface);
+  text-align: center;
+}
+.sleep-table th, .sleep-table td {
+  padding: 8px;
+  border: 1px solid var(--border, #ccc);
+}
+.sleep-table th {
+  background: var(--bg-surface-secondary, #f4f4f4);
+}
+.sleep-table tbody tr:nth-child(even) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sleep-table tbody tr:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+}
+.button {
+  background-color: var(--primary, #007bff);
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s;
+}
+.button:hover {
+  opacity: 0.9;
+}
+.delete-btn {
+  background-color: var(--danger, #dc3545);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: var(--bg-surface, #fff);
+  color: var(--text-main, #333);
+  padding: 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+.modal-content h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.5rem;
+  color: var(--primary, #007bff);
+  text-align: center;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+.form-group label {
+  margin-bottom: 5px;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+.form-group input,
+.form-group select {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border, #ccc);
+  background: var(--bg-surface-secondary, #f9f9f9);
+  color: var(--text-main, #333);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--primary, #007bff);
+}
+.duration-inputs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.duration-inputs input {
+  width: 80px;
+}
+.checkbox-group {
+  flex-direction: row;
+  align-items: center;
+}
+.checkbox-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  cursor: pointer;
+  font-weight: normal;
+}
+.checkbox-group input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 25px;
+}
+.modal-actions .button {
+  padding: 8px 20px;
+  font-size: 1rem;
+  border-radius: 6px;
+}
 </style>

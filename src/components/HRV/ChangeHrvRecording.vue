@@ -39,7 +39,8 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { updateHrvRecording, getHrvRecording } from "@/services/hrvService.ts";
+import { updateHrvRecording, getHrvRecording } from "../../services/hrvService";
+import { toLocalDateTimeString } from "@/utility/date";
 
 const props = defineProps<{
   id: string;
@@ -61,8 +62,7 @@ function toDateTimeLocal(d: string | Date | undefined) {
   if (!d) return "";
   const dateObj = new Date(d);
   if (isNaN(dateObj.getTime())) return "";
-  const offset = dateObj.getTimezoneOffset() * 60000;
-  return new Date(dateObj.getTime() - offset).toISOString().slice(0, 16);
+  return toLocalDateTimeString(dateObj);
 }
 
 onMounted(async () => {
@@ -175,4 +175,3 @@ async function submit() {
   background-color: #00a495;
 }
 </style>
-

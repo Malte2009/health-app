@@ -349,12 +349,17 @@ async function deleteRecording(id: string) {
 }
 
 onMounted(async () => {
-  recordings.value = await getHrvRecordings();
+  try {
+    const hrvs = await getHrvRecordings();
+    recordings.value = hrvs;
 
-  loadedRecordings.value = recordings.value;
+    loadedRecordings.value = recordings.value;
 
-  loadRecordings();
-  calculateAverageValues();
+    loadRecordings();
+    calculateAverageValues();
+  } catch (e) {
+    console.error(e);
+  }
 });
 </script>
 
@@ -430,6 +435,14 @@ onMounted(async () => {
 
 .delete-btn:hover {
   background-color: #e83f60;
+}
+
+.sleep-combo {
+  font-size: 0.9em;
+  color: #555;
+  background: var(--bg-surface, #fdfdfd);
+  padding: 5px;
+  border-radius: 4px;
 }
 
 .modal-overlay {

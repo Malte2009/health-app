@@ -40,13 +40,14 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { createHrvRecording } from "@/services/hrvService.ts";
+import { toLocalDateTimeString, toLocalIsoDate } from "@/utility/date";
 
 const emit = defineEmits(["close", "reload"]);
 
 const name = ref("");
-const date = ref(new Date().toISOString().split('T')[0]);
-const startTime = ref(new Date().toISOString().slice(0, 16));
-const endTime = ref(new Date().toISOString().slice(0, 16));
+const date = ref(toLocalIsoDate());
+const startTime = ref(toLocalDateTimeString());
+const endTime = ref(toLocalDateTimeString());
 const device = ref("");
 const context = ref("");
 const trainingLogId = ref("");
@@ -149,4 +150,3 @@ async function submit() {
   background-color: #00a495;
 }
 </style>
-

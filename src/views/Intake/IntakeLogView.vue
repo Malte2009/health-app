@@ -62,10 +62,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import type { IntakeLog } from "@/types/healthTrackingType";
+import { toLocalDateTimeString } from "@/utility/date";
 
 const form = ref({
-  timestamp: new Date().toISOString().substring(0, 16),
-  beverageType: 'Water',
+  quantity_mlMin_gMax_kcal: 0,
+  timestamp: toLocalDateTimeString(),
+  beverageType: "Water",
+  name: "",
   water_ml: 0,
   otherFluid_ml: 0,
   saltSource: 'None',

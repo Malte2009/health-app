@@ -123,20 +123,28 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import type { SymptomLog } from '@/types/healthTrackingType';
+import { toLocalDateTimeString } from "@/utility/date";
 
 const symptomForm = ref({
+  timestamp: toLocalDateTimeString(),
   type: 'Headache',
+  name: '',
   severity: 5,
-  timestamp: new Date().toISOString().substring(0, 16),
+  description: '',
+  treatedWith: '',
+  durationHours: 0,
+  durationMinutes: 0,
+  triggerContext: '',
+  trigger: '',
+  location: '',
+  outcome: '',
   onsetDateTime: '',
   offsetDateTime: '',
-  durationMinutes: 0,
   worseOnBendingForward: false,
   worseOnLyingDown: false,
   betterOnLyingDown: false,
-  pulsatile: false,
-  trigger: '',
-  location: ''
+  pulsatile: false
 });
 
 const syncopeForm = ref({
@@ -156,6 +164,31 @@ const syncopeForm = ref({
 
 const submitSymptom = () => console.log('Symptom', symptomForm.value);
 const submitSyncope = () => console.log('Syncope', syncopeForm.value);
+const openSymptomAddModal = () => {
+  symptomForm.value = {
+    timestamp: toLocalDateTimeString(),
+    type: 'Headache',
+    name: '',
+    severity: 5,
+    description: '',
+    treatedWith: '',
+    durationHours: 0,
+    durationMinutes: 0,
+    triggerContext: '',
+    trigger: '',
+    location: '',
+    outcome: '',
+    onsetDateTime: '',
+    offsetDateTime: '',
+    worseOnBendingForward: false,
+    worseOnLyingDown: false,
+    betterOnLyingDown: false,
+    pulsatile: false
+  };
+  showSymptomModal.value = true;
+};
+
+const showSymptomModal = ref(false);
 </script>
 
 <style scoped>

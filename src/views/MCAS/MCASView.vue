@@ -56,11 +56,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import type { McasLog } from "@/types/healthTrackingType";
+import { toLocalDateTimeString } from "@/utility/date";
 
 const form = ref({
   reactionType: 'Flush',
   severity: 5,
-  timestamp: new Date().toISOString().substring(0, 16),
+  timestamp: toLocalDateTimeString(),
   onsetMinutes: 0,
   durationMinutes: 0,
   suspectedFood: '',

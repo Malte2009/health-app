@@ -33,152 +33,171 @@
       </div>
 
       <div class="hrv-metrics-display">
-        <div class="hrv-metrics">
-          <table class="hrv-metrics-table">
-            <tr class="hrv-metrics-row">
-              <th colspan="2">Time Domain</th>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>Mean RR (ms)</td>
-              <td>{{ roundTo(loadedMetrics.mean_rr_ms, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row second-metrics-row">
-              <td>Mean HR (bpm)</td>
-              <td>{{ roundTo(loadedMetrics.mean_hr_bpm, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>Max HR (bpm)</td>
-              <td>{{ roundTo(loadedMetrics.max_hr_bpm, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row second-metrics-row">
-              <td>Min HR (bpm</td>
-              <td>{{ roundTo(loadedMetrics.min_hr_bpm, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>SDNN (ms)</td>
-              <td>{{ roundTo(loadedMetrics.sdnn_ms, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row second-metrics-row">
-              <td>RMSSD (ms)</td>
-              <td>{{ roundTo(loadedMetrics.rmssd_ms, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>pNN50 (%)</td>
-              <td>{{ roundTo(loadedMetrics.pnn50_percent, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <th colspan="2">Frequency Domain</th>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>VLF Power (ms²)</td>
-              <td>{{ roundTo(loadedMetrics.vlf_power, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>LF Power (ms²)</td>
-              <td>{{ roundTo(loadedMetrics.lf_power, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>HF Power (ms²)</td>
-              <td>{{ roundTo(loadedMetrics.hf_power, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>LF / HF Ratio</td>
-              <td>{{ roundTo(loadedMetrics.lf_hf_ratio, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>HF Peak (Hz)</td>
-              <td>{{ roundTo(loadedMetrics.hf_peak_hz, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>RSA Peak (breaths/min)</td>
-              <td>{{ roundTo(loadedMetrics.rsa_bpm, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <th colspan="2">Non-linear / Poincare</th>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>SD1 (ms)</td>
-              <td>{{ roundTo(loadedMetrics.sd1_ms, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>SD2 (ms)</td>
-              <td>{{ roundTo(loadedMetrics.sd2_ms, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>SD1 / SD2 Ratio</td>
-              <td>{{ roundTo(loadedMetrics.sd1_sd2_ratio, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>Baevsky Stress Index</td>
-              <td>{{ roundTo(loadedMetrics.baevsky_si, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>Cardiac Sympathetic Index</td>
-              <td>{{ roundTo(loadedMetrics.csi, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>Cardiac Vagal Index</td>
-              <td>{{ roundTo(loadedMetrics.cvi, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <th colspan="2">Entropy / Complexity</th>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>Sample Entropy</td>
-              <td>{{ roundTo(loadedMetrics.sample_entropy, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>Approx. Entropy</td>
-              <td>{{ roundTo(loadedMetrics.approx_entropy, 2) }}</td>
-            </tr>
-            <tr class="hrv-metrics-row">
-              <td>DFA alpha 1</td>
-              <td>{{ roundTo(loadedMetrics.dfa_alpha1, 2) }}</td>
-            </tr>
-            <tr>
-              <th colspan="2">Jump Histogram</th>
-            </tr>
-            <tr>
-              <td>100 - 200ms</td>
-              <td>{{ loadedMetrics.jump_count_100ms_200ms }}</td>
-            </tr>
-            <tr>
-              <td>200 - 300ms</td>
-              <td>{{ loadedMetrics.jump_count_200ms_300ms }}</td>
-            </tr>
-            <tr>
-              <td>300 - 400ms</td>
-              <td>{{ loadedMetrics.jump_count_300ms_400ms }}</td>
-            </tr>
-            <tr>
-              <td>400 - 500ms</td>
-              <td>{{ loadedMetrics.jump_count_400ms_500ms }}</td>
-            </tr>
-            <tr>
-              <td>500 - 600ms</td>
-              <td>{{ loadedMetrics.jump_count_500ms_600ms }}</td>
-            </tr>
-            <tr>
-              <td>600 - 700ms</td>
-              <td>{{ loadedMetrics.jump_count_600ms_700ms }}</td>
-            </tr>
-            <tr>
-              <td>700 - 800ms</td>
-              <td>{{ loadedMetrics.jump_count_700ms_800ms }}</td>
-            </tr>
-            <tr>
-              <td>800 - 900ms</td>
-              <td>{{ loadedMetrics.jump_count_800ms_900ms }}</td>
-            </tr>
-            <tr>
-              <td>900 - 1000ms</td>
-              <td>{{ loadedMetrics.jump_count_900ms_1000ms }}</td>
-            </tr>
-            <tr>
-              <td>1000ms+</td>
-              <td>{{ loadedMetrics.jump_count_1000ms }}</td>
-            </tr>
-          </table>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+          <div class="hrv-metrics">
+            <table class="hrv-metrics-table">
+              <tr class="hrv-metrics-row">
+                <th colspan="2">Time Domain</th>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>Mean RR (ms)</td>
+                <td>{{ roundTo(loadedMetrics.mean_rr_ms, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row second-metrics-row">
+                <td>Mean HR (bpm)</td>
+                <td>{{ roundTo(loadedMetrics.mean_hr_bpm, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>Max HR (bpm)</td>
+                <td>{{ roundTo(loadedMetrics.max_hr_bpm, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row second-metrics-row">
+                <td>Min HR (bpm</td>
+                <td>{{ roundTo(loadedMetrics.min_hr_bpm, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>SDNN (ms)</td>
+                <td>{{ roundTo(loadedMetrics.sdnn_ms, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row second-metrics-row">
+                <td>RMSSD (ms)</td>
+                <td>{{ roundTo(loadedMetrics.rmssd_ms, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>pNN50 (%)</td>
+                <td>{{ roundTo(loadedMetrics.pnn50_percent, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <th colspan="2">Frequency Domain</th>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>VLF Power (ms²)</td>
+                <td>{{ roundTo(loadedMetrics.vlf_power, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>LF Power (ms²)</td>
+                <td>{{ roundTo(loadedMetrics.lf_power, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>HF Power (ms²)</td>
+                <td>{{ roundTo(loadedMetrics.hf_power, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>LF / HF Ratio</td>
+                <td>{{ roundTo(loadedMetrics.lf_hf_ratio, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>HF Peak (Hz)</td>
+                <td>{{ roundTo(loadedMetrics.hf_peak_hz, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>RSA Peak (breaths/min)</td>
+                <td>{{ roundTo(loadedMetrics.rsa_bpm, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <th colspan="2">Non-linear / Poincare</th>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>SD1 (ms)</td>
+                <td>{{ roundTo(loadedMetrics.sd1_ms, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>SD2 (ms)</td>
+                <td>{{ roundTo(loadedMetrics.sd2_ms, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>SD1 / SD2 Ratio</td>
+                <td>{{ roundTo(loadedMetrics.sd1_sd2_ratio, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>Baevsky Stress Index</td>
+                <td>{{ roundTo(loadedMetrics.baevsky_si, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>Cardiac Sympathetic Index</td>
+                <td>{{ roundTo(loadedMetrics.csi, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>Cardiac Vagal Index</td>
+                <td>{{ roundTo(loadedMetrics.cvi, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <th colspan="2">Entropy / Complexity</th>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>Sample Entropy</td>
+                <td>{{ roundTo(loadedMetrics.sample_entropy, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>Approx. Entropy</td>
+                <td>{{ roundTo(loadedMetrics.approx_entropy, 2) }}</td>
+              </tr>
+              <tr class="hrv-metrics-row">
+                <td>DFA alpha 1</td>
+                <td>{{ roundTo(loadedMetrics.dfa_alpha1, 2) }}</td>
+              </tr>
+              <tr>
+                <th colspan="2">Jump Histogram</th>
+              </tr>
+              <tr>
+                <td>100 - 200ms</td>
+                <td>{{ loadedMetrics.jump_count_100ms_200ms }}</td>
+              </tr>
+              <tr>
+                <td>200 - 300ms</td>
+                <td>{{ loadedMetrics.jump_count_200ms_300ms }}</td>
+              </tr>
+              <tr>
+                <td>300 - 400ms</td>
+                <td>{{ loadedMetrics.jump_count_300ms_400ms }}</td>
+              </tr>
+              <tr>
+                <td>400 - 500ms</td>
+                <td>{{ loadedMetrics.jump_count_400ms_500ms }}</td>
+              </tr>
+              <tr>
+                <td>500 - 600ms</td>
+                <td>{{ loadedMetrics.jump_count_500ms_600ms }}</td>
+              </tr>
+              <tr>
+                <td>600 - 700ms</td>
+                <td>{{ loadedMetrics.jump_count_600ms_700ms }}</td>
+              </tr>
+              <tr>
+                <td>700 - 800ms</td>
+                <td>{{ loadedMetrics.jump_count_700ms_800ms }}</td>
+              </tr>
+              <tr>
+                <td>800 - 900ms</td>
+                <td>{{ loadedMetrics.jump_count_800ms_900ms }}</td>
+              </tr>
+              <tr>
+                <td>900 - 1000ms</td>
+                <td>{{ loadedMetrics.jump_count_900ms_1000ms }}</td>
+              </tr>
+              <tr>
+                <td>1000ms+</td>
+                <td>{{ loadedMetrics.jump_count_1000ms }}</td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="sleep-metrics" v-if="relatedSleepLog">
+             <table class="hrv-metrics-table">
+               <tr><th colspan="2">Connected Sleep Data</th></tr>
+              <tr><td>Bed Time</td><td>{{ relatedSleepLog.bedTime ? formatTime(relatedSleepLog.bedTime) : '' }}</td></tr>
+              <tr><td>Wake Time</td><td>{{ relatedSleepLog.wakeTime ? formatTime(relatedSleepLog.wakeTime) : '' }}</td></tr>
+               <tr v-if="relatedSleepLog.sleepLatencyMinutes != null"><td>Sleep Latency</td><td>{{ relatedSleepLog.sleepLatencyMinutes }} m</td></tr>
+               <tr><td>Total Sleep (m)</td><td>{{ relatedSleepLog.totalSleepMinutes }}</td></tr>
+               <tr><td>Awake Minutes</td><td>{{ relatedSleepLog.awakeMinutes }}</td></tr>
+               <tr><td>Light Sleep</td><td>{{ relatedSleepLog.lightSleepMinutes }}</td></tr>
+               <tr><td>Deep Sleep</td><td>{{ relatedSleepLog.deepSleepMinutes }}</td></tr>
+               <tr><td>REM Sleep</td><td>{{ relatedSleepLog.remSleepMinutes }}</td></tr>
+               <tr><td>Rested Score</td><td>{{ relatedSleepLog.restedScore }}</td></tr>
+               <tr><td>Morning Headache</td><td>{{ relatedSleepLog.morningHeadache ? 'Yes' : 'No' }}</td></tr>
+               <tr><td>Morning Dizziness</td><td>{{ relatedSleepLog.morningDizziness ? 'Yes' : 'No' }}</td></tr>
+             </table>
+          </div>
         </div>
 
         <div class="artifacts"></div>
@@ -193,10 +212,12 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive } from "vue";
 import { getHrvData, getHrvRecording, getHrvMetrics } from "@/services/hrvService.ts";
+import { toLocalTimeString, formatTime } from '@/utility/date';
 import { useRoute } from "vue-router";
 import { roundTo } from "@/utility/math.ts";
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
+import type { SleepLog } from "@/types/sleepType.ts";
 
 Chart.defaults.color = '#e0e0e0';
 Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
@@ -211,15 +232,17 @@ const loadedMetrics = ref<any>({});
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rrdata = ref<any>([]);
 
+const relatedSleepLog = ref<SleepLog | null>(null);
+
 const recordingId = route.params.id as string;
 
 const isLoading = ref(false);
 
 const filters = reactive({
   adaptive: false,
-  range: false,
-  movingAverage: false,
-  artifact: false,
+  range: true,
+  movingAverage: true,
+  artifact: true,
 });
 
 let rrChartInst: Chart | null = null;
@@ -290,9 +313,20 @@ const createChart = (canvasId: string, label: string, dataInstant: number[], dat
             drag: {
               enabled: true,
             },
+            wheel: {
+              enabled: true,
+            },
+            pinch: {
+              enabled: true
+            },
             mode: 'x',
             onZoom: syncZoom,
             onZoomComplete: syncZoom
+          },
+          pan: {
+            enabled: true,
+            mode: 'x',
+            modifierKey: 'alt',
           }
         }
       },
@@ -380,8 +414,13 @@ const resetZoom = () => {
 };
 
 onMounted(async () => {
-  hrvRecording.value = await getHrvRecording(recordingId);
-  await loadData('none');
+  try {
+    hrvRecording.value = await getHrvRecording(recordingId);
+    relatedSleepLog.value = hrvRecording.value?.sleepLog || null;
+  } catch (e) {
+    console.error(e);
+  }
+  await applyFilters();
 });
 </script>
 
