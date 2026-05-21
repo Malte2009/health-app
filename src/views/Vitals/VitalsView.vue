@@ -72,6 +72,9 @@
       <button class="button" @click="toggleChart">
         {{ showChart ? 'Hide Progress Chart' : 'Show Progress Chart' }}
       </button>
+      <button class="button" @click="toggleAverageByDay" v-if="showChart" style="margin-left: 10px;">
+        {{ averageByDay ? 'Show Raw Data' : 'Average by Day' }}
+      </button>
     </div>
 
     <div v-if="showChart" class="blood-pressure-chart-container">
@@ -138,7 +141,7 @@ import zoomPlugin from 'chartjs-plugin-zoom';
 import { getBloodPressureLogs, createBloodPressureLog, updateBloodPressureLog, deleteBloodPressureLog } from '@/services/bloodPressureService';
 import type { BloodPressureLog } from '@/types/bloodPressureType';
 import { roundTo } from '@/utility/math';
-import { toLocalDateTimeString, formatDateTime } from "@/utility/date";
+import { toLocalDateTimeString, formatDateTime, getDateString } from "@/utility/date";
 
 Chart.register(...registerables, zoomPlugin);
 Chart.defaults.color = '#e0e0e0';
@@ -159,6 +162,7 @@ const bpForm = ref({
 const showBpModal = ref(false);
 const bpEditId = ref<string | null>(null);
 const showChart = ref(false);
+const averageByDay = ref(false);
 
 const bpLogs = ref<BloodPressureLog[]>([]);
 const bpChartCanvas = ref<HTMLCanvasElement | null>(null);
@@ -192,12 +196,48 @@ const toggleChart = async () => {
   }
 };
 
+const toggleAverageByDay = () => {
+  averageByDay.value = !averageByDay.value;
+  if (bpChart) {
+    bpChart.destroy();
+    bpChart = null;
+  }
+  createChart();
+};
+
 const createChart = () => {
   if (!bpChartCanvas.value) return;
 
-  const logs = [...bpLogs.value].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  if (bpChart) {
+    bpChart.destroy();
+  }
 
-  const labels = logs.map(l => formatDateTime(l.timestamp));
+  let logs = [...bpLogs.value].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  if (averageByDay.value) {
+    const dailyMap = new Map();
+    for (const log of logs) {
+      const date = new Date(log.timestamp).toISOString().split('T')[0];
+      if (!dailyMap.has(date)) {
+        dailyMap.set(date, { count: 0, systolic: 0, diastolic: 0, pulse: 0, time: date });
+      }
+      const dayData = dailyMap.get(date);
+      dayData.count++;
+      dayData.systolic += log.systolic;
+      dayData.diastolic += log.diastolic;
+      dayData.pulse += log.pulse || 0;
+    }
+
+    logs = Array.from(dailyMap.values()).map(d => ({
+      ...d,
+      timestamp: new Date(d.time).toISOString(),
+      systolic: d.systolic / d.count,
+      diastolic: d.diastolic / d.count,
+      pulse: d.pulse / d.count,
+    })) as BloodPressureLog[];
+  }
+
+  const labels = logs.map(l => averageByDay.value ? getDateString(new Date(l.timestamp)) : formatDateTime(l.timestamp));
   const dataSys = logs.map(l => l.systolic);
   const dataDia = logs.map(l => l.diastolic);
   const dataPulse = logs.map(l => l.pulse || null);
