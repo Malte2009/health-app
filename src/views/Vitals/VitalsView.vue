@@ -240,7 +240,7 @@ const createChart = () => {
       responsive: true,
       plugins: {
         zoom: {
-          zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+          zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag : { enabled: true }, mode: 'x' },
           pan: { enabled: true, mode: 'x' }
         }
       },
