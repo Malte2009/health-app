@@ -100,6 +100,7 @@
       <table class="sleep-table">
         <thead>
           <tr>
+            <th>Id</th>
             <th>Date</th>
             <th>Bed Time</th>
             <th>Wake Time</th>
@@ -125,6 +126,7 @@
             <td colspan="3"></td>
           </tr>
           <tr v-for="log in sleepLogs" :key="log.id">
+            <td> {{ log.id }}</td>
             <td>{{ new Date(log.date).toLocaleDateString() }}</td>
             <td>{{ log.bedTime ? formatTime(log.bedTime) : '' }}</td>
             <td>{{ log.wakeTime ? formatTime(log.wakeTime) : '' }}</td>
