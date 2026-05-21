@@ -202,11 +202,36 @@ const createChart = () => {
   const dataDia = logs.map(l => l.diastolic);
   const dataPulse = logs.map(l => l.pulse || null);
 
+  const smooth = (data: (number | null)[], windowSize: number = 7) => {
+    return data.map((val, idx, arr) => {
+      if (val === null) return null;
+      let sum = 0;
+      let count = 0;
+      const start = Math.max(0, idx - windowSize + 1);
+      for (let i = start; i <= idx; i++) {
+        if (arr[i] !== null) {
+          sum += arr[i] as number;
+          count++;
+        }
+      }
+      return count > 0 ? sum / count : null;
+    });
+  };
+
+  const smoothSys = smooth(dataSys);
+  const smoothDia = smooth(dataDia);
+  const smoothPulse = smooth(dataPulse);
+
   const datasets = [];
 
-  datasets.push({ label: 'Systolic', data: dataSys, borderColor: '#ffb3ba', backgroundColor: '#ffb3ba', tension: 0.1 });
-  datasets.push({ label: 'Diastolic', data: dataDia, borderColor: '#bae1ff', backgroundColor: '#bae1ff', tension: 0.1 });
-  datasets.push({ label: 'Pulse', data: dataPulse, borderColor: '#baffc9', backgroundColor: '#baffc9', tension: 0.1 });
+  datasets.push({ label: 'Systolic', data: dataSys, borderColor: '#ffb3ba', backgroundColor: '#ffb3ba', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
+  datasets.push({ label: 'Smoothed Systolic', data: smoothSys, borderColor: '#ff4d4d', backgroundColor: '#ff4d4d', tension: 0.4, borderWidth: 2, pointRadius: 0 });
+
+  datasets.push({ label: 'Diastolic', data: dataDia, borderColor: '#bae1ff', backgroundColor: '#bae1ff', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
+  datasets.push({ label: 'Smoothed Diastolic', data: smoothDia, borderColor: '#007bff', backgroundColor: '#007bff', tension: 0.4, borderWidth: 2, pointRadius: 0 });
+
+  datasets.push({ label: 'Pulse', data: dataPulse, borderColor: '#baffc9', backgroundColor: '#baffc9', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
+  datasets.push({ label: 'Smoothed Pulse', data: smoothPulse, borderColor: '#28a745', backgroundColor: '#28a745', tension: 0.4, borderWidth: 2, pointRadius: 0 });
 
   bpChart = new Chart(bpChartCanvas.value, {
     type: 'line',
