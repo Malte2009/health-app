@@ -20,7 +20,7 @@
         <input placeholder="Repetition Unit" id="repUnit" name="repUnit" type="text" v-if="customRepUnitInput" @keydown.enter="changeFocus('reps')" />
         <input placeholder="Repetitions" id="reps" name="reps" type="number" @keydown.enter="changeFocus('weight')" />
         <input placeholder="Weight (kg)" id="weight" name="weight" type="number" @keydown.enter="changeFocus('set-length')" />
-        <input placeholder="Set Length" id="set-length (s)" name="set-length" type="number" @keydown.enter="submit()" />
+        <input placeholder="Set Length" id="set-length" name="set-length" type="number" @keydown.enter="submit()" />
         <button class="button" @click="submit">Submit</button>
       </div>
     </div>
