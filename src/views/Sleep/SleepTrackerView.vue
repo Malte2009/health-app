@@ -104,6 +104,11 @@
             <th>Date</th>
             <th>Bed Time</th>
             <th>Wake Time</th>
+            <th>Latency</th>
+            <th>Awake</th>
+            <th>Light Sleep</th>
+            <th>Deep Sleep</th>
+            <th>REM Sleep</th>
             <th>Total Sleep</th>
             <th>Rested Score</th>
             <th>Headache</th>
@@ -113,14 +118,20 @@
         </thead>
         <tbody>
           <tr>
-            <td colspan="8" style="text-align: center;">
+            <td colspan="14" style="text-align: center;">
               <button class="button" @click="openAddModal" style="width: fit-content; margin: 10px auto;">Log Sleep Data</button>
             </td>
           </tr>
           <tr>
             <td>Average</td>
+            <td></td>
             <td>{{ averageSleep.bedTime }}</td>
             <td>{{ averageSleep.wakeTime }}</td>
+            <td>{{ formatMinutes(averageSleep.sleepLatencyMinutes) }}</td>
+            <td>{{ formatMinutes(averageSleep.awakeMinutes) }}</td>
+            <td>{{ formatMinutes(averageSleep.lightSleepMinutes) }}</td>
+            <td>{{ formatMinutes(averageSleep.deepSleepMinutes) }}</td>
+            <td>{{ formatMinutes(averageSleep.remSleepMinutes) }}</td>
             <td>{{ formatMinutes(averageSleep.totalSleepMinutes) }}</td>
             <td>{{ roundTo(averageSleep.restedScore, 2) }}</td>
             <td colspan="3"></td>
@@ -130,6 +141,11 @@
             <td>{{ new Date(log.date).toLocaleDateString() }}</td>
             <td>{{ log.bedTime ? formatTime(log.bedTime) : '' }}</td>
             <td>{{ log.wakeTime ? formatTime(log.wakeTime) : '' }}</td>
+            <td>{{ log.sleepLatencyMinutes != null ? formatMinutes(log.sleepLatencyMinutes) : '' }}</td>
+            <td>{{ log.awakeMinutes != null ? formatMinutes(log.awakeMinutes) : '' }}</td>
+            <td>{{ log.lightSleepMinutes != null ? formatMinutes(log.lightSleepMinutes) : '' }}</td>
+            <td>{{ log.deepSleepMinutes != null ? formatMinutes(log.deepSleepMinutes) : '' }}</td>
+            <td>{{ log.remSleepMinutes != null ? formatMinutes(log.remSleepMinutes) : '' }}</td>
             <td>{{ log.totalSleepMinutes != null ? formatMinutes(log.totalSleepMinutes) : '' }}</td>
             <td>{{ log.restedScore }}</td>
             <td>{{ log.morningHeadache ? 'Yes' : 'No' }}</td>
@@ -205,12 +221,17 @@ const calculateAverageTime = (times: string[]) => {
 };
 
 const averageSleep = computed(() => {
-  if (sleepLogs.value.length === 0) return { totalSleepMinutes: 0, restedScore: 0, bedTime: "00:00", wakeTime: "00:00" };
+  if (sleepLogs.value.length === 0) return { totalSleepMinutes: 0, sleepLatencyMinutes: 0, awakeMinutes: 0, lightSleepMinutes: 0, deepSleepMinutes: 0, remSleepMinutes: 0, restedScore: 0, bedTime: "00:00", wakeTime: "00:00" };
   const totalSleepMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.totalSleepMinutes || 0), 0) / sleepLogs.value.length;
+  const sleepLatencyMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.sleepLatencyMinutes || 0), 0) / sleepLogs.value.length;
+  const awakeMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.awakeMinutes || 0), 0) / sleepLogs.value.length;
+  const lightSleepMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.lightSleepMinutes || 0), 0) / sleepLogs.value.length;
+  const deepSleepMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.deepSleepMinutes || 0), 0) / sleepLogs.value.length;
+  const remSleepMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.remSleepMinutes || 0), 0) / sleepLogs.value.length;
   const restedScore = sleepLogs.value.reduce((acc, log) => acc + (log.restedScore || 0), 0) / sleepLogs.value.length;
   const avgBedTime = calculateAverageTime(sleepLogs.value.map(log => log.bedTime).filter((t): t is string => !!t));
   const avgWakeTime = calculateAverageTime(sleepLogs.value.map(log => log.wakeTime).filter((t): t is string => !!t));
-  return { totalSleepMinutes, restedScore, bedTime: avgBedTime, wakeTime: avgWakeTime };
+  return { totalSleepMinutes, sleepLatencyMinutes, awakeMinutes, lightSleepMinutes, deepSleepMinutes, remSleepMinutes, restedScore, bedTime: avgBedTime, wakeTime: avgWakeTime };
 });
 
 const formatMinutes = (minutes: number) => {
