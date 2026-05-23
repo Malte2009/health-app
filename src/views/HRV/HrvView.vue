@@ -335,14 +335,24 @@ function editRecording(id: string) {
 
 async function handleReload() {
   recordings.value = await getHrvRecordings();
+  sortRecordings();
   loadRecordings();
   calculateAverageValues();
+}
+
+function sortRecordings() {
+  recordings.value.sort((a, b) => {
+    const da = new Date(a.date).getTime();
+    const db = new Date(b.date).getTime();
+    return db - da; // Descending by date/time
+  });
 }
 
 async function deleteRecording(id: string) {
   if (confirm("Are you sure you want to delete this HRV recording?")) {
     await deleteHrvRecording(id);
     recordings.value = await getHrvRecordings();
+    sortRecordings();
     loadRecordings();
     calculateAverageValues();
   }
@@ -352,6 +362,8 @@ onMounted(async () => {
   try {
     const hrvs = await getHrvRecordings();
     recordings.value = hrvs;
+
+    sortRecordings();
 
     loadedRecordings.value = recordings.value;
 

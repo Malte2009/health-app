@@ -99,6 +99,14 @@
 
     <h2>Sleep Tracker</h2>
 
+    <div class="control-panel" style="margin-bottom: 15px;">
+      <label for="sleep-type-filter" style="margin-right: 10px; font-weight: 500;">Filter by Type:</label>
+      <select id="sleep-type-filter" v-model="selectedSleepType" style="padding: 5px; border-radius: 4px; border: 1px solid var(--border, #ccc);">
+        <option value="">All Types</option>
+        <option v-for="type in availableSleepTypes" :key="type" :value="type">{{ type }}</option>
+      </select>
+    </div>
+
     <div class="sleep-table-container">
       <h3>Sleep History</h3>
       <table class="sleep-table">
@@ -142,7 +150,7 @@
             <td>{{ roundTo(averageSleep.restedScore, 2) }}</td>
             <td colspan="3"></td>
           </tr>
-          <tr v-for="log in sleepLogs" :key="log.id">
+          <tr v-for="log in filteredSleepLogs" :key="log.id">
             <td> {{ log.id }}</td>
             <td>{{ new Date(log.date).toLocaleDateString() }}</td>
             <td>{{ log.sleepType || '' }}</td>
@@ -209,6 +217,23 @@ const editId = ref<string | null>(null);
 
 const sleepLogs = ref<SleepLog[]>([]);
 
+const selectedSleepType = ref("");
+
+const availableSleepTypes = computed(() => {
+  const types = new Set<string>();
+  for (const log of sleepLogs.value) {
+    if (log.sleepType) {
+      types.add(log.sleepType);
+    }
+  }
+  return Array.from(types).sort();
+});
+
+const filteredSleepLogs = computed(() => {
+  if (!selectedSleepType.value) return sleepLogs.value;
+  return sleepLogs.value.filter(log => log.sleepType === selectedSleepType.value);
+});
+
 const calculateAverageTime = (times: string[]) => {
   if (!times.length) return "00:00";
   let sumSin = 0;
@@ -229,16 +254,17 @@ const calculateAverageTime = (times: string[]) => {
 };
 
 const averageSleep = computed(() => {
-  if (sleepLogs.value.length === 0) return { totalSleepMinutes: 0, sleepLatencyMinutes: 0, awakeMinutes: 0, lightSleepMinutes: 0, deepSleepMinutes: 0, remSleepMinutes: 0, restedScore: 0, bedTime: "00:00", wakeTime: "00:00" };
-  const totalSleepMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.totalSleepMinutes || 0), 0) / sleepLogs.value.length;
-  const sleepLatencyMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.sleepLatencyMinutes || 0), 0) / sleepLogs.value.length;
-  const awakeMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.awakeMinutes || 0), 0) / sleepLogs.value.length;
-  const lightSleepMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.lightSleepMinutes || 0), 0) / sleepLogs.value.length;
-  const deepSleepMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.deepSleepMinutes || 0), 0) / sleepLogs.value.length;
-  const remSleepMinutes = sleepLogs.value.reduce((acc, log) => acc + (log.remSleepMinutes || 0), 0) / sleepLogs.value.length;
-  const restedScore = sleepLogs.value.reduce((acc, log) => acc + (log.restedScore || 0), 0) / sleepLogs.value.length;
-  const avgBedTime = calculateAverageTime(sleepLogs.value.map(log => log.bedTime).filter((t): t is string => !!t));
-  const avgWakeTime = calculateAverageTime(sleepLogs.value.map(log => log.wakeTime).filter((t): t is string => !!t));
+  if (filteredSleepLogs.value.length === 0) return { totalSleepMinutes: 0, sleepLatencyMinutes: 0, awakeMinutes: 0, lightSleepMinutes: 0, deepSleepMinutes: 0, remSleepMinutes: 0, restedScore: 0, bedTime: "00:00", wakeTime: "00:00" };
+  const length = filteredSleepLogs.value.length;
+  const totalSleepMinutes = filteredSleepLogs.value.reduce((acc, log) => acc + (log.totalSleepMinutes || 0), 0) / length;
+  const sleepLatencyMinutes = filteredSleepLogs.value.reduce((acc, log) => acc + (log.sleepLatencyMinutes || 0), 0) / length;
+  const awakeMinutes = filteredSleepLogs.value.reduce((acc, log) => acc + (log.awakeMinutes || 0), 0) / length;
+  const lightSleepMinutes = filteredSleepLogs.value.reduce((acc, log) => acc + (log.lightSleepMinutes || 0), 0) / length;
+  const deepSleepMinutes = filteredSleepLogs.value.reduce((acc, log) => acc + (log.deepSleepMinutes || 0), 0) / length;
+  const remSleepMinutes = filteredSleepLogs.value.reduce((acc, log) => acc + (log.remSleepMinutes || 0), 0) / length;
+  const restedScore = filteredSleepLogs.value.reduce((acc, log) => acc + (log.restedScore || 0), 0) / length;
+  const avgBedTime = calculateAverageTime(filteredSleepLogs.value.map(log => log.bedTime).filter((t): t is string => !!t));
+  const avgWakeTime = calculateAverageTime(filteredSleepLogs.value.map(log => log.wakeTime).filter((t): t is string => !!t));
   return { totalSleepMinutes, sleepLatencyMinutes, awakeMinutes, lightSleepMinutes, deepSleepMinutes, remSleepMinutes, restedScore, bedTime: avgBedTime, wakeTime: avgWakeTime };
 });
 
@@ -249,9 +275,23 @@ const formatMinutes = (minutes: number) => {
   return `${h}h ${m}m`;
 };
 
+const sortSleepLogs = (logs: SleepLog[]) => {
+  logs.sort((a, b) => {
+    const da = new Date(a.date).getTime();
+    const db = new Date(b.date).getTime();
+    if (da !== db) return db - da; // Descending by date
+
+    // Sort by bedtime if dates are the same
+    const ta = a.bedTime ? new Date(a.bedTime).getTime() : 0;
+    const tb = b.bedTime ? new Date(b.bedTime).getTime() : 0;
+    return tb - ta; // Descending by time
+  });
+};
+
 const loadData = async () => {
   try {
     const sl = await getSleepLogs();
+    sortSleepLogs(sl);
     sleepLogs.value = sl;
   } catch (err) {
     console.error(err);
