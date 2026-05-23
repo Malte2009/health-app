@@ -9,6 +9,10 @@
             <input type="date" v-model="form.date" />
           </div>
           <div class="form-group">
+            <label>Sleep Type:</label>
+            <input type="text" v-model="form.sleepType" placeholder="e.g. Night, Nap, etc." />
+          </div>
+          <div class="form-group">
             <label>Bed Time:</label>
             <input type="time" v-model="form.bedTime" />
           </div>
@@ -102,6 +106,7 @@
           <tr>
             <th>Id</th>
             <th>Date</th>
+            <th>Type</th>
             <th>Bed Time</th>
             <th>Wake Time</th>
             <th>Latency</th>
@@ -125,6 +130,7 @@
           <tr>
             <td>Average</td>
             <td></td>
+            <td></td>
             <td>{{ averageSleep.bedTime }}</td>
             <td>{{ averageSleep.wakeTime }}</td>
             <td>{{ formatMinutes(averageSleep.sleepLatencyMinutes) }}</td>
@@ -139,6 +145,7 @@
           <tr v-for="log in sleepLogs" :key="log.id">
             <td> {{ log.id }}</td>
             <td>{{ new Date(log.date).toLocaleDateString() }}</td>
+            <td>{{ log.sleepType || '' }}</td>
             <td>{{ log.bedTime ? formatTime(log.bedTime) : '' }}</td>
             <td>{{ log.wakeTime ? formatTime(log.wakeTime) : '' }}</td>
             <td>{{ log.sleepLatencyMinutes != null ? formatMinutes(log.sleepLatencyMinutes) : '' }}</td>
@@ -193,7 +200,8 @@ const form = ref({
   remSleepHours: 0,
   remSleepMins: 0,
   turningSpikeCount: 0,
-  turningSpikeMaxHr: 0
+  turningSpikeMaxHr: 0,
+  sleepType: ''
 });
 
 const showModal = ref(false);
@@ -277,7 +285,8 @@ const openAddModal = () => {
     remSleepHours: 0,
     remSleepMins: 0,
     turningSpikeCount: 0,
-    turningSpikeMaxHr: 0
+    turningSpikeMaxHr: 0,
+    sleepType: ''
   };
   showModal.value = true;
 };
@@ -300,7 +309,8 @@ const openEditModal = (log: SleepLog) => {
     deepSleepHours: Math.floor((log.deepSleepMinutes || 0) / 60),
     deepSleepMins: Math.round((log.deepSleepMinutes || 0) % 60),
     remSleepHours: Math.floor((log.remSleepMinutes || 0) / 60),
-    remSleepMins: Math.round((log.remSleepMinutes || 0) % 60)
+    remSleepMins: Math.round((log.remSleepMinutes || 0) % 60),
+    sleepType: log.sleepType || ''
   } as any;
   showModal.value = true;
 };
@@ -316,7 +326,8 @@ const submitForm = async () => {
     awakeMinutes: (form.value.awakeHours || 0) * 60 + (form.value.awakeMins || 0),
     lightSleepMinutes: (form.value.lightSleepHours || 0) * 60 + (form.value.lightSleepMins || 0),
     deepSleepMinutes: (form.value.deepSleepHours || 0) * 60 + (form.value.deepSleepMins || 0),
-    remSleepMinutes: (form.value.remSleepHours || 0) * 60 + (form.value.remSleepMins || 0)
+    remSleepMinutes: (form.value.remSleepHours || 0) * 60 + (form.value.remSleepMins || 0),
+    sleepType: form.value.sleepType || ''
   };
   if (editId.value) {
     await updateSleepLog(editId.value, data as any);

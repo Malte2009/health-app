@@ -19,10 +19,10 @@ export type SleepLog = {
   remSleepMinutes?: number;
   turningSpikeCount?: number;
   turningSpikeMaxHr?: number;
+  sleepType?: string;
   notes?: string;
   hrvRecording?: any;
 };
 
 export type CreateSleepLog = Omit<SleepLog, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;
 export type UpdateSleepLog = Partial<CreateSleepLog>;
-
