@@ -138,7 +138,7 @@ async function submit() {
       position: position.value,
       outcome: outcome.value,
       amnesia: hadAmnesia.value,
-      amnesiaDurationMinutes: amnesiaLength.value ? parseInt(amnesiaLength.value) : undefined,
+      amnesiaDurationMinutes: parseInt(amnesiaLength.value),
       injuries: injuries.value,
       trainingLogId: trainingLogId.value,
       activityBefore: activityBefore.value
