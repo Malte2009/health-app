@@ -22,7 +22,7 @@ export function toLocalTimeString(date: Date = new Date()): string {
   return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 }
 
-export function formatDateTime(date: string | Date): string {
+export function formatDateTime(date: string | Date | undefined): string {
   if (!date) return "";
   return new Date(date).toLocaleString("de-DE", {
     year: 'numeric', month: '2-digit', day: '2-digit',

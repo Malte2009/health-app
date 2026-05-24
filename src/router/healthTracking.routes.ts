@@ -5,11 +5,6 @@ export default [
     component: () => import("@/views/Daily/DailyTrackingView.vue")
   },
   {
-    path: "/intake-log",
-    name: "intake-log",
-    component: () => import("@/views/Intake/IntakeLogView.vue")
-  },
-  {
     path: "/sleep-tracker",
     name: "sleep-tracker",
     component: () => import("@/views/Sleep/SleepTrackerView.vue")
@@ -23,11 +18,6 @@ export default [
     path: "/symptoms",
     name: "symptoms",
     component: () => import("@/views/Symptoms/SymptomsView.vue")
-  },
-  {
-    path: "/mcas",
-    name: "mcas",
-    component: () => import("@/views/MCAS/MCASView.vue")
   },
   {
     path: "/hrv",
