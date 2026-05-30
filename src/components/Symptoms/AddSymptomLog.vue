@@ -13,7 +13,7 @@
         <input v-model="timestamp" type="datetime-local" />
         <label>Severity (1-10)</label>
         <div style="display: flex; flex-direction: row; align-items: center">
-          <input v-model="severity" min="1" max="10" type="range"/>
+          <input v-model="severity" min="1" max="10" type="range" />
           <div style="margin-left: 10px">{{ severity }}</div>
         </div>
         <label>Name</label>
@@ -44,10 +44,10 @@
         </select>
 
         <label>Trigger</label>
-        <input placeholder="e.g Leg Press" v-model="trigger">
+        <input placeholder="e.g Leg Press" v-model="trigger" />
 
         <label>Position</label>
-        <input placeholder="e.g. Standing, Sitting" v-model="position">
+        <input placeholder="e.g. Standing, Sitting" v-model="position" />
 
         <label v-if="type === 'SYMPTOM'">ICP Trigger</label>
         <div v-if="type === 'SYMPTOM'">
@@ -64,7 +64,7 @@
           <input style="width: fit-content; margin-left: 10px" type="checkbox" v-model="pulsatile" />
         </div>
         <label v-if="type === 'SYMPTOM'">Syncope ID</label>
-        <input v-if="type === 'SYMPTOM'" v-model="syncopeId"/>
+        <input v-if="type === 'SYMPTOM'" v-model="syncopeId" />
 
         <label v-if="type === 'SYNCOPE'">Outcome</label>
         <select v-if="type === 'SYNCOPE'" v-model="outcome">
@@ -78,16 +78,16 @@
         </div>
 
         <label v-if="hadAmnesia === true && type === 'SYNCOPE'">Amnesia Length</label>
-        <input placeholder="Minutes" v-if="hadAmnesia === true && type === 'SYNCOPE'" v-model="amnesiaLength" type="number"/>
+        <input placeholder="Minutes" v-if="hadAmnesia === true && type === 'SYNCOPE'" v-model="amnesiaLength" type="number" />
 
         <label v-if="type === 'SYNCOPE'">Activity Before</label>
-        <input v-if="type === 'SYNCOPE'" v-model="activityBefore" placeholder="e.g Gym"/>
+        <input v-if="type === 'SYNCOPE'" v-model="activityBefore" placeholder="e.g Gym" />
 
         <label v-if="type === 'SYNCOPE'">Injuries</label>
-        <input v-if="type === 'SYNCOPE'" v-model="injuries" placeholder="e.g Cut"/>
+        <input v-if="type === 'SYNCOPE'" v-model="injuries" placeholder="e.g Cut" />
 
         <label v-if="type === 'SYNCOPE'">Training Log ID</label>
-        <input v-if="type === 'SYNCOPE'" v-model="trainingLogId"/>
+        <input v-if="type === 'SYNCOPE'" v-model="trainingLogId" />
 
         <label>Notes</label>
         <textarea v-model="notes" placeholder="Additional notes..." rows="4"></textarea>
@@ -99,7 +99,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { ref } from "vue";
 import { toLocalDateTimeString } from "@/utility/date.ts";
 import { syncopeService } from "@/services/syncopeService.ts";
@@ -111,7 +110,7 @@ const emit = defineEmits(["close", "reload"]);
 
 const type = ref<"SYMPTOM" | "SYNCOPE">("SYMPTOM");
 const timestamp = ref(toLocalDateTimeString());
-const severity = ref(5);
+const severity = ref<string>("5");
 const name = ref();
 const notes = ref(undefined);
 const icpTrigger = ref(undefined);
@@ -127,11 +126,11 @@ const trainingLogId = ref(undefined);
 const activityBefore = ref(undefined);
 
 async function submit() {
-  if (type.value === 'SYNCOPE') {
+  if (type.value === "SYNCOPE") {
     const data: SyncopeLog = {
       type: type.value,
       timestamp: timestamp.value,
-      severity: severity.value,
+      severity: parseInt(severity.value),
       name: name.value,
       notes: notes.value,
       trigger: trigger.value,
@@ -141,16 +140,15 @@ async function submit() {
       amnesiaDurationMinutes: parseInt(amnesiaLength.value),
       injuries: injuries.value,
       trainingLogId: trainingLogId.value,
-      activityBefore: activityBefore.value
-    }
+      activityBefore: activityBefore.value,
+    };
 
     await syncopeService.createSyncope(data);
-
-  } else if (type.value === 'SYMPTOM') {
+  } else if (type.value === "SYMPTOM") {
     const data: SymptomLog = {
       type: type.value,
       timestamp: timestamp.value,
-      severity: severity.value,
+      severity: parseInt(severity.value),
       name: name.value,
       notes: notes.value,
       trigger: trigger.value,
@@ -159,8 +157,8 @@ async function submit() {
       worseOnLyingDown: icpTrigger.value === "LYING_DOWN",
       betterOnLyingDown: icpTrigger.value === "BETTER_LYING_DOWN",
       pulsatile: pulsatile.value,
-      syncopeLogId: syncopeId.value || undefined
-    }
+      syncopeLogId: syncopeId.value || undefined,
+    };
 
     await SymptomService.createSymptom(data);
   }
@@ -168,7 +166,6 @@ async function submit() {
   emit("reload");
   emit("close");
 }
-
 </script>
 
 <style scoped>
@@ -203,7 +200,9 @@ async function submit() {
   width: 100%;
 }
 
-.container input, .container select, .container textarea {
+.container input,
+.container select,
+.container textarea {
   background-color: var(--bg-surface-secondary);
   color: var(--text-main);
   border: 1px solid var(--border);
@@ -217,7 +216,8 @@ async function submit() {
   resize: none;
 }
 
-.container input:focus, .container textarea:focus{
+.container input:focus,
+.container textarea:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(0, 191, 174, 0.2);
 }

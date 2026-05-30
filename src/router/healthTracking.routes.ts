@@ -28,5 +28,10 @@ export default [
     path: "/hrv/:id",
     name: "hrvDetails",
     component: () => import("../views/HRV/HrvDetailsView.vue")
+  },
+  {
+    path: "/calendar",
+    name: "diagnostic-calendar",
+    component: () => import("@/views/Diagnostic/DiagnosticCalendarView.vue")
   }
 ];
