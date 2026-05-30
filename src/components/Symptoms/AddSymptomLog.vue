@@ -99,56 +99,107 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { toLocalDateTimeString } from "@/utility/date.ts";
 import { syncopeService } from "@/services/syncopeService.ts";
 import type { SyncopeLog } from "@/types/symptoms/syncopeType.ts";
 import type { SymptomLog } from "@/types/symptoms/symptomType.ts";
 import SymptomService from "@/services/symptomService.ts";
 
+// Props: optionally receive an initial log to enable edit mode
+const props = defineProps<{
+  initialData?: SymptomLog | SyncopeLog | null
+}>();
+
 const emit = defineEmits(["close", "reload"]);
 
 const type = ref<"SYMPTOM" | "SYNCOPE">("SYMPTOM");
 const timestamp = ref(toLocalDateTimeString());
 const severity = ref<string>("5");
-const name = ref();
-const notes = ref(undefined);
-const icpTrigger = ref(undefined);
+const name = ref<any>(undefined);
+const notes = ref<string | undefined>(undefined);
+const icpTrigger = ref<any>(undefined);
 const pulsatile = ref(false);
-const trigger = ref(undefined);
-const position = ref(undefined);
+const trigger = ref<string | undefined>(undefined);
+const position = ref<string | undefined>(undefined);
 const outcome = ref<"PRESYNCOPE" | "SYNCOPE">("PRESYNCOPE");
-const syncopeId = ref(undefined);
+const syncopeId = ref<string | undefined>(undefined);
 const hadAmnesia = ref(false);
-const amnesiaLength = ref();
-const injuries = ref(undefined);
-const trainingLogId = ref(undefined);
-const activityBefore = ref(undefined);
+const amnesiaLength = ref<number | undefined>(undefined);
+const injuries = ref<string | undefined>(undefined);
+const trainingLogId = ref<string | undefined>(undefined);
+const activityBefore = ref<string | undefined>(undefined);
+
+function populateFromInitial() {
+  const data = props.initialData as any;
+  if (!data) return;
+
+  type.value = data.type || "SYMPTOM";
+  timestamp.value = data.timestamp ? toLocalDateTimeString(new Date(data.timestamp)) : toLocalDateTimeString();
+  severity.value = data.severity != null ? String(data.severity) : "5";
+  name.value = data.name;
+  notes.value = data.notes;
+  trigger.value = data.trigger;
+  position.value = (data.position as any) || undefined;
+
+  if (type.value === "SYMPTOM") {
+    icpTrigger.value = "";
+    if ((data as SymptomLog).worseOnBendingForward) icpTrigger.value = "BENDING_FORWARD";
+    else if ((data as SymptomLog).worseOnLyingDown) icpTrigger.value = "LYING_DOWN";
+    else if ((data as SymptomLog).betterOnLyingDown) icpTrigger.value = "BETTER_LYING_DOWN";
+
+    pulsatile.value = Boolean((data as SymptomLog).pulsatile);
+    syncopeId.value = (data as SymptomLog).syncopeLogId;
+  } else if (type.value === "SYNCOPE") {
+    outcome.value = (data as SyncopeLog).outcome || "PRESYNCOPE";
+    hadAmnesia.value = Boolean((data as SyncopeLog).amnesia);
+    amnesiaLength.value = (data as SyncopeLog).amnesiaDurationMinutes;
+    injuries.value = (data as SyncopeLog).injuries;
+    trainingLogId.value = (data as SyncopeLog).trainingLogId;
+    activityBefore.value = (data as SyncopeLog).activityBefore;
+  }
+}
+
+onMounted(() => {
+  if (props.initialData) populateFromInitial();
+});
+
+watch(() => props.initialData, () => {
+  populateFromInitial();
+});
 
 async function submit() {
+  // If initialData has id -> edit mode; otherwise create
+  const isEdit = !!props.initialData?.id;
+
   if (type.value === "SYNCOPE") {
     const data: SyncopeLog = {
       type: type.value,
       timestamp: timestamp.value,
-      severity: parseInt(severity.value),
+      severity: parseInt(String(severity.value)) || 0,
       name: name.value,
       notes: notes.value,
       trigger: trigger.value,
       position: position.value,
       outcome: outcome.value,
       amnesia: hadAmnesia.value,
-      amnesiaDurationMinutes: parseInt(amnesiaLength.value),
+      amnesiaDurationMinutes: amnesiaLength != null ? Number(amnesiaLength) : undefined,
       injuries: injuries.value,
       trainingLogId: trainingLogId.value,
       activityBefore: activityBefore.value,
     };
 
-    await syncopeService.createSyncope(data);
+    if (isEdit && props.initialData?.id) {
+      data.id = props.initialData.id;
+      await syncopeService.updateSyncope(data);
+    } else {
+      await syncopeService.createSyncope(data);
+    }
   } else if (type.value === "SYMPTOM") {
     const data: SymptomLog = {
       type: type.value,
       timestamp: timestamp.value,
-      severity: parseInt(severity.value),
+      severity: parseInt(String(severity.value)) || 0,
       name: name.value,
       notes: notes.value,
       trigger: trigger.value,
@@ -160,7 +211,12 @@ async function submit() {
       syncopeLogId: syncopeId.value || undefined,
     };
 
-    await SymptomService.createSymptom(data);
+    if (isEdit && props.initialData?.id) {
+      data.id = props.initialData.id;
+      await SymptomService.updateSymptom(data);
+    } else {
+      await SymptomService.createSymptom(data);
+    }
   }
 
   emit("reload");
