@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { onMounted } from "vue";
 
 import { isAuthenticated, login } from "@/services/authService.ts";
@@ -20,6 +20,7 @@ import { useTypeStore } from "@/stores/type.ts";
 const typeStore = useTypeStore();
 
 const router = useRouter();
+const currentRoute = useRoute();
 
 const emit = defineEmits<{
   (e: "loginSuccess"): void;
@@ -59,19 +60,23 @@ async function submit() {
 
   await typeStore.loadTypes();
 
-  await route();
+  await handleAuthenticatedRoute();
 }
 
-async function route() {
+async function handleAuthenticatedRoute() {
   if (await isAuthenticated()) {
     emit("loginSuccess");
-    await router.push({ name: "home" });
+    const redirect = typeof currentRoute.query.redirect === "string" && currentRoute.query.redirect.startsWith("/")
+      ? currentRoute.query.redirect
+      : undefined;
+
+    await router.push(redirect || { name: "home" });
   }
 }
 
 onMounted(() => {
   try {
-    route();
+    handleAuthenticatedRoute();
   } catch (e) {
     return e;
   }

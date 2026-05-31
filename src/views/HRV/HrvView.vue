@@ -10,12 +10,14 @@
     <h1>HRV Recordings</h1>
 
     <div class="control-panel">
-      <select name="filter" id="filter-select" @change="changeFilters">
+      <label for="filter-select" class="control-label">Filter by Type:</label>
+      <select name="filter" id="filter-select" @change="changeFilters" class="filter-select">
         <option value="no">No Filtering</option>
         <option selected value="standard">Standard Filtering</option>
         <option value="full">Full Filtering</option>
       </select>
-      <select name="context-filter" id="context-filter-select" v-model="selectedContext" @change="changeFilters" style="margin-left: 10px;">
+      <label for="context-filter-select" class="control-label">Context:</label>
+      <select name="context-filter" id="context-filter-select" v-model="selectedContext" @change="changeFilters" class="filter-select">
         <option value="">All Contexts</option>
         <option v-for="context in availableContexts" :key="context" :value="context">{{ context }}</option>
       </select>
@@ -227,6 +229,7 @@ function loadRecordings() {
     }
 
     const newRecording = recording;
+    newRecording.metric = undefined;
     for (let i = 0; i < recording.metrics.length; i++) {
       const metric = recording.metrics[i];
       if (
@@ -241,9 +244,9 @@ function loadRecordings() {
       if (
         filters.standard &&
         !metric.adaptiveFilteringApplied &&
+        metric.artifactFilteringApplied &&
         metric.movingAverageFilteringApplied &&
-        metric.rangeFilteringApplied &&
-        metric.artifactFilteringApplied
+        metric.rangeFilteringApplied
       ) {
         newRecording.metric = metric;
       }
@@ -268,57 +271,21 @@ function calculateAverageValues() {
     averageValues.value[key as keyof typeof averageValues.value] = 0;
   }
 
-  if (filters.no) {
-    for (const recording of loadedRecordings.value) {
-      for (const metric of recording.metrics) {
-        if (
-          metric.adaptiveFilteringApplied ||
-          metric.artifactFilteringApplied ||
-          metric.movingAverageFilteringApplied ||
-          metric.rangeFilteringApplied
-        )
-          continue;
+  let count = 0;
 
-        for (const [key] of Object.entries(averageValues.value)) {
-          averageValues.value[key as keyof typeof averageValues.value] += metric[key as keyof typeof averageValues.value];
-        }
-      }
-    }
-  } else if (filters.standard) {
-    for (const recording of loadedRecordings.value) {
-      for (const metric of recording.metrics) {
-        if (
-          metric.adaptiveFilteringApplied ||
-          !metric.artifactFilteringApplied ||
-          !metric.movingAverageFilteringApplied ||
-          !metric.rangeFilteringApplied
-        )
-          continue;
+  for (const recording of loadedRecordings.value) {
+    const metric = recording.metric;
+    if (!metric) continue;
 
-        for (const [key] of Object.entries(averageValues.value)) {
-          averageValues.value[key as keyof typeof averageValues.value] += metric[key as keyof typeof averageValues.value];
-        }
-      }
-    }
-  } else if (filters.full) {
-    for (const recording of loadedRecordings.value) {
-      for (const metric of recording.metrics) {
-        if (
-          !metric.adaptiveFilteringApplied ||
-          !metric.artifactFilteringApplied ||
-          !metric.movingAverageFilteringApplied ||
-          !metric.rangeFilteringApplied
-        )
-          continue;
 
-        for (const [key] of Object.entries(averageValues.value)) {
-          averageValues.value[key as keyof typeof averageValues.value] += metric[key as keyof typeof averageValues.value];
-        }
-      }
+    for (const [key] of Object.entries(averageValues.value)) {
+      averageValues.value[key as keyof typeof averageValues.value] += metric[key as keyof typeof averageValues.value];
     }
+    count++;
   }
 
-  const count = loadedRecordings.value.length || 1;
+  if (count === 0) return;
+
   for (const [key] of Object.entries(averageValues.value)) {
     averageValues.value[key as keyof typeof averageValues.value] /= count;
   }
@@ -360,8 +327,7 @@ async function deleteRecording(id: string) {
 
 onMounted(async () => {
   try {
-    const hrvs = await getHrvRecordings();
-    recordings.value = hrvs;
+    recordings.value = await getHrvRecordings();
 
     sortRecordings();
 
@@ -417,6 +383,40 @@ onMounted(async () => {
   background-color: #00a495; /* etwas dunklerer Ton von --primary */
 }
 
+.control-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.control-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.filter-select {
+  min-width: 220px;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface-secondary);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 209, 196, 0.15);
+}
+
 .action-buttons {
   display: flex;
   gap: 5px;
@@ -449,13 +449,6 @@ onMounted(async () => {
   background-color: #e83f60;
 }
 
-.sleep-combo {
-  font-size: 0.9em;
-  color: #555;
-  background: var(--bg-surface, #fdfdfd);
-  padding: 5px;
-  border-radius: 4px;
-}
 
 .modal-overlay {
   position: fixed;

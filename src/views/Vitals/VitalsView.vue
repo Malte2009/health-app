@@ -147,6 +147,16 @@ Chart.register(...registerables, zoomPlugin);
 Chart.defaults.color = '#e0e0e0';
 Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
 
+const CHART_VISIBILITY_STORAGE_KEY = 'bloodPressureChartVisibility';
+const CHART_SERIES_KEYS = [
+  'Systolic',
+  'Smoothed Systolic',
+  'Diastolic',
+  'Smoothed Diastolic',
+  'Pulse',
+  'Smoothed Pulse',
+] as const;
+
 const bpForm = ref({
   timestamp: toLocalDateTimeString(),
   minutesAfterPositionChange: 0,
@@ -171,6 +181,9 @@ const chartToggles = ref({
   systolic: true,
   diastolic: true,
   pulse: true,
+  smoothedSystolic: true,
+  smoothedDiastolic: true,
+  smoothedPulse: true,
 });
 
 const averageBp = computed(() => {
@@ -180,6 +193,68 @@ const averageBp = computed(() => {
   const pulse = bpLogs.value.reduce((acc, log) => acc + (log.pulse || 0), 0) / bpLogs.value.length;
   return { systolic, diastolic, pulse };
 });
+
+const loadChartVisibilityState = () => {
+  try {
+    const raw = localStorage.getItem(CHART_VISIBILITY_STORAGE_KEY);
+    if (!raw) return;
+
+    const parsed = JSON.parse(raw) as Partial<Record<keyof typeof chartToggles.value, boolean>>;
+    chartToggles.value = {
+      systolic: parsed.systolic ?? true,
+      diastolic: parsed.diastolic ?? true,
+      pulse: parsed.pulse ?? true,
+      smoothedSystolic: parsed.smoothedSystolic ?? true,
+      smoothedDiastolic: parsed.smoothedDiastolic ?? true,
+      smoothedPulse: parsed.smoothedPulse ?? true,
+    };
+  } catch (error) {
+    console.error('Failed to load blood pressure chart visibility state', error);
+  }
+};
+
+const saveChartVisibilityState = () => {
+  localStorage.setItem(CHART_VISIBILITY_STORAGE_KEY, JSON.stringify(chartToggles.value));
+};
+
+const syncChartVisibilityFromInstance = () => {
+  if (!bpChart) return;
+
+  chartToggles.value = {
+    systolic: bpChart.isDatasetVisible(0),
+    smoothedSystolic: bpChart.isDatasetVisible(1),
+    diastolic: bpChart.isDatasetVisible(2),
+    smoothedDiastolic: bpChart.isDatasetVisible(3),
+    pulse: bpChart.isDatasetVisible(4),
+    smoothedPulse: bpChart.isDatasetVisible(5),
+  };
+
+  saveChartVisibilityState();
+};
+
+const isSeriesVisible = (label: string) => {
+  switch (label) {
+    case 'Systolic': return chartToggles.value.systolic;
+    case 'Smoothed Systolic': return chartToggles.value.smoothedSystolic;
+    case 'Diastolic': return chartToggles.value.diastolic;
+    case 'Smoothed Diastolic': return chartToggles.value.smoothedDiastolic;
+    case 'Pulse': return chartToggles.value.pulse;
+    case 'Smoothed Pulse': return chartToggles.value.smoothedPulse;
+    default: return true;
+  }
+};
+
+const setSeriesVisible = (label: string, visible: boolean) => {
+  switch (label) {
+    case 'Systolic': chartToggles.value.systolic = visible; break;
+    case 'Smoothed Systolic': chartToggles.value.smoothedSystolic = visible; break;
+    case 'Diastolic': chartToggles.value.diastolic = visible; break;
+    case 'Smoothed Diastolic': chartToggles.value.smoothedDiastolic = visible; break;
+    case 'Pulse': chartToggles.value.pulse = visible; break;
+    case 'Smoothed Pulse': chartToggles.value.smoothedPulse = visible; break;
+  }
+  saveChartVisibilityState();
+};
 
 const loadBpLogs = async () => {
   bpLogs.value = await getBloodPressureLogs();
@@ -197,6 +272,7 @@ const toggleChart = async () => {
 };
 
 const toggleAverageByDay = () => {
+  syncChartVisibilityFromInstance();
   averageByDay.value = !averageByDay.value;
   if (bpChart) {
     bpChart.destroy();
@@ -264,14 +340,14 @@ const createChart = () => {
 
   const datasets = [];
 
-  datasets.push({ label: 'Systolic', data: dataSys, borderColor: '#ffb3ba', backgroundColor: '#ffb3ba', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
-  datasets.push({ label: 'Smoothed Systolic', data: smoothSys, borderColor: '#ff4d4d', backgroundColor: '#ff4d4d', tension: 0.4, borderWidth: 2, pointRadius: 0 });
+  datasets.push({ label: 'Systolic', data: dataSys, hidden: !isSeriesVisible('Systolic'), borderColor: '#ffb3ba', backgroundColor: '#ffb3ba', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
+  datasets.push({ label: 'Smoothed Systolic', data: smoothSys, hidden: !isSeriesVisible('Smoothed Systolic'), borderColor: '#ff4d4d', backgroundColor: '#ff4d4d', tension: 0.4, borderWidth: 2, pointRadius: 0 });
 
-  datasets.push({ label: 'Diastolic', data: dataDia, borderColor: '#bae1ff', backgroundColor: '#bae1ff', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
-  datasets.push({ label: 'Smoothed Diastolic', data: smoothDia, borderColor: '#007bff', backgroundColor: '#007bff', tension: 0.4, borderWidth: 2, pointRadius: 0 });
+  datasets.push({ label: 'Diastolic', data: dataDia, hidden: !isSeriesVisible('Diastolic'), borderColor: '#bae1ff', backgroundColor: '#bae1ff', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
+  datasets.push({ label: 'Smoothed Diastolic', data: smoothDia, hidden: !isSeriesVisible('Smoothed Diastolic'), borderColor: '#007bff', backgroundColor: '#007bff', tension: 0.4, borderWidth: 2, pointRadius: 0 });
 
-  datasets.push({ label: 'Pulse', data: dataPulse, borderColor: '#baffc9', backgroundColor: '#baffc9', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
-  datasets.push({ label: 'Smoothed Pulse', data: smoothPulse, borderColor: '#28a745', backgroundColor: '#28a745', tension: 0.4, borderWidth: 2, pointRadius: 0 });
+  datasets.push({ label: 'Pulse', data: dataPulse, hidden: !isSeriesVisible('Pulse'), borderColor: '#baffc9', backgroundColor: '#baffc9', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
+  datasets.push({ label: 'Smoothed Pulse', data: smoothPulse, hidden: !isSeriesVisible('Smoothed Pulse'), borderColor: '#28a745', backgroundColor: '#28a745', tension: 0.4, borderWidth: 2, pointRadius: 0 });
 
   bpChart = new Chart(bpChartCanvas.value, {
     type: 'line',
@@ -279,6 +355,19 @@ const createChart = () => {
     options: {
       responsive: true,
       plugins: {
+        legend: {
+          onClick: (event, legendItem, legend) => {
+            const chart = legend.chart;
+            const datasetIndex = legendItem.datasetIndex;
+            if (datasetIndex === undefined) return;
+
+            const label = chart.data.datasets[datasetIndex]?.label;
+            if (!label) return;
+
+            Chart.defaults.plugins.legend.onClick?.call(legend, event, legendItem, legend);
+            setSeriesVisible(label, chart.isDatasetVisible(datasetIndex));
+          },
+        },
         zoom: {
           zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag : { enabled: true }, mode: 'x' },
           pan: { enabled: true, mode: 'x' }
@@ -287,6 +376,8 @@ const createChart = () => {
       maintainAspectRatio: false
     }
   });
+
+  syncChartVisibilityFromInstance();
 }
 
 const openBpAddModal = () => {
@@ -341,6 +432,7 @@ const deleteBp = async (id: string) => {
 
 
 onMounted(() => {
+  loadChartVisibilityState();
   loadBpLogs();
 });
 

@@ -101,7 +101,7 @@
 
     <div class="control-panel" style="margin-bottom: 15px;">
       <label for="sleep-type-filter" style="margin-right: 10px; font-weight: 500;">Filter by Type:</label>
-      <select id="sleep-type-filter" v-model="selectedSleepType" style="padding: 5px; border-radius: 4px; border: 1px solid var(--border, #ccc);">
+      <select id="sleep-type-filter" v-model="selectedSleepType" class="filter-select">
         <option value="">All Types</option>
         <option v-for="type in availableSleepTypes" :key="type" :value="type">{{ type }}</option>
       </select>
@@ -167,7 +167,7 @@
             <td>{{ log.morningDizziness ? 'Yes' : 'No' }}</td>
             <td>
               <button class="button" @click="openEditModal(log)" style="margin-right: 5px;">Edit</button>
-              <button v-if="log.hrvRecording" class="button" @click="goToHrv(log.hrvRecording.id)" style="margin-right: 5px; background-color: var(--secondary, #17a2b8);">HRV Report</button>
+              <button v-if="log.hrvRecording" class="button hrv-report-btn" @click="goToHrv(log.hrvRecording.id)">HRV Report</button>
               <button class="button delete-btn" @click="deleteSleep(log.id)">Delete</button>
             </td>
           </tr>
@@ -182,12 +182,40 @@ import { ref, onMounted, computed } from 'vue';
 import { getSleepLogs, createSleepLog, updateSleepLog, deleteSleepLog } from '@/services/sleepService';
 import { useRouter } from 'vue-router';
 import type { SleepLog } from '@/types/sleepType';
+import type { CreateSleepLog, UpdateSleepLog } from '@/types/sleepType';
 import { roundTo } from '@/utility/math';
 import { toLocalIsoDate, createLocalTimeDate, toLocalTimeString, formatTime } from '@/utility/date';
 
 const router = useRouter();
 
-const form = ref({
+type SleepFormState = {
+  date: string;
+  bedTime: string;
+  wakeTime: string;
+  sleepLatencyHours: number;
+  sleepLatencyMins: number;
+  wakeEpisodes: number;
+  restedScore: number;
+  morningHeadache: boolean;
+  morningDizziness: boolean;
+  totalSleepHours: number;
+  totalSleepMins: number;
+  awakeHours: number;
+  awakeMins: number;
+  lightSleepHours: number;
+  lightSleepMins: number;
+  deepSleepHours: number;
+  deepSleepMins: number;
+  remSleepHours: number;
+  remSleepMins: number;
+  turningSpikeCount: number;
+  turningSpikeMaxHr: number;
+  subjectiveHours: number;
+  notes: string;
+  sleepType: string;
+};
+
+const form = ref<SleepFormState>({
   date: toLocalIsoDate(),
   bedTime: '22:00',
   wakeTime: '07:00',
@@ -209,6 +237,8 @@ const form = ref({
   remSleepMins: 0,
   turningSpikeCount: 0,
   turningSpikeMaxHr: 0,
+  subjectiveHours: 0,
+  notes: '',
   sleepType: ''
 });
 
@@ -326,6 +356,8 @@ const openAddModal = () => {
     remSleepMins: 0,
     turningSpikeCount: 0,
     turningSpikeMaxHr: 0,
+    subjectiveHours: 0,
+    notes: '',
     sleepType: ''
   };
   showModal.value = true;
@@ -334,12 +366,15 @@ const openAddModal = () => {
 const openEditModal = (log: SleepLog) => {
   editId.value = log.id;
   form.value = {
-    ...log,
     date: new Date(log.date).toISOString().substring(0, 10),
     bedTime: log.bedTime ? toLocalTimeString(new Date(log.bedTime)) : '',
     wakeTime: log.wakeTime ? toLocalTimeString(new Date(log.wakeTime)) : '',
     sleepLatencyHours: Math.floor((log.sleepLatencyMinutes || 0) / 60),
     sleepLatencyMins: Math.round((log.sleepLatencyMinutes || 0) % 60),
+    wakeEpisodes: log.wakeEpisodes ?? 0,
+    restedScore: log.restedScore ?? 5,
+    morningHeadache: log.morningHeadache ?? false,
+    morningDizziness: log.morningDizziness ?? false,
     totalSleepHours: Math.floor((log.totalSleepMinutes || 0) / 60),
     totalSleepMins: Math.round((log.totalSleepMinutes || 0) % 60),
     awakeHours: Math.floor((log.awakeMinutes || 0) / 60),
@@ -350,14 +385,17 @@ const openEditModal = (log: SleepLog) => {
     deepSleepMins: Math.round((log.deepSleepMinutes || 0) % 60),
     remSleepHours: Math.floor((log.remSleepMinutes || 0) / 60),
     remSleepMins: Math.round((log.remSleepMinutes || 0) % 60),
+    turningSpikeCount: log.turningSpikeCount ?? 0,
+    turningSpikeMaxHr: log.turningSpikeMaxHr ?? 0,
+    subjectiveHours: log.subjectiveHours ?? 0,
+    notes: log.notes ?? '',
     sleepType: log.sleepType || ''
-  } as any;
+  };
   showModal.value = true;
 };
 
 const submitForm = async () => {
-  const data = {
-    ...form.value,
+  const data: CreateSleepLog = {
     date: new Date(form.value.date).toISOString(),
     bedTime: createLocalTimeDate(form.value.bedTime).toISOString(),
     wakeTime: createLocalTimeDate(form.value.wakeTime).toISOString(),
@@ -367,12 +405,16 @@ const submitForm = async () => {
     lightSleepMinutes: (form.value.lightSleepHours || 0) * 60 + (form.value.lightSleepMins || 0),
     deepSleepMinutes: (form.value.deepSleepHours || 0) * 60 + (form.value.deepSleepMins || 0),
     remSleepMinutes: (form.value.remSleepHours || 0) * 60 + (form.value.remSleepMins || 0),
+    turningSpikeCount: form.value.turningSpikeCount,
+    turningSpikeMaxHr: form.value.turningSpikeMaxHr,
+    subjectiveHours: form.value.subjectiveHours,
+    notes: form.value.notes,
     sleepType: form.value.sleepType || ''
   };
   if (editId.value) {
-    await updateSleepLog(editId.value, data as any);
+    await updateSleepLog(editId.value, data as UpdateSleepLog);
   } else {
-    await createSleepLog(data as any);
+    await createSleepLog(data);
   }
   showModal.value = false;
   await loadData();
@@ -430,6 +472,11 @@ onMounted(() => {
 }
 .button:hover {
   opacity: 0.9;
+}
+
+.hrv-report-btn {
+  margin-right: 5px;
+  background-color: var(--primary);
 }
 .delete-btn {
   background-color: var(--danger, #dc3545);
@@ -490,6 +537,39 @@ onMounted(() => {
 .form-group select:focus {
   outline: none;
   border-color: var(--primary, #007bff);
+}
+
+.control-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.control-panel label {
+  color: var(--text-secondary);
+}
+
+.filter-select {
+  min-width: 220px;
+  padding: 0.6rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-surface-secondary);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 209, 196, 0.15);
 }
 .duration-inputs {
   display: flex;

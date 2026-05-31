@@ -160,7 +160,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { isAuthenticated } from "@/services/authService.ts";
 import { getDailyDashboard } from "@/services/foodDashboardService.ts";
 import { getNrvProgress } from "@/services/nrvService.ts";
@@ -169,10 +169,11 @@ import { toLocalIsoDate } from "@/utility/date.ts";
 import type { DailyDashboard, MealLog, FoodLog, MealType, Nutrient, GoalProgress, NrvProgressItem, MacroTotals } from "@/types/foodType.ts";
 import AddFoodLogModal from "@/components/Food/AddFoodLogModal.vue";
 
+const route = useRoute();
 const router = useRouter();
 
 const todayStr = toLocalIsoDate();
-const selectedDate = ref(todayStr);
+const selectedDate = ref((route.query.date as string) || todayStr);
 const dashboard = ref<DailyDashboard | null>(null);
 const nrvData = ref<Record<string, NrvProgressItem>>({});
 const loading = ref(false);

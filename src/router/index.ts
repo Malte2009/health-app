@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
+import { isAuthenticated } from "@/services/authService.ts";
 
 import bodyRoutes from "@/router/body.routes.ts";
 import trainingRoutes from "@/router/training.routes.ts";
@@ -27,6 +28,26 @@ const router = createRouter({
     },
     ...routes,
   ],
+});
+
+const PUBLIC_ROUTE_NAMES = new Set(["login", "signup"]);
+
+router.beforeEach(async (to) => {
+  const isPublicRoute = to.name ? PUBLIC_ROUTE_NAMES.has(String(to.name)) : false;
+  const authenticated = Boolean(await isAuthenticated());
+
+  if (!isPublicRoute && !authenticated) {
+    return {
+      name: "login",
+      query: { redirect: to.fullPath },
+    };
+  }
+
+  if (isPublicRoute && authenticated) {
+    return { name: "home" };
+  }
+
+  return true;
 });
 
 export default router;

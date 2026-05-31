@@ -33,5 +33,11 @@ export default [
     path: "/calendar",
     name: "diagnostic-calendar",
     component: () => import("@/views/Diagnostic/DiagnosticCalendarView.vue")
+  },
+  {
+    path: "/day/:date",
+    name: "day-details",
+    component: () => import("@/views/Daily/DayDetailsView.vue"),
+    props: true
   }
 ];

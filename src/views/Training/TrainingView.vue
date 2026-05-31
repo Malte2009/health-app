@@ -6,9 +6,9 @@
         <h2>Training Overview</h2>
         <div v-if="training">
           <p class="bold">Name: {{ training.name }}</p>
-          <p v-if="training.duration" class="bold">Duration: {{ training.duration }} minutes</p>
+          <p v-if="training.duration" class="bold">Length: {{ formatTrainingLength(training.duration) }}</p>
           <p v-if="training.avgHeartRate" class="bold">Average Heart Rate: {{ training.avgHeartRate }} bpm</p>
-          <p v-if="training.caloriesBurned" class="bold">Calories Burned: {{ training.caloriesBurned }}</p>
+          <p v-if="training.caloriesBurned" class="bold">Calories Burned: {{ training.caloriesBurned }} kcal</p>
           <p>Date: {{ getDateString(training.createdAt) }}</p>
           <p>Notes: {{ training.notes }}</p>
         </div>
@@ -197,6 +197,11 @@ const selectedSetId = ref<string>("");
 
 const editExerciseLogId = ref<string>("");
 const editSetId = ref<string>("");
+
+const formatTrainingLength = (duration: number): string => {
+  const minutes = duration > 600 ? Math.round(duration / 60) : duration;
+  return `${minutes} minutes`;
+};
 
 function confirmDelete() {
   if (editExerciseLogId.value) {

@@ -3,11 +3,35 @@
     <div class="calendar-header">
       <div class="month-controls">
         <button class="nav-btn" @click="prevMonth">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
         </button>
         <h2>{{ currentMonthName }} {{ currentYear }}</h2>
         <button class="nav-btn" @click="nextMonth">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
         </button>
       </div>
 
@@ -23,11 +47,33 @@
           <label class="toggle-label"><input type="checkbox" v-model="toggles.intake" /> Intake Logs</label>
         </div>
 
-        <div class="sub-toggle-group" v-if="toggles.micro">
-          <span class="sub-label">Micro Focus:</span>
-          <label class="toggle-label" v-for="micro in MICROS_LIST" :key="micro">
-            <input type="checkbox" v-model="microToggles[micro]" /> {{ formatMicroName(micro) }}
-          </label>
+        <div class="sub-toggles-wrapper">
+          <div class="sub-toggle-group" v-if="toggles.micro">
+            <div class="sub-toggle-header" @click="uiState.showMicroFilters = !uiState.showMicroFilters">
+              <span class="sub-label">Micro Focus</span>
+              <span class="toggle-icon">{{ uiState.showMicroFilters ? '▼ Hide Filters' : '▶ Show Filters' }}</span>
+            </div>
+            <div class="micro-filters" v-if="uiState.showMicroFilters">
+              <label class="toggle-label" v-for="micro in MICROS_LIST" :key="micro">
+                <input type="checkbox" v-model="microToggles[micro]" /> {{ formatMicroName(micro) }}
+              </label>
+            </div>
+          </div>
+
+          <div class="sub-toggle-group">
+            <div class="sub-toggle-header" @click="uiState.showFoodFilters = !uiState.showFoodFilters">
+              <span class="sub-label">Food Focus</span>
+              <span class="toggle-icon">{{ uiState.showFoodFilters ? '▼ Hide Filters' : '▶ Show Filters' }}</span>
+            </div>
+            <div class="micro-filters" v-if="uiState.showFoodFilters">
+              <label class="toggle-label" v-for="foodName in uniqueFoodList" :key="foodName">
+                <input type="checkbox" v-model="foodToggles[foodName]" /> {{ foodName }}
+              </label>
+              <div v-if="uniqueFoodList.length === 0" style="color:var(--text-secondary); font-size:0.9rem;">
+                No foods logged in this month.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -41,43 +87,52 @@
           v-for="day in calendarDays"
           :key="day.dateStr"
           class="day-cell"
-          :class="{ 'out-of-month': !day.inMonth, 'today': day.isToday }"
-          @click="selectedDay = day"
+          :class="{ 'out-of-month': !day.inMonth, today: day.isToday }"
+          @click="goToDayDetails(day.dateStr)"
         >
           <div class="day-number">{{ day.dayNumber }}</div>
 
           <div class="day-content" v-if="day.inMonth">
-            <div v-if="toggles.symptoms && day.symptoms.length" class="event-pill symptom">
-              {{ day.symptoms.length }} Symptom{{ day.symptoms.length > 1 ? 's' : '' }}
+            <template v-if="toggles.symptoms && Array.isArray(day.symptoms) && day.symptoms.length > 0">
+              <div class="event-pill symptom">{{ day.symptoms.length }} Symptom{{ day.symptoms.length > 1 ? "s" : "" }}</div>
+            </template>
+
+            <template v-if="toggles.syncopes && Array.isArray(day.syncopes) && day.syncopes.length > 0">
+              <div class="event-pill syncope">{{ day.syncopes.length }} Syncope{{ day.syncopes.length > 1 ? "s" : "" }}</div>
+            </template>
+
+            <div
+              v-if="toggles.bp && Array.isArray(day.bp) && day.bp.length > 0"
+              class="event-pill bp"
+              :title="formatAverageBloodPressureDetails(day.bp)"
+            >
+              {{ formatAverageBloodPressurePill(day.bp) }}
             </div>
 
-            <div v-if="toggles.syncopes && day.syncopes.length" class="event-pill syncope">
-              {{ day.syncopes.length }} Syncope{{ day.syncopes.length > 1 ? 's' : '' }}
+            <template v-if="toggles.sleep && Array.isArray(day.sleep) && day.sleep.length > 0">
+              <div v-for="(s, idx) in day.sleep" :key="s.id ?? idx" :class="['event-pill', isNap(s) ? 'nap' : 'sleep']">
+                {{ formatSleepPill(s) }}
+              </div>
+            </template>
+
+            <div v-if="toggles.training && Array.isArray(day.training) && day.training.length > 0" class="event-pill training">
+              {{ day.training.length }} Workout{{ day.training.length > 1 ? "s" : "" }}
             </div>
 
-            <div v-if="toggles.bp && day.bp.length" class="event-pill bp">
-               BP
-            </div>
+            <div v-if="toggles.daily && Array.isArray(day.daily) && day.daily.length > 0" class="event-pill daily">Daily</div>
 
-            <div v-if="toggles.sleep && day.sleep.length" class="event-pill sleep">
-               {{ Math.round(day.sleep[0].totalSleepMinutes / 60) }}h Sleep
-            </div>
+            <div v-if="toggles.intake && Array.isArray(day.intake) && day.intake.length > 0" class="event-pill intake">{{ day.intake.length }} Intake</div>
 
-            <div v-if="toggles.training && day.training.length" class="event-pill training">
-               {{ day.training.length }} Workout{{ day.training.length > 1 ? 's' : '' }}
-            </div>
-
-            <div v-if="toggles.daily && day.daily.length" class="event-pill daily">
-               Daily
-            </div>
-
-            <div v-if="toggles.intake && day.intake.length" class="event-pill intake">
-               {{ day.intake.length }} Intake
-            </div>
+            <template v-if="activeFoods(day.food).length">
+              <div v-for="(food, index) in activeFoods(day.food)" :key="index" class="event-pill food">
+                {{ food.name }}{{ food.totalWeight_g ? (': ' + food.totalWeight_g + 'g') : '' }}
+              </div>
+            </template>
 
             <template v-if="toggles.micro && day.micro">
               <template v-for="micro in MICROS_LIST" :key="micro">
-                <div v-if="microToggles[micro] && day.micro[micro] > 0" class="event-pill micro" :class="micro">
+                <!-- only show micro if the global micro toggle is on AND the specific micro filter is enabled -->
+                <div v-if="microToggles[micro] === true && typeof day.micro[micro] === 'number' && day.micro[micro] > 0" class="event-pill micro" :class="micro">
                   {{ formatMicroName(micro) }}: {{ day.micro[micro] }}
                 </div>
               </template>
@@ -86,72 +141,12 @@
         </div>
       </div>
     </div>
-
-    <div v-if="selectedDay" class="modal-overlay" @click.self="selectedDay = null">
-      <div class="modal">
-        <div class="modal-header">
-          <h3>Details for {{ selectedDay.dateStr }}</h3>
-          <button class="close-btn" @click="selectedDay = null">&times;</button>
-        </div>
-
-        <div class="modal-body">
-          <div class="details-card" v-if="selectedDay.symptoms.length">
-            <h4 class="card-title symptom-text">Symptoms</h4>
-            <ul class="detail-list">
-              <li v-for="s in selectedDay.symptoms" :key="s.id">{{ s.symptom?.name }} (Intensity: {{ s.intensity }})</li>
-            </ul>
-          </div>
-
-          <div class="details-card" v-if="selectedDay.syncopes.length">
-            <h4 class="card-title syncope-text">Syncopes</h4>
-            <ul class="detail-list">
-              <li v-for="s in selectedDay.syncopes" :key="s.id">{{ new Date(s.timestamp).toLocaleTimeString() }}</li>
-            </ul>
-          </div>
-
-          <div class="details-card" v-if="selectedDay.bp.length">
-            <h4 class="card-title bp-text">Blood Pressure</h4>
-            <ul class="detail-list">
-              <li v-for="b in selectedDay.bp" :key="b.id">{{ b.systolic }}/{{ b.diastolic }} mmHg (HR: {{ b.heartRate }})</li>
-            </ul>
-          </div>
-
-          <div class="details-card" v-if="selectedDay.sleep.length">
-            <h4 class="card-title sleep-text">Sleep</h4>
-            <ul class="detail-list">
-              <li v-for="s in selectedDay.sleep" :key="s.id">{{ Math.floor(s.totalSleepMinutes / 60) }}h {{ s.totalSleepMinutes % 60 }}min</li>
-            </ul>
-          </div>
-
-          <div class="details-card" v-if="selectedDay.training.length">
-            <h4 class="card-title training-text">Training</h4>
-            <ul class="detail-list">
-              <li v-for="t in selectedDay.training" :key="t.id">{{ t.name }}</li>
-            </ul>
-          </div>
-
-          <div class="details-card" v-if="selectedDay.micro">
-            <h4 class="card-title micro-text">Micronutrients</h4>
-            <div class="micro-stats">
-              <template v-for="micro in MICROS_LIST" :key="micro">
-                <p v-if="selectedDay.micro[micro] !== undefined && selectedDay.micro[micro] !== null">
-                  <strong>{{ formatMicroName(micro) }}:</strong> {{ selectedDay.micro[micro] }}
-                </p>
-              </template>
-            </div>
-          </div>
-
-          <div class="empty-state" v-if="!selectedDay.symptoms.length && !selectedDay.syncopes.length && !selectedDay.bp.length && !selectedDay.sleep.length && !selectedDay.training.length && !selectedDay.micro">
-            <p>No tracked data for this day.</p>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted, watch } from "vue";
+import { useRouter } from "vue-router";
 import {
   getMicroOverMonth,
   getSymptomsOverMonth,
@@ -160,8 +155,35 @@ import {
   getSleepOverMonth,
   getTrainingOverMonth,
   getDailyLogsOverMonth,
-  getIntakeLogsOverMonth
-} from '@/services/diagnosticService';
+  getIntakeLogsOverMonth,
+  getFoodOverMonth,
+} from "@/services/diagnosticService";
+
+const router = useRouter();
+
+/*
+  This file deals with flexible backend payloads where the exact shapes may vary.
+  We intentionally allow some `any`/loose typing in helpers (normalized at runtime)
+  to keep the calendar resilient. Disable the explicit-any lint rule for this file.
+*/
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+interface DayDetails {
+  dateStr: string;
+  dayNumber: number;
+  inMonth: boolean;
+  isToday: boolean;
+  // keep these permissive so the calendar can accept various backend shapes
+  micro?: Record<string, any> | null;
+  symptoms?: Record<string, any>[];
+  syncopes?: Record<string, any>[];
+  bp?: Record<string, any>[];
+  sleep?: Record<string, any>[];
+  training?: Record<string, any>[];
+  daily?: Record<string, any>[];
+  intake?: Record<string, any>[];
+  food?: any[] | null;
+}
 
 const currentDate = ref(new Date());
 
@@ -176,27 +198,12 @@ const toggles = reactive({
   intake: true,
 });
 
-const MICROS_LIST = [
-  'vitamin_a', 'vitamin_d', 'vitamin_e', 'vitamin_k', 'vitamin_b1', 'vitamin_b2', 'vitamin_b3',
-  'vitamin_b5', 'vitamin_b6', 'vitamin_b7', 'vitamin_b9', 'vitamin_b12', 'choline', 'caffeine',
-  'calcium', 'phosphorus', 'magnesium', 'sodium', 'potassium', 'chloride', 'sulfur', 'iron',
-  'zinc', 'selenium', 'iodine', 'copper', 'manganese', 'chromium', 'molybdenum', 'fluoride',
-  'vitamin_c', 'omega_3', 'omega_6', 'omega_9'
-];
+const uiState = reactive({
+  showMicroFilters: false,
+  showFoodFilters: false,
+});
 
-const microToggles = reactive<Record<string, boolean>>(
-  MICROS_LIST.reduce((acc, key) => {
-    acc[key] = (key === 'caffeine'); // Default on for caffeine as example
-    return acc;
-  }, {} as Record<string, boolean>)
-);
-
-const formatMicroName = (name: string) => {
-  return name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
-};
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const data = reactive<Record<string, any>>({
+const data = reactive<Record<string, unknown>>({
   micro: [],
   symptoms: [],
   syncopes: [],
@@ -205,14 +212,282 @@ const data = reactive<Record<string, any>>({
   training: [],
   daily: [],
   intake: [],
+  food: [],
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const selectedDay = ref<any>(null);
+const foodToggles = reactive<Record<string, boolean>>({});
+
+// Helper: extract a stable set of food names from various backend payload shapes
+const extractFoodNames = (payload: any): Set<string> => {
+  const names = new Set<string>();
+  if (!payload) return names;
+
+  // small helper to pull a name from a possibly nested food object
+  const handleItem = (it: any) => {
+    if (!it) return;
+    const name = it.name ?? it.food?.name ?? it.food_item?.name ?? it.foodItem?.name;
+    if (name) names.add(String(name));
+  };
+
+  // If an array of day/entry objects
+  if (Array.isArray(payload)) {
+    payload.forEach((entry: any) => {
+      if (!entry) return;
+      if (Array.isArray(entry.items)) {
+        entry.items.forEach((f: any) => handleItem(f));
+      } else if (Array.isArray(entry.data)) {
+        entry.data.forEach((f: any) => handleItem(f));
+      } else if (Array.isArray(entry.foodLogs) || Array.isArray(entry.food_logs) || Array.isArray(entry.foods)) {
+        const arr = entry.foodLogs ?? entry.food_logs ?? entry.foods;
+        if (Array.isArray(arr)) arr.forEach((f: any) => handleItem(f));
+      } else {
+        handleItem(entry);
+      }
+    });
+    return names;
+  }
+
+  // If payload is an object: could be wrapper { data: [...] } or a date->array map
+  if (payload && typeof payload === "object") {
+    if (Array.isArray(payload.data)) return extractFoodNames(payload.data);
+    if (Array.isArray(payload.items)) return extractFoodNames(payload.items);
+
+    // treat as mapping date->array or wrapper with keys
+    for (const val of Object.values(payload as any)) {
+      if (!val) continue;
+      if (Array.isArray(val)) {
+        val.forEach((v: any) => handleItem(v));
+      } else if (val && typeof val === "object") {
+        if (Array.isArray((val as any).items)) (val as any).items.forEach((v: any) => handleItem(v));
+        else handleItem(val);
+      }
+    }
+  }
+
+  return names;
+};
+
+// keep foodToggles in sync with names found for the current month
+watch(
+  () => data.food,
+  (newFood) => {
+    const names = extractFoodNames(newFood);
+    names.forEach((n) => {
+      // Default foods to OFF so the calendar stays uncluttered. Users can enable specific foods manually.
+      if (foodToggles[n] === undefined) foodToggles[n] = false;
+    });
+  },
+  { deep: true, immediate: true },
+);
+
+const uniqueFoodList = computed(() => {
+  return Array.from(extractFoodNames(data.food)).sort();
+});
+
+// Normalize various food item shapes into a small display object
+type FoodDisplay = { name: string; totalWeight_g?: any; weightLogs?: any; raw?: any };
+const normalizeFoodItem = (it: any): FoodDisplay | null => {
+  if (!it) return null;
+  const name = it.name ?? it.food?.name ?? it.food_item?.name ?? it.foodItem?.name;
+  if (!name) return null;
+  const totalWeight_g = it.totalWeight_g ?? it.total_weight_g ?? it.totalWeight ?? it.weight_g ?? it.weightG ?? it.food?.weight_g;
+  const weightLogs = it.weightLogs ?? it.logs ?? it.weight_logs ?? undefined;
+  return { name: String(name), totalWeight_g, weightLogs, raw: it };
+};
+
+const activeFoods = (foods: any): FoodDisplay[] => {
+  if (!foods) return [];
+  const foodsArray = Array.isArray(foods) ? foods : [foods];
+  const mapped = foodsArray.map((f: any) => normalizeFoodItem(f));
+  // narrow out nulls and ensure TypeScript knows we return concrete FoodDisplay items
+  return mapped.filter((f): f is FoodDisplay => Boolean(f) && Boolean((f as any).name) && foodToggles[(f as any).name] !== false);
+};
+
+// Format a sleep entry into a short label for calendar pills (e.g. "1h 15m Sleep")
+const formatSleepPill = (s: any): string => {
+  if (!s) return "";
+  const mins = s.totalSleepMinutes ?? s.total_sleep_minutes ?? s.durationMinutes ?? s.duration_min ?? s.duration ?? null;
+  const suffix = isNap(s) ? 'Nap' : 'Sleep';
+  if (mins != null && !isNaN(Number(mins))) {
+    const total = Number(mins);
+    const hrs = Math.floor(total / 60);
+    const rem = Math.round(total % 60);
+    return rem === 0 ? `${hrs}h ${suffix}` : `${hrs}h ${rem}m ${suffix}`;
+  }
+
+  const start = s.bedTime ?? s.start_time ?? s.startTime ?? s.start ?? s.timestamp ?? null;
+  const end = s.wakeTime ?? s.end_time ?? s.endTime ?? s.end ?? null;
+  if (start && end) {
+    const st = new Date(start).getTime();
+    const ed = new Date(end).getTime();
+    if (!isNaN(st) && !isNaN(ed) && ed >= st) {
+      const diff = Math.round((ed - st) / 60000);
+      const hrs = Math.floor(diff / 60);
+      const rem = diff % 60;
+      return rem === 0 ? `${hrs}h ${suffix}` : `${hrs}h ${rem}m ${suffix}`;
+    }
+  }
+
+  const label = s.sleepType ?? s.type ?? s.label ?? s.name ?? '';
+  return (label || suffix) as string;
+};
+
+// Detect whether a sleep entry represents a nap (flexible across different payload shapes)
+const isNap = (s: any): boolean => {
+  if (!s) return false;
+  const val = (s.sleepType ?? s.type ?? s.sleep_type ?? s.label ?? s.name ?? '').toString().toLowerCase();
+  if (!val) return false;
+  return val.includes('nap');
+};
+
+const getBloodPressurePulse = (bp: any): number | null => {
+  const pulse = bp?.pulse ?? bp?.heartRate ?? bp?.hr;
+  if (pulse == null || pulse === '') return null;
+  const value = Number(pulse);
+  return Number.isNaN(value) ? null : value;
+};
+
+const formatTrainingDurationMinutes = (durationValue: any): number | null => {
+  const duration = Number(durationValue);
+  if (Number.isNaN(duration) || duration <= 0) return null;
+  return duration > 600 ? Math.round(duration / 60) : duration;
+};
+
+const normalizeBloodPressureEntries = (bp: any): any[] => {
+  if (!bp) return [];
+  if (Array.isArray(bp)) return bp;
+  return [bp];
+};
+
+const formatAverageBloodPressurePill = (bp: any): string => {
+  const entries = normalizeBloodPressureEntries(bp);
+  const validEntries = entries.filter((entry) => Number(entry?.systolic) > 0 && Number(entry?.diastolic) > 0);
+
+  if (validEntries.length === 0) return 'BP';
+
+  const avgSystolic = validEntries.reduce((sum, entry) => sum + Number(entry.systolic), 0) / validEntries.length;
+  const avgDiastolic = validEntries.reduce((sum, entry) => sum + Number(entry.diastolic), 0) / validEntries.length;
+  return `Avg ${Math.round(avgSystolic)}/${Math.round(avgDiastolic)}`;
+};
+
+const formatAverageBloodPressureDetails = (bp: any): string => {
+  const entries = normalizeBloodPressureEntries(bp);
+  const validEntries = entries.filter((entry) => Number(entry?.systolic) > 0 && Number(entry?.diastolic) > 0);
+
+  if (validEntries.length === 0) return '';
+
+  const avgSystolic = validEntries.reduce((sum, entry) => sum + Number(entry.systolic), 0) / validEntries.length;
+  const avgDiastolic = validEntries.reduce((sum, entry) => sum + Number(entry.diastolic), 0) / validEntries.length;
+
+  const pulseValues = validEntries
+    .map((entry) => getBloodPressurePulse(entry))
+    .filter((value): value is number => value !== null);
+  const pulseText = pulseValues.length > 0
+    ? ` · Avg Pulse: ${Math.round(pulseValues.reduce((sum, value) => sum + value, 0) / pulseValues.length)} bpm`
+    : '';
+
+  return `Average blood pressure: ${Math.round(avgSystolic)}/${Math.round(avgDiastolic)} mmHg (${validEntries.length} reading${validEntries.length > 1 ? 's' : ''})${pulseText}`;
+};
+
+const formatBloodPressureSummary = (bp: any): string => {
+  if (!bp) return '';
+  const pulse = getBloodPressurePulse(bp);
+  return pulse !== null ? `${bp.systolic}/${bp.diastolic} · ${pulse} bpm` : `${bp.systolic}/${bp.diastolic}`;
+};
+
+const formatBloodPressureDetails = (bp: any): string => {
+  if (!bp) return '';
+  const pulse = getBloodPressurePulse(bp);
+  return pulse !== null ? `${bp.systolic}/${bp.diastolic} mmHg · Pulse: ${pulse} bpm` : `${bp.systolic}/${bp.diastolic} mmHg`;
+};
+
+const formatTrainingSummary = (training: any, fallbackName = 'Workout'): string => {
+  if (!training) return fallbackName;
+
+  const parts: string[] = [];
+
+  const duration = formatTrainingDurationMinutes(training.duration);
+  if (duration !== null) parts.push(`${duration}m`);
+
+  const avgHeartRate = Number(training.avgHeartRate);
+  if (!Number.isNaN(avgHeartRate) && avgHeartRate > 0) parts.push(`${avgHeartRate} bpm`);
+
+  const calories = Number(training.caloriesBurned ?? training.calories);
+  if (!Number.isNaN(calories) && calories > 0) parts.push(`${calories} kcal`);
+
+  return parts.length > 0 ? `${fallbackName} · ${parts.join(' · ')}` : fallbackName;
+};
+
+const formatTrainingDetails = (training: any): string => {
+  if (!training) return '';
+
+  const parts: string[] = [];
+
+  const duration = formatTrainingDurationMinutes(training.duration);
+  if (duration !== null) parts.push(`Length: ${duration} min`);
+
+  const avgHeartRate = Number(training.avgHeartRate);
+  if (!Number.isNaN(avgHeartRate) && avgHeartRate > 0) parts.push(`Avg HR: ${avgHeartRate} bpm`);
+
+  const calories = Number(training.caloriesBurned ?? training.calories);
+  if (!Number.isNaN(calories) && calories > 0) parts.push(`Calories Burned: ${calories} kcal`);
+
+  return parts.join(' · ');
+};
+
+const MICROS_LIST = [
+  "vitamin_a",
+  "vitamin_d",
+  "vitamin_e",
+  "vitamin_k",
+  "vitamin_b1",
+  "vitamin_b2",
+  "vitamin_b3",
+  "vitamin_b5",
+  "vitamin_b6",
+  "vitamin_b7",
+  "vitamin_b9",
+  "vitamin_b12",
+  "choline",
+  "caffeine",
+  "calcium",
+  "phosphorus",
+  "magnesium",
+  "sodium",
+  "potassium",
+  "chloride",
+  "sulfur",
+  "iron",
+  "zinc",
+  "selenium",
+  "iodine",
+  "copper",
+  "manganese",
+  "chromium",
+  "molybdenum",
+  "fluoride",
+  "vitamin_c",
+  "omega_3",
+  "omega_6",
+  "omega_9",
+];
+
+const microToggles = reactive<Record<string, boolean>>({});
+MICROS_LIST.forEach((micro) => {
+  microToggles[micro] = false;
+});
+
+const formatMicroName = (name: string): string => {
+  return name.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
+const goToDayDetails = (dateStr: string) => {
+  router.push({ name: 'day-details', params: { date: dateStr } });
+};
 
 const currentYear = computed(() => currentDate.value.getFullYear());
 const currentMonth = computed(() => currentDate.value.getMonth());
-const currentMonthName = computed(() => currentDate.value.toLocaleString('default', { month: 'long' }));
+const currentMonthName = computed(() => currentDate.value.toLocaleString("default", { month: "long" }));
 
 const prevMonth = () => {
   currentDate.value = new Date(currentYear.value, currentMonth.value - 1, 1);
@@ -226,8 +501,8 @@ const nextMonth = () => {
 
 const formatDate = (date: Date) => {
   const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, '0');
-  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 };
 
@@ -240,9 +515,7 @@ const fetchData = async () => {
   const endStr = formatDate(end);
 
   try {
-    const [
-      microRes, symptomsRes, syncopesRes, bpRes, sleepRes, trainingRes, dailyRes, intakeRes
-    ] = await Promise.all([
+    const [microRes, symptomsRes, syncopesRes, bpRes, sleepRes, trainingRes, dailyRes, intakeRes, foodRes] = await Promise.all([
       getMicroOverMonth(startStr, endStr),
       getSymptomsOverMonth(startStr, endStr),
       getSyncopesOverMonth(startStr, endStr),
@@ -251,6 +524,7 @@ const fetchData = async () => {
       getTrainingOverMonth(startStr, endStr),
       getDailyLogsOverMonth(startStr, endStr),
       getIntakeLogsOverMonth(startStr, endStr),
+      getFoodOverMonth(startStr, endStr),
     ]);
 
     data.micro = microRes;
@@ -261,18 +535,71 @@ const fetchData = async () => {
     data.training = trainingRes;
     data.daily = dailyRes;
     data.intake = intakeRes;
+    data.food = foodRes;
   } catch (error) {
     console.error("Failed to fetch diagnostic data", error);
   }
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const buildMap = (arr: any[]) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+const buildMap = (arr: any[] = []) => {
   const map: Record<string, any> = {};
+  if (!Array.isArray(arr)) return map;
   for (const item of arr) {
-    map[item.date] = item.items !== undefined ? item.items : item;
+    if (!item) continue;
+    const date = item.date ?? item.day ?? item.dateStr ?? item.date_str;
+    if (!date) continue;
+    map[String(date)] = item.items !== undefined ? item.items : item;
   }
+  return map;
+};
+
+// Build a flexible date->items map for food payloads that may be shaped differently
+const buildFoodMap = (payload: any): Record<string, any[]> => {
+  const map: Record<string, any[]> = {};
+  if (!payload) return map;
+
+  const push = (date: string | undefined, item: any) => {
+    if (!date) return;
+    if (!map[date]) map[date] = [];
+    if (Array.isArray(item)) map[date].push(...item);
+    else map[date].push(item);
+  };
+
+  if (Array.isArray(payload)) {
+    for (const entry of payload as any[]) {
+      const date = entry?.date ?? entry?.day ?? entry?.dateStr ?? entry?.date_str;
+      if (Array.isArray(entry.items)) push(String(date), entry.items);
+      else if (Array.isArray(entry.data)) push(String(date), entry.data);
+      else if (Array.isArray(entry.foodLogs) || Array.isArray(entry.food_logs) || Array.isArray(entry.foods)) {
+        const arr = entry.foodLogs ?? entry.food_logs ?? entry.foods;
+        if (Array.isArray(arr)) push(String(date), arr);
+      } else if (entry && (entry.name || entry.food)) {
+        push(String(date), entry);
+      }
+    }
+    return map;
+  }
+
+  if (payload && typeof payload === "object") {
+    if (Array.isArray(payload.data)) return buildFoodMap(payload.data);
+    if (Array.isArray(payload.items)) return buildFoodMap(payload.items);
+
+    // treat as mapping date -> array/object
+    for (const [k, v] of Object.entries(payload as any)) {
+      if (k === "data" || k === "items") continue;
+      if (Array.isArray(v)) {
+        v.forEach((e: any) => {
+          if (Array.isArray(e.items)) push(String(e.date ?? k), e.items);
+          else if (e?.date) push(String(e.date), e);
+          else push(k, e);
+        });
+      } else if (v && typeof v === "object") {
+        if (Array.isArray((v as any).items)) push(k, (v as any).items);
+        else push(k, v);
+      }
+    }
+  }
+
   return map;
 };
 
@@ -283,16 +610,19 @@ const calendarDays = computed(() => {
   const firstDayOfMonth = new Date(year, month, 1);
   const lastDayOfMonth = new Date(year, month + 1, 0);
 
-  const days = [];
+  const days: DayDetails[] = [];
 
-  const microMap = buildMap(data.micro);
-  const symptomsMap = buildMap(data.symptoms);
-  const syncopesMap = buildMap(data.syncopes);
-  const bpMap = buildMap(data.bp);
-  const sleepMap = buildMap(data.sleep);
-  const trainingMap = buildMap(data.training);
-  const dailyMap = buildMap(data.daily);
-  const intakeMap = buildMap(data.intake);
+  const microMap = buildMap(data.micro as any[]);
+  const symptomsMap = buildMap(data.symptoms as any[]);
+  const syncopesMap = buildMap(data.syncopes as any[]);
+  const bpMap = buildMap(data.bp as any[]);
+  const sleepMap = buildMap(data.sleep as any[]);
+  const trainingMap = buildMap(data.training as any[]);
+  const dailyMap = buildMap(data.daily as any[]);
+  const intakeMap = buildMap(data.intake as any[]);
+
+  // Build a flexible food map from the returned payload (handles arrays, wrappers or date->array maps)
+  const foodMap = buildFoodMap((data.food ?? []) as any);
 
   // padding for previous month
   // Monday as first day: if getDay() is 0 (Sun), then offset is 6. Otherwise getDay() - 1
@@ -315,13 +645,14 @@ const calendarDays = computed(() => {
       dateStr,
       isToday: dateStr === todayStr,
       micro: microMap[dateStr] || null,
-      symptoms: symptomsMap[dateStr] || [],
-      syncopes: syncopesMap[dateStr] || [],
-      bp: bpMap[dateStr] || [],
-      sleep: sleepMap[dateStr] || [],
-      training: trainingMap[dateStr] || [],
-      daily: dailyMap[dateStr] || [],
-      intake: intakeMap[dateStr] || [],
+      symptoms: (symptomsMap[dateStr] as any[]) || [],
+      syncopes: (syncopesMap[dateStr] as any[]) || [],
+      bp: (bpMap[dateStr] as any[]) || [],
+      sleep: (sleepMap[dateStr] as any[]) || [],
+      training: (trainingMap[dateStr] as any[]) || [],
+      daily: (dailyMap[dateStr] as any[]) || [],
+      intake: (intakeMap[dateStr] as any[]) || [],
+      food: (foodMap[dateStr] as any[]) || null,
     });
   }
 
@@ -403,20 +734,52 @@ onMounted(() => {
   gap: 16px;
 }
 
-.sub-toggle-group {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px dashed var(--border);
+.sub-toggles-wrapper {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+}
+
+.sub-toggle-group {
+  background: var(--bg-surface-secondary);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.sub-toggle-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.sub-toggle-header:hover .sub-label {
+  color: var(--primary);
+}
+
+.toggle-icon {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 600;
 }
 
 .sub-label {
   font-weight: 600;
   color: var(--text-secondary);
-  margin-right: 8px;
+  transition: color 0.2s;
+}
+
+.micro-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
 }
 
 .toggle-label {
@@ -440,7 +803,7 @@ onMounted(() => {
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .calendar-grid {
@@ -515,7 +878,9 @@ onMounted(() => {
   max-height: 80px;
   scrollbar-width: none;
 }
-.day-content::-webkit-scrollbar { display: none; }
+.day-content::-webkit-scrollbar {
+  display: none;
+}
 
 .event-pill {
   font-size: 0.75rem;
@@ -526,22 +891,44 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   color: #fff;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
 /* Updated Colors to blend nicely with the dark theme */
-.symptom { background: linear-gradient(135deg, #ef4444, #dc2626); }
-.syncope { background: linear-gradient(135deg, #b91c1c, #991b1b); }
-.bp { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.sleep { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-.training { background: linear-gradient(135deg, #10b981, #059669); }
-.daily { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-.intake { background: linear-gradient(135deg, #06b6d4, #0891b2); }
-.micro { background: linear-gradient(135deg, #6b7280, #4b5563); }
-.micro.caffeine { background: linear-gradient(135deg, #92400e, #78350f); }
-.micro.alc { background: linear-gradient(135deg, #6d28d9, #5b21b6); }
-.micro.sug { background: linear-gradient(135deg, #db2777, #be185d); }
+.symptom {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+.syncope {
+  background: linear-gradient(135deg, #b91c1c, #991b1b);
+}
+.bp {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+.sleep {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
 
+.nap {
+  /* distinct color for naps */
+  background: linear-gradient(135deg, #7dd3fc, #38bdf8);
+}
+.training {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+.daily {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+.intake {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.food {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.micro {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
 
 /* Modal Styles */
 .modal-overlay {
@@ -560,8 +947,12 @@ onMounted(() => {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .modal {
@@ -573,13 +964,19 @@ onMounted(() => {
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .modal-header {
@@ -632,12 +1029,27 @@ onMounted(() => {
   border-bottom: 1px solid var(--border);
 }
 
-.symptom-text { color: #ef4444; }
-.syncope-text { color: #b91c1c; }
-.bp-text { color: #f59e0b; }
-.sleep-text { color: #3b82f6; }
-.training-text { color: #10b981; }
-.micro-text { color: #8b5cf6; }
+.symptom-text {
+  color: #ef4444;
+}
+.food-text {
+  color: #f59e0b;
+}
+.syncope-text {
+  color: #b91c1c;
+}
+.bp-text {
+  color: #f59e0b;
+}
+.sleep-text {
+  color: #3b82f6;
+}
+.training-text {
+  color: #10b981;
+}
+.micro-text {
+  color: #8b5cf6;
+}
 
 .detail-list {
   padding-left: 20px;

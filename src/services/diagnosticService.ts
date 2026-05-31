@@ -39,3 +39,8 @@ export const getIntakeLogsOverMonth = async (start_date: string, end_date: strin
   const response = await api.get('/analysis/calender/intakeLogsOverMonth', { params: { start_date, end_date } });
   return response.data;
 };
+
+export const getFoodOverMonth = async (start_date: string, end_date: string) => {
+  const response = await api.get('/analysis/calender/foodOverMonth', { params: { start_date, end_date } });
+  return response.data;
+};
