@@ -166,14 +166,26 @@ import { getDailyDashboard } from "@/services/foodDashboardService.ts";
 import { getNrvProgress } from "@/services/nrvService.ts";
 import { createMealLog, updateMealLog, deleteMealLog, deleteFoodLog } from "@/services/mealLogService.ts";
 import { toLocalIsoDate } from "@/utility/date.ts";
-import type { DailyDashboard, MealLog, FoodLog, MealType, Nutrient, GoalProgress, NrvProgressItem, MacroTotals } from "@/types/foodType.ts";
+import type { DailyDashboard, MealLog, FoodLog, MealType, Nutrient, GoalProgress, NrvProgressItem, MacroTotals, PortionUnit } from "@/types/foodType.ts";
 import AddFoodLogModal from "@/components/Food/AddFoodLogModal.vue";
 
 const route = useRoute();
 const router = useRouter();
 
 const todayStr = toLocalIsoDate();
-const selectedDate = ref((route.query.date as string) || todayStr);
+
+function parseRouteDate(date: unknown): string | null {
+  const value = Array.isArray(date) ? date[0] : date;
+  if (typeof value !== "string") return null;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+
+  const parsed = new Date(`${value}T12:00:00`);
+  if (Number.isNaN(parsed.getTime())) return null;
+
+  return toLocalIsoDate(parsed) === value ? value : null;
+}
+
+const selectedDate = computed(() => parseRouteDate(route.query.date) ?? todayStr);
 const dashboard = ref<DailyDashboard | null>(null);
 const nrvData = ref<Record<string, NrvProgressItem>>({});
 const loading = ref(false);
@@ -274,6 +286,14 @@ function round1(val: number): number {
   return Math.round(val * 10) / 10;
 }
 
+async function syncSelectedDateInUrl(date: string) {
+  const currentDate = parseRouteDate(route.query.date);
+  const rawDate = route.query.date;
+  if (currentDate === date && !Array.isArray(rawDate)) return;
+
+  await router.replace({ query: { ...route.query, date } });
+}
+
 function formatDisplayDate(d: string): string {
   return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "long" }).format(new Date(d + "T12:00:00"));
 }
@@ -282,11 +302,13 @@ function changeDate(delta: number) {
   const d = new Date(selectedDate.value + "T12:00:00");
   d.setDate(d.getDate() + delta);
   const newDate = toLocalIsoDate(d);
-  if (newDate <= todayStr) selectedDate.value = newDate;
+  if (newDate <= todayStr) {
+    void syncSelectedDateInUrl(newDate);
+  }
 }
 
 function goToToday() {
-  selectedDate.value = todayStr;
+  void syncSelectedDateInUrl(todayStr);
 }
 
 function mealIcon(type: MealType): string {
@@ -406,13 +428,48 @@ function foodTextField(fl: FoodLog, snake: string, camel: string): string {
   return typeof direct === "string" ? direct : "";
 }
 
-function foodLogAmountDisplay(fl: FoodLog): string {
+function normalizePortionUnit(unit: unknown): PortionUnit | null {
+  if (typeof unit !== "string") return null;
+  const normalized = unit.toUpperCase();
+  return normalized === "G" || normalized === "ML" || normalized === "PORTION" ? normalized : null;
+}
+
+function formatPortionUnit(unit: PortionUnit): string {
+  return unit === "ML" ? "ml" : unit === "PORTION" ? "portion" : "g";
+}
+
+function foodLogDisplayParts(fl: FoodLog): { amount: number; unit: PortionUnit } {
+  const explicitUnit = normalizePortionUnit((fl as FoodLog & { unit?: unknown }).unit);
+  const defaultUnit = normalizePortionUnit(foodTextField(fl, "default_unit", "defaultUnit"));
+  const density = Number(foodField(fl, "density_g_per_ml", "densityGPerMl"));
+  const gramsPerPortion = Number(foodField(fl, "g_per_portion", "gPerPortion"));
   const amount = Number((fl as FoodLog & { amount?: number }).amount ?? 0);
-  const unit = ((fl as FoodLog & { unit?: string }).unit ?? "").toString().toUpperCase();
-  if (amount > 0 && (unit === "G" || unit === "ML" || unit === "PORTION")) {
-    return `${Math.round(amount * 10) / 10} ${unit === "G" ? "g" : unit === "ML" ? "ml" : "portion"}`;
+
+  const preferredUnit = explicitUnit ?? defaultUnit ?? (density > 0 ? "ML" : gramsPerPortion > 0 ? "PORTION" : "G");
+
+  if (amount > 0) {
+    return { amount, unit: preferredUnit };
   }
-  return `${Math.round(foodLogWeight(fl) * 10) / 10} g`;
+
+  const weight = foodLogWeight(fl);
+  if (weight <= 0) {
+    return { amount: 0, unit: preferredUnit === "ML" && density > 0 ? "ML" : preferredUnit === "PORTION" && gramsPerPortion > 0 ? "PORTION" : "G" };
+  }
+
+  if (preferredUnit === "ML" && density > 0) {
+    return { amount: weight / density, unit: "ML" };
+  }
+
+  if (preferredUnit === "PORTION" && gramsPerPortion > 0) {
+    return { amount: weight / gramsPerPortion, unit: "PORTION" };
+  }
+
+  return { amount: weight, unit: "G" };
+}
+
+function foodLogAmountDisplay(fl: FoodLog): string {
+  const { amount, unit } = foodLogDisplayParts(fl);
+  return `${Math.round(amount * 10) / 10} ${formatPortionUnit(unit)}`;
 }
 
 function foodLogName(fl: FoodLog): string {
@@ -486,7 +543,9 @@ async function loadDashboard() {
   loading.value = false;
 }
 
-watch(selectedDate, loadDashboard);
+watch(selectedDate, () => {
+  void loadDashboard();
+});
 
 watch(meals, starDragListeners)
 
@@ -584,6 +643,7 @@ onMounted(async () => {
     await router.push({ name: "login" });
     return;
   }
+  await syncSelectedDateInUrl(selectedDate.value);
   await loadDashboard();
   starDragListeners();
 });
