@@ -96,13 +96,15 @@
             <th>Position</th>
             <th>Context</th>
             <th>Arm</th>
+            <th>Hours Since Caffeine</th>
+            <th>Caffeine Amount (mg)</th>
             <th>Symptoms</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td colspan="9" style="text-align: center;">
+            <td colspan="11" style="text-align: center;">
               <button class="button" @click="openBpAddModal">Log Blood Pressure</button>
             </td>
           </tr>
@@ -111,7 +113,7 @@
             <td>{{ roundTo(averageBp.systolic, 2) }}</td>
             <td>{{ roundTo(averageBp.diastolic, 2) }}</td>
             <td>{{ roundTo(averageBp.pulse, 2) }}</td>
-            <td colspan="5"></td>
+            <td colspan="7"></td>
           </tr>
           <tr v-for="log in bpLogs" :key="log.id">
             <td>{{ formatDateTime(log.timestamp) }}</td>
@@ -121,6 +123,8 @@
             <td>{{ log.position }}</td>
             <td>{{ log.context }}</td>
             <td>{{ log.arm }}</td>
+            <td>{{ (log.hoursSinceLastCaffeine || 0) < 24 ? log.hoursSinceLastCaffeine : "-" }}</td>
+            <td>{{ (log.hoursSinceLastCaffeine || 0) < 24 ? log.lastCaffeineAmountMg : "-" }}</td>
             <td>{{ log.symptoms }}</td>
             <td>
               <button class="button" @click="openBpEditModal(log)" style="margin-right: 5px;">Edit</button>

@@ -124,6 +124,8 @@
             <th>REM Sleep</th>
             <th>Total Sleep</th>
             <th>Rested Score</th>
+            <th>Hours Since Caffeine</th>
+            <th>Caffeine Amount (mg)</th>
             <th>Headache</th>
             <th>Dizziness</th>
             <th>Actions</th>
@@ -131,7 +133,7 @@
         </thead>
         <tbody>
           <tr>
-            <td colspan="14" style="text-align: center;">
+            <td colspan="16" style="text-align: center;">
               <button class="button" @click="openAddModal" style="width: fit-content; margin: 10px auto;">Log Sleep Data</button>
             </td>
           </tr>
@@ -148,7 +150,7 @@
             <td>{{ formatMinutes(averageSleep.remSleepMinutes) }}</td>
             <td>{{ formatMinutes(averageSleep.totalSleepMinutes) }}</td>
             <td>{{ roundTo(averageSleep.restedScore, 2) }}</td>
-            <td colspan="3"></td>
+            <td colspan="5"></td>
           </tr>
           <tr v-for="log in filteredSleepLogs" :key="log.id">
             <td> {{ log.id }}</td>
@@ -163,6 +165,8 @@
             <td>{{ log.remSleepMinutes != null ? formatMinutes(log.remSleepMinutes) : '' }}</td>
             <td>{{ log.totalSleepMinutes != null ? formatMinutes(log.totalSleepMinutes) : '' }}</td>
             <td>{{ log.restedScore }}</td>
+            <td>{{ (log.hoursSinceLastCaffeine || 0) < 24 ? log.hoursSinceLastCaffeine : "-" }}</td>
+            <td>{{ (log.hoursSinceLastCaffeine || 0) < 24 ? log.lastCaffeineAmountMg : "-" }}</td>
             <td>{{ log.morningHeadache ? 'Yes' : 'No' }}</td>
             <td>{{ log.morningDizziness ? 'Yes' : 'No' }}</td>
             <td>
@@ -409,7 +413,8 @@ const submitForm = async () => {
     turningSpikeMaxHr: form.value.turningSpikeMaxHr,
     subjectiveHours: form.value.subjectiveHours,
     notes: form.value.notes,
-    sleepType: form.value.sleepType || ''
+    sleepType: form.value.sleepType || '',
+    restedScore: form.value.restedScore
   };
   if (editId.value) {
     await updateSleepLog(editId.value, data as UpdateSleepLog);

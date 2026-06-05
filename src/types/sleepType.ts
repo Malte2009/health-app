@@ -22,6 +22,8 @@ export type SleepLog = {
   sleepType?: string;
   notes?: string;
   hrvRecording?: any;
+  hoursSinceLastCaffeine?: number;
+  lastCaffeineAmountMg?: number;
 };
 
 export type CreateSleepLog = Omit<SleepLog, 'id' | 'userId' | 'createdAt' | 'updatedAt'>;

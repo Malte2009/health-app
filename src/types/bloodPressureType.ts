@@ -10,6 +10,8 @@ export type BloodPressureLog = {
   position?: string;
   context?: string;
   minutesAfterPositionChange?: number;
+  hoursSinceLastCaffeine?: number;
+  lastCaffeineAmountMg?: number;
   symptoms?: string;
   arm?: string;
   trainingId?: string;
