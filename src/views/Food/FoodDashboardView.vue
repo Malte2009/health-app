@@ -86,7 +86,10 @@
           <div v-if="hasMealFoods(meal)" class="food-logs-list">
             <div v-for="(fl, idx) in mealFoodLogs(meal)" :key="fl.id || `${meal.id}-${idx}`" class="food-log-item">
               <div class="food-log-left">
-                <div class="food-log-name">{{ foodLogName(fl) }}</div>
+                <div class="food-log-name">
+                  {{ foodLogName(fl) }}
+                  <span v-if="fl.date" class="food-log-time">{{ formatFoodLogTime(fl) }}</span>
+                </div>
                 <div class="food-log-macros">
                   <span class="macro-pill weight-pill">{{ foodLogAmountDisplay(fl) }}</span>
                   <span class="macro-pill kcal-pill">{{ calcFoodLogCalories(fl) }} kcal</span>
@@ -475,6 +478,13 @@ function foodLogAmountDisplay(fl: FoodLog): string {
 function foodLogName(fl: FoodLog): string {
   const withFoodItem = fl as FoodLog & { food_item?: { name?: string } };
   return fl.food?.name ?? withFoodItem.food_item?.name ?? "Unknown";
+}
+
+function formatFoodLogTime(fl: FoodLog): string {
+  if (!fl.date) return "";
+  const dateObj = new Date(fl.date);
+  if (isNaN(dateObj.getTime())) return "";
+  return dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
 function nutrientVal(key: NutrientValueKey): number | null {
@@ -1105,6 +1115,15 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.food-log-time {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 400;
 }
 
 .food-log-macros {

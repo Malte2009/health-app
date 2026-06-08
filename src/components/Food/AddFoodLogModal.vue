@@ -50,6 +50,12 @@
               <option value="PORTION">portion</option>
             </select>
           </div>
+
+          <div class="weight-row">
+            <label class="weight-label">Time</label>
+            <input v-model="time" class="time-input" type="time" />
+          </div>
+
           <div v-if="unit === 'ML' && !selectedFood?.density_g_per_ml" class="status-msg density-hint">
             This food has no density (g/ml). Weight will fallback to backend defaults.
           </div>
@@ -106,6 +112,10 @@
                 <label class="weight-label">Scale</label>
                 <input v-model.number="recipeScale" class="weight-input" type="number" min="0.1" step="0.1" />
               </div>
+              <div class="weight-row">
+                <label class="weight-label">Time</label>
+                <input v-model="time" class="time-input" type="time" />
+              </div>
               <div class="recipe-log-actions">
                 <button class="log-btn" :disabled="saving" @click="logRecipe">{{ saving ? 'Logging...' : 'Log Recipe' }}</button>
                 <button class="back-btn" @click="selectedRecipe = null">Cancel</button>
@@ -142,6 +152,7 @@ const searchResults = ref<Food[]>([]);
 const selectedFood = ref<Food | null>(null);
 const amount = ref<number>(100);
 const unit = ref<PortionUnit>("G");
+const time = ref<string>(new Date().toTimeString().slice(0, 5));
 const loading = ref(false);
 const saving = ref(false);
 const showAdvancedMacros = ref(false);
@@ -198,12 +209,13 @@ const calcSalt = computed(() => selectedFood.value ? Math.round((((selectedFood.
 async function logFood() {
   if (!selectedFood.value || amount.value <= 0) return;
   saving.value = true;
+  const combinedDate = `${props.date}T${time.value}:00`;
   const result = await createFoodLog(props.mealLogId, {
     foodId: selectedFood.value.id,
     amount: amount.value,
     unit: unit.value,
     weight_g: effectiveWeight.value > 0 ? effectiveWeight.value : undefined,
-    date: props.date,
+    date: combinedDate,
   });
   saving.value = false;
   if (result) { emit("logged"); emit("close"); }
@@ -226,10 +238,11 @@ function selectRecipe(recipe: MealRecipe) {
 async function logRecipe() {
   if (!selectedRecipe.value) return;
   saving.value = true;
+  const combinedDate = `${props.date}T${time.value}:00`;
   const result = await logMealRecipe(selectedRecipe.value.id, {
     mealLogId: props.mealLogId,
     scaleFactor: recipeScale.value,
-    date: props.date,
+    date: combinedDate,
   });
   saving.value = false;
   if (result) { emit("logged"); emit("close"); }
@@ -428,6 +441,23 @@ async function logRecipe() {
 }
 
 .unit-select:focus { border-color: var(--primary); outline: none; }
+
+.time-input {
+  width: 150px;
+  text-align: center;
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 1.1rem;
+  padding: 10px 14px;
+  outline: none;
+  min-height: 48px;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.time-input:focus { border-color: var(--primary); }
 
 .density-hint {
   padding-top: 0;
