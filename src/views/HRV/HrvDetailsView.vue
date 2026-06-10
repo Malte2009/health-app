@@ -16,6 +16,9 @@
         <button @click="resetZoom" class="apply-btn" style="background-color: var(--bg-surface-secondary); color: var(--text-main);">
           Reset Zoom
         </button>
+        <button @click="copyVisibleRR" class="apply-btn" style="background-color: var(--bg-surface-secondary); color: var(--text-main);">
+          Copy Visible RR
+        </button>
       </div>
       <div v-if="isLoading" class="loading-spinner"></div>
     </div>
@@ -231,6 +234,7 @@ const hrvRecording = ref<any>({});
 const loadedMetrics = ref<any>({});
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rrdata = ref<any>([]);
+const rrTimes = ref<number[]>([]);
 
 const relatedSleepLog = ref<SleepLog | null>(null);
 
@@ -349,6 +353,7 @@ const loadData = async (filterString: string) => {
       currentTime += rawRr[i] / 1000;
       times.push(currentTime);
     }
+    rrTimes.value = times;
 
     const bpmData = rawRr.map((rr: number) => 60000 / rr);
 
@@ -411,6 +416,27 @@ const resetZoom = () => {
   rrChartInst?.resetZoom();
   hrChartInst?.resetZoom();
   hrvChartInst?.resetZoom();
+};
+
+const copyVisibleRR = async () => {
+  if (!rrChartInst) return;
+
+  const minTime = rrChartInst.scales.x?.min ?? 0;
+  const maxTime = rrChartInst.scales.x?.max ?? rrTimes.value[rrTimes.value.length - 1];
+
+  const visibleRRs = [];
+  for (let i = 0; i < rrTimes.value.length; i++) {
+    if (rrTimes.value[i] >= minTime && rrTimes.value[i] <= maxTime) {
+      visibleRRs.push(rrdata.value[i]);
+    }
+  }
+
+  try {
+    await navigator.clipboard.writeText(visibleRRs.join('\n'));
+    alert(`Copied ${visibleRRs.length} RR intervals to clipboard!`);
+  } catch (err) {
+    console.error('Failed to copy visible RR intervals: ', err);
+  }
 };
 
 onMounted(async () => {
