@@ -21,4 +21,9 @@ export default [
     name: "createTraining",
     component: () => import("../views/Training/CreateTrainingView.vue"),
   },
+  {
+    path: "/training/progression",
+    name: "progression",
+    component: () => import("../views/ProgressionView.vue"),
+  }
 ];
