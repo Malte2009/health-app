@@ -3,7 +3,7 @@ import type { changeExerciseLogRequest, createExerciseLogRequest, exerciseLog } 
 
 export const getExerciseLogById = async (id: string): Promise<exerciseLog | void> => {
   try {
-    return (await api.get(`/exerciseLog/getExerciseLog/${id}`)).data;
+    return (await api.get(`/exerciseLog/${id}`)).data;
   } catch (error) {
     console.error(error);
   }
@@ -11,7 +11,7 @@ export const getExerciseLogById = async (id: string): Promise<exerciseLog | void
 
 export const changeExerciseLog = async (exercise: changeExerciseLogRequest): Promise<exerciseLog | void> => {
   try {
-    return (await api.patch(`/exerciseLog/changeExerciseLog/${exercise.id}`, exercise)).data;
+    return (await api.patch(`/exerciseLog/${exercise.id}`, exercise)).data;
   } catch (error) {
     console.error(error);
   }
@@ -19,7 +19,7 @@ export const changeExerciseLog = async (exercise: changeExerciseLogRequest): Pro
 
 export const createExerciseLog = async (exercise: createExerciseLogRequest): Promise<exerciseLog | void> => {
   try {
-    return (await api.post("/exerciseLog/createExerciseLog", exercise)).data;
+    return (await api.post("/exerciseLog", exercise)).data;
   } catch (error) {
     console.error(error);
   }
@@ -27,7 +27,7 @@ export const createExerciseLog = async (exercise: createExerciseLogRequest): Pro
 
 export const deleteExerciseLogRequest = async (id: string): Promise<void> => {
   try {
-    await api.delete(`/exerciseLog/deleteExerciseLog/${id}`);
+    await api.delete(`/exerciseLog/${id}`);
   } catch (error) {
     console.error(error);
   }

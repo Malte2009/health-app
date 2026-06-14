@@ -3,7 +3,7 @@ import type { changeSetRequestType, createSetRequestType, set } from "@/types/se
 
 export const getSetById = async (id: string): Promise<set | void> => {
   try {
-    return (await api.get(`/set/getSet/${id}`)).data;
+    return (await api.get(`/set/${id}`)).data;
   } catch (error) {
     console.error(error);
   }
@@ -11,7 +11,7 @@ export const getSetById = async (id: string): Promise<set | void> => {
 
 export const getSetTypes = async (): Promise<string[]> => {
   try {
-    return (await api.get("/set/getSetTypes")).data;
+    return (await api.get("/set/types")).data;
   } catch (error) {
     console.error(error);
     return [];
@@ -20,7 +20,7 @@ export const getSetTypes = async (): Promise<string[]> => {
 
 export const getSetUnits = async (): Promise<string[]> => {
   try {
-    return (await api.get("/set/getSetUnits")).data;
+    return (await api.get("/set/units")).data;
   } catch (error) {
     console.error(error);
     return [];
@@ -29,7 +29,7 @@ export const getSetUnits = async (): Promise<string[]> => {
 
 export const changeSetRequest = async (set: changeSetRequestType): Promise<set | void> => {
   try {
-    return (await api.patch(`/set/changeSet/${set.id}`, set)).data;
+    return (await api.patch(`/set/${set.id}`, set)).data;
   } catch (error) {
     console.error(error);
   }
@@ -37,7 +37,7 @@ export const changeSetRequest = async (set: changeSetRequestType): Promise<set |
 
 export const createSetRequest = async (set: createSetRequestType): Promise<set | void> => {
   try {
-    return (await api.post("/set/createSet", set)).data;
+    return (await api.post("/set", set)).data;
   } catch (error) {
     console.error(error);
   }
@@ -45,7 +45,7 @@ export const createSetRequest = async (set: createSetRequestType): Promise<set |
 
 export const deleteSetRequest = async (setId: string): Promise<void> => {
   try {
-    await api.delete(`/set/deleteSet/${setId}`);
+    await api.delete(`/set/${setId}`);
   } catch (error) {
     console.error(error);
   }

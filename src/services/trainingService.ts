@@ -6,7 +6,7 @@ import type {
 
 export const getTrainings = async (): Promise<getTrainingResponseType[]> => {
   try {
-    return (await api.get("/training/getTraining")).data;
+    return (await api.get("/training")).data;
   } catch (error) {
     console.error(error);
     return [];
@@ -15,7 +15,7 @@ export const getTrainings = async (): Promise<getTrainingResponseType[]> => {
 
 export const getTrainingById = async (id: string): Promise<getTrainingResponseType | void> => {
   try {
-    return (await api.get(`/training/getTraining/${id}`)).data;
+    return (await api.get(`/training/${id}`)).data;
   } catch (error) {
     console.error(error);
   }
@@ -23,7 +23,7 @@ export const getTrainingById = async (id: string): Promise<getTrainingResponseTy
 
 export const getTrainingNames= async (): Promise<string[]> => {
   try {
-    return (await api.get("/training/getTrainingNames")).data;
+    return (await api.get("/training/names")).data;
   } catch (error) {
     console.error(error);
     return [];
@@ -32,7 +32,7 @@ export const getTrainingNames= async (): Promise<string[]> => {
 
 export const updateTraining = async (id: string, training: training): Promise<training | void> => {
   try {
-    return (await api.patch(`/training/updateTraining/${id}`, training)).data;
+    return (await api.patch(`/training/${id}`, training)).data;
   } catch (error) {
     console.error(error);
   }
@@ -40,7 +40,7 @@ export const updateTraining = async (id: string, training: training): Promise<tr
 
 export const createTrainingLog = async (training: createTrainingLogRequestType): Promise<training | void> => {
   try {
-    return (await api.post("/training/createTraining", training)).data;
+    return (await api.post("/training", training)).data;
   } catch (error) {
     console.error(error);
   }
@@ -48,7 +48,7 @@ export const createTrainingLog = async (training: createTrainingLogRequestType):
 
 export const deleteTrainingRequest = async (id: string): Promise<void> => {
   try {
-    await api.delete(`/training/deleteTraining/${id}`);
+    await api.delete(`/training/${id}`);
   } catch (error) {
     console.error(error);
   }
