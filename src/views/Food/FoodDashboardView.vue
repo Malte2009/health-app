@@ -122,21 +122,29 @@
           <div v-for="group in nutrientGroups" :key="group.title" class="micro-group">
             <h4 class="micro-group-title">{{ group.title }}</h4>
             <div class="micro-grid">
-              <div v-for="n in group.items" :key="n.key" class="micro-item">
+              <div v-for="n in group.items" :key="n.key" class="micro-item" :class="{ 'micro-item-nested': hasChildNutrients(n) }">
                 <div class="micro-top">
                   <span class="micro-name">{{ n.label }}</span>
                   <span class="micro-val" :class="{ 'micro-zero': !nutrientVal(n.key) }">
-                    {{ nutrientVal(n.key) != null ? nutrientVal(n.key) + " " + n.unit : "—" }}
+                    {{ nutrientDisplay(n) }}
                   </span>
                 </div>
+                <div v-if="hasChildNutrients(n)" class="micro-breakdown">
+                  <div v-for="child in childNutrients(n)" :key="child.key" class="micro-child-row">
+                    <span class="micro-child-name">{{ child.label }}</span>
+                    <span class="micro-child-val" :class="{ 'micro-zero': !nutrientVal(child.key) }">
+                      {{ nutrientDisplay(child) }}
+                    </span>
+                  </div>
+                </div>
                 <!-- NRV bar -->
-                <div v-if="nrvData[n.key]" class="nrv-bar-track">
+                <div v-if="hasNrvProgress(n.key)" class="nrv-bar-track">
                   <div
                     class="nrv-bar"
-                    :style="{ width: Math.min(100, nrvData[n.key].progress_percent) + '%' }"
-                    :class="{ 'nrv-full': nrvData[n.key].progress_percent >= 100 }"
+                    :style="{ width: nrvProgressWidth(n.key) }"
+                    :class="{ 'nrv-full': isNrvComplete(n.key) }"
                   ></div>
-                  <span class="nrv-pct">{{ Math.round(nrvData[n.key].progress_percent) }}%</span>
+                  <span class="nrv-pct">{{ nrvProgressLabel(n.key) }}</span>
                 </div>
               </div>
             </div>
@@ -493,6 +501,41 @@ function nutrientVal(key: NutrientValueKey): number | null {
   return Math.round(v * 10) / 10;
 }
 
+function nutrientDisplay(nutrient: NutrientDef): string {
+  const value = nutrientVal(nutrient.key);
+  return value == null ? "—" : `${value} ${nutrient.unit}`;
+}
+
+function hasChildNutrients(nutrient: NutrientDef): nutrient is NutrientDef & { children: NutrientDef[] } {
+  return Array.isArray(nutrient.children) && nutrient.children.length > 0;
+}
+
+function childNutrients(nutrient: NutrientDef): NutrientDef[] {
+  return nutrient.children ?? [];
+}
+
+function nrvProgress(key: NutrientValueKey): NrvProgressItem | null {
+  return nrvData.value[key] ?? null;
+}
+
+function hasNrvProgress(key: NutrientValueKey): boolean {
+  return nrvProgress(key) != null;
+}
+
+function nrvProgressWidth(key: NutrientValueKey): string {
+  const progress = nrvProgress(key);
+  return progress ? `${Math.min(100, progress.progress_percent)}%` : "0%";
+}
+
+function nrvProgressLabel(key: NutrientValueKey): string {
+  const progress = nrvProgress(key);
+  return progress ? `${Math.round(progress.progress_percent)}%` : "";
+}
+
+function isNrvComplete(key: NutrientValueKey): boolean {
+  return (nrvProgress(key)?.progress_percent ?? 0) >= 100;
+}
+
 function openAddFood(mealId: string) {
   addFoodMealId.value = mealId;
 }
@@ -663,7 +706,7 @@ function sleep(ms: number) {
 }
 
 // Nutrient definitions grouped
-type NutrientDef = { key: NutrientValueKey; label: string; unit: string };
+type NutrientDef = { key: NutrientValueKey; label: string; unit: string; children?: NutrientDef[] };
 
 const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   {
@@ -709,9 +752,18 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   {
     title: "Fatty Acids",
     items: [
-      { key: "omega_3", label: "Omega-3", unit: "mg" },
-      { key: "omega_6", label: "Omega-6", unit: "mg" },
-      { key: "omega_9", label: "Omega-9", unit: "mg" },
+      {
+        key: "omega_3",
+        label: "Omega 3",
+        unit: "mg",
+        children: [
+          { key: "omega_3_ala_mg", label: "ALA", unit: "mg" },
+          { key: "omega_3_epa_mg", label: "EPA", unit: "mg" },
+          { key: "omega_3_dha_mg", label: "DHA", unit: "mg" },
+        ],
+      },
+      { key: "omega_6", label: "Omega 6", unit: "mg" },
+      { key: "omega_9", label: "Omega 9", unit: "mg" },
     ],
   },
 ];
@@ -1277,6 +1329,11 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   padding: 6px 10px;
   background: var(--bg-surface-secondary);
   border-radius: 6px;
+  height: fit-content;
+}
+
+.micro-item-nested {
+  padding-bottom: 8px;
 }
 
 .micro-top {
@@ -1284,20 +1341,58 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2px;
+  gap: 10px;
 }
 
 .micro-name {
   font-size: 0.78rem;
   color: var(--text-secondary);
 }
+
 .micro-val {
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--primary);
+  white-space: nowrap;
 }
+
 .micro-zero {
   color: var(--text-secondary);
   font-weight: 400;
+}
+
+.micro-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 7px 0 4px;
+  padding-left: 10px;
+  border-left: 2px solid rgba(0, 191, 174, 0.28);
+}
+
+.micro-child-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 7px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+}
+
+.micro-child-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.03em;
+}
+
+.micro-child-val {
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--primary);
+  white-space: nowrap;
 }
 
 /* NRV Progress Bar */

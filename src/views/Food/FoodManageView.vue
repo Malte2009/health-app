@@ -685,6 +685,9 @@ const minerals: NutrientField[] = [
 
 const fattyAcids: NutrientField[] = [
   { key: "omega_3", label: "Omega-3", unit: "mg" },
+  { key: "omega_3_ala_mg", label: "Omega-3 ALA", unit: "mg" },
+  { key: "omega_3_epa_mg", label: "Omega-3 EPA", unit: "mg" },
+  { key: "omega_3_dha_mg", label: "Omega-3 DHA", unit: "mg" },
   { key: "omega_6", label: "Omega-6", unit: "mg" },
   { key: "omega_9", label: "Omega-9", unit: "mg" },
 ];

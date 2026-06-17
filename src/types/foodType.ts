@@ -32,6 +32,9 @@ export interface Nutrient {
   molybdenum?: number;
   fluoride?: number;
   omega_3?: number;
+  omega_3_ala_mg?: number;
+  omega_3_epa_mg?: number;
+  omega_3_dha_mg?: number;
   omega_6?: number;
   omega_9?: number;
   caffeine?: number;
