@@ -1,5 +1,16 @@
 import api from "./api";
 
+export type HrvRecordingQueryParams = {
+    name?: string;
+    date?: string;
+    startTime?: string;
+    endTime?: string;
+    device?: string;
+    context?: string;
+    workoutId?: string;
+    sleepLogId?: string;
+}
+
 export const getHrvRecordings = async (includeWindows: boolean = false) => {
     return (await api.get(`/hrv${includeWindows ? '?includeWindows=true' : ''}`)).data;
 }
@@ -20,14 +31,14 @@ export const getHrvMetrics = async (id: string, filters: string) => {
     return (await api.get(`/hrv/metrics/${id}?filters=${filters}`, { timeout: 0 })).data;
 }
 
-export const createHrvRecording = async (rrData: string, queryParams: any) => {
+export const createHrvRecording = async (rrData: string, queryParams: HrvRecordingQueryParams) => {
     return (await api.post(`/hrv`, rrData, {
         headers: { 'Content-Type': 'text/plain' },
         params: queryParams
     })).data;
 }
 
-export const updateHrvRecording = async (id: string, rrData?: string, queryParams?: any) => {
+export const updateHrvRecording = async (id: string, rrData?: string, queryParams?: HrvRecordingQueryParams) => {
     return (await api.patch(`/hrv/${id}`, rrData, {
         headers: { 'Content-Type': 'text/plain' },
         params: queryParams
