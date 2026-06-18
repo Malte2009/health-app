@@ -101,17 +101,21 @@ function getProgressExportText(exercise: ExerciseWithProgress): string {
   });
 
   const rows = workoutExercises
-    .map((workoutExercise) => [...(workoutExercise.workoutSets ?? [])].sort((a, b) => a.order - b.order))
-    .filter((sets) => sets.length > 0)
-    .map((sets) => {
+    .map((workoutExercise) => ({
+      date: new Date(workoutExercise.createdAt).toISOString().slice(0, 10),
+      sets: [...(workoutExercise.workoutSets ?? [])].sort((a, b) => a.order - b.order),
+    }))
+    .filter((entry) => entry.sets.length > 0)
+    .map((entry) => {
+      const { date, sets } = entry;
       const cells = sets.map((set) => `${set.weight}:${set.reps} (${set.repUnit})`);
-      return [exercise.name, ...cells];
+      return [date, exercise.name, ...cells];
     });
 
   if (rows.length === 0) return "";
 
-  const maxSetCount = Math.max(...rows.map((row) => row.length - 1));
-  const header = ["ExerciseName", ...Array.from({ length: maxSetCount }, (_, index) => `Weight ${index + 1}:reps (RepUnit)`)];
+  const maxSetCount = Math.max(...rows.map((row) => row.length - 2));
+  const header = ["Date", "ExerciseName", ...Array.from({ length: maxSetCount }, (_, index) => `Weight ${index + 1}:reps (RepUnit)`)];
 
   return [header, ...rows]
     .map((row) => row.join(", "))
