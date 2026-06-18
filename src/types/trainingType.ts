@@ -1,12 +1,12 @@
-import type { exerciseLog } from "./exerciseLogType.ts";
+import type { exerciseLog, workoutExercise } from "./exerciseLogType.ts";
 
-export type training = {
+export type workout = {
   id: string;
   userId: string;
   createdAt: Date;
   changedAt?: Date;
   name: string;
-  type: string;
+  type?: string;
   score?: number;
   notes?: string;
   caloriesBurned?: number;
@@ -14,13 +14,12 @@ export type training = {
   avgHeartRate?: number;
   pauses?: number;
   pauseLength?: number;
-
-  exerciseLogs: exerciseLog[];
+  workoutExercises: workoutExercise[];
 };
 
-export type createTrainingLogRequestType = {
-  type: string;
+export type createWorkoutRequest = {
   name: string;
+  type?: string;
   avgHeartRate?: number;
   duration?: number;
   notes?: string;
@@ -28,20 +27,13 @@ export type createTrainingLogRequestType = {
   pauseLength?: number;
 };
 
-export type getTrainingResponseType = {
-  id: string;
-  userId: string;
-  createdAt: Date;
-  changedAt?: Date;
-  type: string;
-  name: string;
-  score?: number;
-  notes?: string;
-  caloriesBurned?: number;
-  duration?: number;
-  avgHeartRate?: number;
-  pauses?: number;
-  pauseLength?: number;
+export type getWorkoutResponse = workout;
 
+export type training = Omit<workout, "workoutExercises"> & {
+  type: string;
   exerciseLogs: exerciseLog[];
 };
+
+export type createTrainingLogRequestType = createWorkoutRequest;
+
+export type getTrainingResponseType = training;

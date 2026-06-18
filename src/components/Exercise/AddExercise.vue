@@ -20,8 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import { createExerciseLog } from "@/services/exerciseLogService.ts";
-import type { createExerciseLogRequest } from "@/types/exerciseLogType.ts";
+import WorkoutExerciseService from "@/services/exerciseLogService.ts";
+import type { createWorkoutExerciseRequest } from "@/types/exerciseLogType.ts";
 import { onMounted, ref } from "vue";
 import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { useTypeStore } from "@/stores/type.ts";
@@ -32,7 +32,7 @@ const typeStore = useTypeStore();
 const emit = defineEmits(["close", "reload"]);
 
 const props = defineProps<{
-  trainingId: string;
+  workoutId: string;
 }>();
 
 const showCustomInput = ref(false);
@@ -59,19 +59,18 @@ async function submit() {
       exerciseInput.style.borderColor = "var(--border)";
     });
 
-    await trainingStore.sortExerciseLogs(props.trainingId);
+    await trainingStore.sortExerciseLogs(props.workoutId);
 
     return;
   }
 
-  const exerciseData: createExerciseLogRequest = {
+  const exerciseData: createWorkoutExerciseRequest = {
     name: exerciseName,
-    trainingId: props.trainingId,
-    order: trainingStore.getTrainingById(props.trainingId)?.exerciseLogs.length || 0,
+    order: trainingStore.getTrainingById(props.workoutId)?.exerciseLogs.length || 0,
     notes: (document.getElementById("exerciseLogNotes") as HTMLTextAreaElement).value || undefined,
   };
 
-  const newExerciseLog = await createExerciseLog(exerciseData);
+  const newExerciseLog = await WorkoutExerciseService.createWorkoutExercise(props.workoutId, exerciseData);
 
   if (!newExerciseLog) {
     console.error("Failed to create exerciseLog");

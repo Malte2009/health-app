@@ -52,8 +52,8 @@
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import type { createTrainingLogRequestType } from "@/types/trainingType.ts";
-import { createTrainingLog } from "@/services/trainingService.ts";
+import type { createWorkoutRequest } from "@/types/trainingType.ts";
+import WorkoutService from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
@@ -69,9 +69,14 @@ const showCustomInput = ref(false);
 const HFmax = ref(0);
 
 function checkInput() {
-  const input = document.getElementById("trainingTypeSelect") as HTMLSelectElement;
+  const input = document.getElementById("trainingNameSelect") as HTMLSelectElement;
 
   showCustomInput.value = input.value === "Custom";
+}
+
+function optionalInteger(value: string): number | undefined {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
 }
 
 async function submit() {
@@ -79,8 +84,8 @@ async function submit() {
   const trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
-  const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value);
-  const pauseLength = parseInt((document.getElementById("pauseLength") as HTMLInputElement).value);
+  const pauses = optionalInteger((document.getElementById("pauses") as HTMLInputElement).value);
+  const pauseLength = optionalInteger((document.getElementById("pauseLength") as HTMLInputElement).value);
 
   if (showCustomInput.value) {
     trainingName = (document.getElementById("trainingName") as HTMLInputElement).value;
@@ -88,20 +93,20 @@ async function submit() {
 
   console.log(trainingName, trainingDuration, averageHeartRate, pauses, pauseLength);
 
-  const trainingData: createTrainingLogRequestType = {
-    type: trainingType,
+  const trainingData: createWorkoutRequest = {
     name: trainingName,
-    duration: parseInt(trainingDuration, 10),
-    avgHeartRate: parseInt(averageHeartRate, 10),
-    pauses,
-    pauseLength,
+    type: trainingType || undefined,
+    duration: optionalInteger(trainingDuration),
+    avgHeartRate: optionalInteger(averageHeartRate),
+    ...(pauses !== undefined ? { pauses } : {}),
+    ...(pauseLength !== undefined ? { pauseLength } : {}),
     notes: (document.getElementById("notes") as HTMLInputElement).value || undefined,
   };
 
   let trainingLog;
 
   try {
-    trainingLog = await createTrainingLog(trainingData);
+    trainingLog = await WorkoutService.createWorkout(trainingData);
   } catch (error) {
     handleError(error as AxiosError);
     return;

@@ -1,10 +1,8 @@
-import type { exerciseLog } from "@/types/exerciseLogType.ts";
-
-
-export type exerciseType = {
+export type Exercise = {
   name: string;
   id: string;
-  userId: string;
   createdAt: Date;
   changedAt?: Date;
 };
+
+export type exerciseType = Exercise;

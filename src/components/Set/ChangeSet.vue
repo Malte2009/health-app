@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { changeSetRequest } from "@/services/setService.ts";
+import WorkoutSetService from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
 import type { changeSetRequestType } from "@/types/setType.ts";
 import type { AxiosError } from "axios";
@@ -42,6 +42,8 @@ const trainingStore = useTrainingStore();
 
 const props = defineProps<{
   setId: string;
+  workoutId: string;
+  workoutExerciseId: string;
 }>();
 
 const setTypes = ref<string[]>([]);
@@ -98,20 +100,22 @@ async function submit() {
 
   const setData: changeSetRequestType = {
     id: props.setId,
+    workoutId: props.workoutId,
+    workoutExerciseId: props.workoutExerciseId,
     type,
     reps,
     weight,
     repUnit,
-    setTime
+    ...(Number.isFinite(setTime) ? { setTime } : {}),
   };
 
   try {
-    const changedSet = await changeSetRequest(setData);
+    const changedSet = await WorkoutSetService.changeWorkoutSet(setData);
 
     if (changedSet) {
       trainingStore.updateSet(changedSet);
 
-      if (customRepUnitInput.value) typeStore.addSetUnitType(type);
+      if (customRepUnitInput.value) typeStore.addSetUnitType(repUnit);
       if (customTypeInput.value) typeStore.addSetType(type);
     }
   } catch (error) {
@@ -225,7 +229,7 @@ async function loadOldSetData() {
       }
 
       if (setData.setTime) {
-        (document.getElementById("time") as HTMLInputElement).value = setData.setTime.toString();
+        (document.getElementById("set-length") as HTMLInputElement).value = setData.setTime.toString();
       }
     }
   } catch (error) {

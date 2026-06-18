@@ -15,16 +15,16 @@
             <button class="button" @click="router.push({ name: 'createExercise' })">Add New Exercise</button>
           </td>
         </tr>
-        <tr v-for="exercise in exercises" :key="exercise.name">
+        <tr v-for="exercise in exercises" :key="exercise.id">
           <td>{{ exercise.name }}</td>
           <td>
-            <button class="button button-primary" @click="router.push({ name: 'exerciseDetails', params: { name: exercise.name } })">View</button>
-            <button class="button button-secondary" @click="router.push({ name: 'editExercise', params: { name: exercise.name } })">Edit</button>
+            <button class="button button-primary" @click="router.push({ name: 'exerciseDetails', params: { id: exercise.id } })">View</button>
+            <button class="button button-secondary" @click="router.push({ name: 'editExercise', params: { id: exercise.id } })">Edit</button>
             <button
               class="button button-danger"
               @click="
                 showConfirmDelete = true;
-                deleteExerciseName = exercise.name;
+                deleteExerciseId = exercise.id;
               "
             >
               Delete
@@ -33,25 +33,45 @@
         </tr>
       </tbody>
     </table>
+    <div v-if="showConfirmDelete" id="confirmDeleteModal" class="modal">
+      <div class="modal-content">
+        <p>Are you sure you want to delete this exercise?</p>
+        <button class="button button-danger" @click="confirmDelete(deleteExerciseId)">Delete</button>
+        <button class="button button-secondary" @click="cancelDelete()">Cancel</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import router from "@/router";
 import { onMounted, ref } from "vue";
-import type { exerciseType } from "@/types/exerciseType.ts";
-import { getExercises } from "@/services/exerciseService.ts";
+import type { Exercise } from "@/types/exerciseType.ts";
+import ExerciseService from "@/services/training/exercise.service.ts";
 import { useExerciseStore } from "@/stores/exerciseStore.ts";
 
 const exerciseStore = useExerciseStore();
 
-const exercises = ref([] as exerciseType[]);
+const exercises = ref([] as Exercise[]);
 
 const showConfirmDelete = ref(false);
-const deleteExerciseName = ref<string>("");
+const deleteExerciseId = ref<string>("");
+
+async function confirmDelete(id: string) {
+  await ExerciseService.deleteExercise(id);
+  exercises.value = exercises.value.filter((exercise) => exercise.id !== id);
+  exerciseStore.setExercises(exercises.value);
+  showConfirmDelete.value = false;
+  deleteExerciseId.value = "";
+}
+
+function cancelDelete() {
+  showConfirmDelete.value = false;
+  deleteExerciseId.value = "";
+}
 
 onMounted(async () => {
-  const exerciseData = await getExercises();
+  const exerciseData = await ExerciseService.getAllExercises();
 
   if (exerciseData) {
     exercises.value = exerciseData;

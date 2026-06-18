@@ -1,52 +1,69 @@
 import api from "./api";
-import type { changeSetRequestType, createSetRequestType, set } from "@/types/setType.ts";
+import type { changeSetRequestType, createSetRequestType, set, workoutSet } from "@/types/setType.ts";
 
-export const getSetById = async (id: string): Promise<set | void> => {
-  try {
-    return (await api.get(`/set/${id}`)).data;
-  } catch (error) {
-    console.error(error);
-  }
-};
+function normalizeWorkoutSet(workoutSet: workoutSet): set {
+  return {
+    ...workoutSet,
+    exerciseLogId: workoutSet.workoutExerciseId,
+  };
+}
 
-export const getSetTypes = async (): Promise<string[]> => {
-  try {
-    return (await api.get("/set/types")).data;
-  } catch (error) {
-    console.error(error);
-    return [];
+class WorkoutSetService {
+  async getWorkoutSetById(workoutId: string, workoutExerciseId: string, setId: string): Promise<set | void> {
+    try {
+      return normalizeWorkoutSet((await api.get(`/workouts/${workoutId}/exercises/${workoutExerciseId}/sets/${setId}`)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const getSetUnits = async (): Promise<string[]> => {
-  try {
-    return (await api.get("/set/units")).data;
-  } catch (error) {
-    console.error(error);
-    return [];
+  async getSetTypes(): Promise<string[]> {
+    try {
+      return (await api.get("/sets/types")).data;
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
-};
 
-export const changeSetRequest = async (set: changeSetRequestType): Promise<set | void> => {
-  try {
-    return (await api.patch(`/set/${set.id}`, set)).data;
-  } catch (error) {
-    console.error(error);
+  async getSetUnits(): Promise<string[]> {
+    try {
+      return (await api.get("/sets/units")).data;
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
-};
 
-export const createSetRequest = async (set: createSetRequestType): Promise<set | void> => {
-  try {
-    return (await api.post("/set", set)).data;
-  } catch (error) {
-    console.error(error);
-  }
-};
+  async createWorkoutSet(workoutId: string, workoutExerciseId: string, set: createSetRequestType): Promise<set | void> {
+    const { workoutId: _workoutId, workoutExerciseId: _workoutExerciseId, ...body } = set;
 
-export const deleteSetRequest = async (setId: string): Promise<void> => {
-  try {
-    await api.delete(`/set/${setId}`);
-  } catch (error) {
-    console.error(error);
+    try {
+      return normalizeWorkoutSet((await api.post(`/workouts/${workoutId}/exercises/${workoutExerciseId}/sets`, body)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
+
+  async changeWorkoutSet(set: changeSetRequestType): Promise<set | void> {
+    const { id, workoutId, workoutExerciseId, ...body } = set;
+
+    try {
+      return normalizeWorkoutSet((await api.patch(`/workouts/${workoutId}/exercises/${workoutExerciseId}/sets/${id}`, body)).data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async deleteWorkoutSet(workoutId: string, workoutExerciseId: string, setId: string): Promise<void> {
+    try {
+      await api.delete(`/workouts/${workoutId}/exercises/${workoutExerciseId}/sets/${setId}`);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+const workoutSetService = new WorkoutSetService();
+
+export default workoutSetService;

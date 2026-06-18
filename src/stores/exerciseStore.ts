@@ -1,21 +1,21 @@
 import { defineStore } from "pinia";
-import type { exerciseType } from "@/types/exerciseType.ts";
+import type { Exercise } from "@/types/exerciseType.ts";
 
 export const useExerciseStore = defineStore("exerciseStore", {
   state: () => ({
-    exercises: [] as Array<exerciseType>,
+    exercises: [] as Array<Exercise>,
     exerciseNames: [] as Array<string>,
   }),
 
   actions: {
-    setExercises(exercises: Array<exerciseType>) {
+    setExercises(exercises: Array<Exercise>) {
       this.exercises = exercises;
     },
     setExerciseNames(names: Array<string>) {
       this.exerciseNames = names;
     },
-    updateExercise(oldName: string, exercise: exerciseType) {
-      const index = this.exercises.findIndex((ex) => ex.name === oldName);
+    updateExercise(id: string, exercise: Exercise) {
+      const index = this.exercises.findIndex((ex) => ex.id === id);
 
       if (index !== -1) {
         this.exercises[index] = exercise;
@@ -23,16 +23,21 @@ export const useExerciseStore = defineStore("exerciseStore", {
     }
   },
   getters: {
-    getExercises(state): Array<exerciseType> {
+    getExercises(state): Array<Exercise> {
       return state.exercises;
     },
     getExerciseNames(state): Array<string> {
       return state.exerciseNames;
     },
     getExerciseByName: (state) => {
-      return (name: string): exerciseType | undefined => {
+      return (name: string): Exercise | undefined => {
         return state.exercises.find((exercise) => exercise.name === name);
       };
-    }
+    },
+    getExerciseById: (state) => {
+      return (id: string): Exercise | undefined => {
+        return state.exercises.find((exercise) => exercise.id === id);
+      };
+    },
   }
 });

@@ -52,11 +52,12 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { getTrainings, updateTraining } from "@/services/trainingService.ts";
+import WorkoutService from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
 import { getUserAge, isAuthenticated } from "@/services/authService.ts";
+import type { createWorkoutRequest } from "@/types/trainingType.ts";
 
 const trainingStore = useTrainingStore();
 const typeStore = useTypeStore();
@@ -107,13 +108,18 @@ function checkInput() {
   showCustomInput.value = input.value === "Custom";
 }
 
+function optionalInteger(value: string): number | undefined {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 async function submit() {
   let trainingName = (document.getElementById("trainingNameSelect") as HTMLInputElement).value;
   const trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
   const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
-  const pauses = parseInt((document.getElementById("pauses") as HTMLInputElement).value) || 0;
-  const pauseLength = parseInt((document.getElementById("pauseLength") as HTMLInputElement).value) || 0;
+  const pauses = optionalInteger((document.getElementById("pauses") as HTMLInputElement).value);
+  const pauseLength = optionalInteger((document.getElementById("pauseLength") as HTMLInputElement).value);
 
   if (showCustomInput.value) {
     trainingName = (document.getElementById("trainingName") as HTMLInputElement).value;
@@ -126,15 +132,17 @@ async function submit() {
     return;
   }
 
-  newTraining.name = trainingName;
-  newTraining.type = trainingType;
-  newTraining.duration = parseInt(trainingDuration, 10);
-  newTraining.avgHeartRate = parseInt(averageHeartRate, 10);
-  newTraining.notes = (document.getElementById("notes") as HTMLInputElement).value || "";
-  newTraining.pauses = pauses;
-  newTraining.pauseLength = pauseLength;
+  const workoutData: createWorkoutRequest = {
+    name: trainingName,
+    type: trainingType || undefined,
+    duration: optionalInteger(trainingDuration),
+    avgHeartRate: optionalInteger(averageHeartRate),
+    notes: (document.getElementById("notes") as HTMLInputElement).value || undefined,
+    ...(pauses !== undefined ? { pauses } : {}),
+    ...(pauseLength !== undefined ? { pauseLength } : {}),
+  };
 
-  if (!newTraining.name) {
+  if (!workoutData.name) {
     const trainingNameInput = showCustomInput.value
       ? (document.getElementById("trainingName") as HTMLInputElement)
       : (document.getElementById("trainingNameSelect") as HTMLInputElement);
@@ -147,7 +155,7 @@ async function submit() {
     return;
   }
 
-  if (!newTraining.type) {
+  if (!workoutData.type) {
     const trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
     trainingTypeInput.style.borderColor = "var(--danger)";
 
@@ -159,7 +167,10 @@ async function submit() {
   }
 
   try {
-    await updateTraining(trainingsId, newTraining);
+    const updatedWorkout = await WorkoutService.updateWorkout(trainingsId, workoutData);
+    if (updatedWorkout) {
+      trainingStore.changeTraining(trainingsId, updatedWorkout);
+    }
   } catch (error) {
     console.error("Failed to update training:", error);
     return;
@@ -167,11 +178,11 @@ async function submit() {
 
   trainingStore.setCurrentTraining(trainingsId);
 
-  const trainings = await getTrainings();
+  const trainings = await WorkoutService.getWorkouts();
 
   trainingStore.setTrainings(trainings);
 
-  await router.push({ name: "training", params: { trainingsId } });
+  await router.push({ name: "trainingDetails", params: { id: trainingsId } });
 }
 
 function changeFocus(elementId: string) {

@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
 import type { exerciseLog } from "@/types/exerciseLogType.ts";
 import type { set } from "@/types/setType.ts";
-import { getTrainings } from "@/services/trainingService.ts";
+import WorkoutService from "@/services/trainingService.ts";
 
 export const useTrainingStore = defineStore("trainingStore", {
   state: () => ({
@@ -45,7 +45,7 @@ export const useTrainingStore = defineStore("trainingStore", {
       }
     },
     async loadTrainings() {
-      const trainings = await getTrainings();
+      const trainings = await WorkoutService.getWorkouts();
       this.trainings = trainings;
       if (trainings.length > 0) {
         this.currentTraining = trainings[0].id; // Set the first training as current by default
@@ -102,7 +102,7 @@ export const useTrainingStore = defineStore("trainingStore", {
       console.warn(`Exercise with ID ${exerciseLogId} not found in any training.`);
     },
     addSet(set: set) {
-      const exerciseLogId = set.exerciseLogId;
+      const exerciseLogId = set.workoutExerciseId;
       const exercise = this.getExerciseLogById(exerciseLogId);
       if (exercise) {
         exercise.sets.push(set);
@@ -111,7 +111,7 @@ export const useTrainingStore = defineStore("trainingStore", {
       }
     },
     updateSet(set: set) {
-      const exerciseLogId = set.exerciseLogId;
+      const exerciseLogId = set.workoutExerciseId;
       const exercise = this.getExerciseLogById(exerciseLogId);
       if (exercise) {
         const index = exercise.sets.findIndex((s) => s.id === set.id);

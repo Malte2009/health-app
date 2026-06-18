@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import type { createSetRequestType } from "@/types/setType.ts";
-import { createSetRequest, getSetUnits } from "@/services/setService.ts";
+import WorkoutSetService from "@/services/setService.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
@@ -41,7 +41,8 @@ const typeStore = useTypeStore();
 const trainingStore = useTrainingStore();
 
 const props = defineProps<{
-  exerciseLogId: string;
+  workoutId: string;
+  workoutExerciseId: string;
 }>();
 
 const setTypes = ref<string[]>([]);
@@ -84,28 +85,31 @@ function checkSetUnitInput() {
 async function submit() {
   const reps = parseInt((document.getElementById("reps") as HTMLInputElement).value);
   const weight = parseFloat((document.getElementById("weight") as HTMLInputElement).value);
-  const type = (document.getElementById("type-selection") as HTMLInputElement).value;
+  let type = (document.getElementById("type-selection") as HTMLInputElement).value;
   let repUnit = (document.getElementById("repUnit-selection") as HTMLInputElement).value;
   const setTime = parseFloat((document.getElementById("set-length") as HTMLInputElement).value);
 
+  if (customTypeInput.value) type = (document.getElementById("type") as HTMLInputElement).value;
   if (customRepUnitInput.value) repUnit = (document.getElementById("repUnit") as HTMLInputElement).value;
 
   const setData: createSetRequestType = {
     type,
     reps,
     weight,
-    exerciseLogId: props.exerciseLogId,
+    workoutId: props.workoutId,
+    workoutExerciseId: props.workoutExerciseId,
     repUnit,
-    setTime
+    order: trainingStore.getExerciseLogById(props.workoutExerciseId)?.sets.length || 0,
+    ...(Number.isFinite(setTime) ? { setTime } : {}),
   };
 
   try {
-    const newSet = await createSetRequest(setData);
+    const newSet = await WorkoutSetService.createWorkoutSet(props.workoutId, props.workoutExerciseId, setData);
 
     if (newSet) {
       trainingStore.addSet(newSet);
 
-      if (customRepUnitInput.value) typeStore.addSetUnitType(type);
+      if (customRepUnitInput.value) typeStore.addSetUnitType(repUnit);
       if (customTypeInput.value) typeStore.addSetType(type);
     }
   } catch (error) {
@@ -210,7 +214,7 @@ function sleep(ms: number) {
 onMounted(async () => {
   try {
     setTypes.value = typeStore.getSetTypes;
-    setRepUnits.value = await getSetUnits();
+    setRepUnits.value = await WorkoutSetService.getSetUnits();
   } catch (error) {
     console.error("Failed to fetch set types:", error);
   }

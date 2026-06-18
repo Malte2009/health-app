@@ -10,8 +10,11 @@ import { onMounted, ref } from "vue";
 import { isAuthenticated } from "@/services/authService.ts";
 import NavBar from "@/components/General/NavBar.vue";
 import { useTypeStore } from "@/stores/type.ts";
+import ExerciseService from "@/services/training/exercise.service.ts";
+import { useExerciseStore } from "@/stores/exerciseStore.ts";
 
 const typeStore = useTypeStore();
+const exerciseStore = useExerciseStore();
 const router = useRouter();
 
 const EXCLUDED_ROUTES = new Set(["login", "signup", "home"]);
@@ -37,6 +40,8 @@ onMounted(async () => {
   setViewport(window.innerWidth <= 768 ? 0.59 : 1);
   if (await isAuthenticated()) {
     await typeStore.loadTypes();
+
+    exerciseStore.setExercises(await ExerciseService.getAllExercises());
     showNavBar.value = true;
   }
 });

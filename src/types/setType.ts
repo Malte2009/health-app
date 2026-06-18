@@ -1,4 +1,4 @@
-export type set = {
+export type workoutSet = {
   id: string;
   type?: string;
   createdAt: Date;
@@ -6,26 +6,37 @@ export type set = {
   order: number;
   reps: number;
   weight: number;
-  exerciseLogId: string;
+  workoutExerciseId: string;
   userId: string;
   repUnit: string;
   setTime?: number;
 };
 
-export type createSetRequestType = {
-  type?: string;
+export type createWorkoutSetRequest = {
+  workoutId?: string;
+  type: string;
   reps: number;
   weight: number;
-  exerciseLogId: string;
+  workoutExerciseId?: string;
   repUnit: string;
   setTime?: number;
+  order?: number;
 };
 
-export type changeSetRequestType = {
+export type changeWorkoutSetRequest = {
   id: string;
-  type?: string;
+  workoutId: string;
+  workoutExerciseId: string;
+  type?: string | null;
   reps?: number;
   weight?: number;
-  repUnit: string;
-  setTime?: number;
+  repUnit?: string;
+  setTime?: number | null;
+  order?: number;
 };
+
+export type set = workoutSet & {
+  exerciseLogId: string;
+};
+export type createSetRequestType = createWorkoutSetRequest;
+export type changeSetRequestType = changeWorkoutSetRequest;

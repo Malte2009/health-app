@@ -15,24 +15,26 @@
 import { useExerciseStore } from "@/stores/exerciseStore.ts";
 import { useRoute } from "vue-router";
 import { onMounted } from "vue";
-import { updateExercise } from "@/services/exerciseService.ts";
+import ExerciseService from "@/services/training/exercise.service.ts";
 import router from "@/router";
 
 const exerciseStore = useExerciseStore();
 
 const route = useRoute();
 
-const exerciseName = route.params.name as string;
+const exerciseId = route.params.id as string;
 
 function loadOldValues(): void {
   const exerciseNameInput = document.getElementById("exerciseName") as HTMLInputElement;
 
-  const exercise = exerciseStore.getExerciseByName(exerciseName);
+  const exercise = exerciseStore.getExerciseById(exerciseId);
 
   if (exercise) {
     exerciseNameInput.value = exercise.name;
   } else {
-    exerciseNameInput.value = exerciseName;
+    ExerciseService.getExerciseById(exerciseId).then((exercise) => {
+      if (exercise) exerciseNameInput.value = exercise.name;
+    });
   }
 }
 
@@ -43,14 +45,14 @@ async function submit() {
 
   const exerciseNameInput = document.getElementById("exerciseName") as HTMLInputElement;
 
-  const response = await updateExercise(exerciseName, exerciseNameInput.value);
+  const response = await ExerciseService.changeExercise(exerciseId, exerciseNameInput.value);
 
   if (!response) {
     alert("An error occurred while updating the exercise.");
     return;
   }
 
-  exerciseStore.updateExercise(exerciseName, response);
+  exerciseStore.updateExercise(exerciseId, response);
 
   await router.push("/exercise");
 }

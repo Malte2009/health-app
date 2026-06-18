@@ -20,8 +20,8 @@
 </template>
 
 <script setup lang="ts">
-import { changeExerciseLog } from "@/services/exerciseLogService.ts";
-import type { changeExerciseLogRequest, exerciseLog } from "@/types/exerciseLogType.ts";
+import WorkoutExerciseService from "@/services/exerciseLogService.ts";
+import type { changeWorkoutExerciseRequest, exerciseLog } from "@/types/exerciseLogType.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
 import { useTrainingStore } from "@/stores/trainingStore.ts";
@@ -34,6 +34,7 @@ const emit = defineEmits(["close", "reload"]);
 const exerciseLog = ref<exerciseLog>();
 
 const props = defineProps<{
+  workoutId: string;
   exerciseLogId: string;
 }>();
 
@@ -63,13 +64,14 @@ async function submit() {
     return;
   }
 
-  const exerciseLogData: changeExerciseLogRequest = {
+  const exerciseLogData: changeWorkoutExerciseRequest = {
     id: props.exerciseLogId,
+    workoutId: props.workoutId,
     name: exerciseName,
     notes: (document.getElementById("exerciseLogNotes") as HTMLInputElement).value || "",
   };
 
-  const changedExerciseLog = await changeExerciseLog(exerciseLogData);
+  const changedExerciseLog = await WorkoutExerciseService.changeWorkoutExercise(exerciseLogData);
 
   if (!changedExerciseLog) {
     console.error("Failed to change exercise");

@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
-import { getTrainingNames } from "@/services/trainingService.ts";
-import { getSetTypes, getSetUnits } from "@/services/setService.ts";
-import { getExerciseNames } from "@/services/exerciseService.ts";
+import WorkoutService from "@/services/trainingService.ts";
+import WorkoutSetService from "@/services/setService.ts";
+import ExerciseService from "@/services/training/exercise.service.ts";
 
 export const useTypeStore = defineStore("typeStore", {
   state: () => ({
@@ -54,10 +54,10 @@ export const useTypeStore = defineStore("typeStore", {
       this.setTypes = [];
     },
     async loadTypes() {
-      this.trainingNames = await getTrainingNames();
-      this.setTypes = await getSetTypes();
-      this.exerciseTypes = await getExerciseNames() || [];
-      this.setRepUnitTypes = await getSetUnits();
+      this.trainingNames = await WorkoutService.getWorkoutNames();
+      this.setTypes = await WorkoutSetService.getSetTypes();
+      this.exerciseTypes = await ExerciseService.getExerciseNames() || [];
+      this.setRepUnitTypes = await WorkoutSetService.getSetUnits();
     },
     checkTypes() {
       if (this.trainingNames.length === 0 || this.setTypes.length === 0 || this.exerciseTypes.length === 0 || this.setRepUnitTypes.length === 0) {

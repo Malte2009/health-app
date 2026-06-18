@@ -61,7 +61,7 @@
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
-import { deleteTrainingRequest, getTrainings } from "@/services/trainingService.ts";
+import WorkoutService from "@/services/trainingService.ts";
 import { useTrainingStore } from "@/stores/trainingStore.ts";
 import { getDateString } from "@/utility/date.ts";
 import { isAuthenticated } from "@/services/authService.ts";
@@ -75,7 +75,7 @@ const trainings = ref([] as getTrainingResponseType[]);
 
 async function confirmDelete(id: string) {
   try {
-    await deleteTrainingRequest(id);
+    await WorkoutService.deleteWorkout(id);
     trainings.value = trainings.value.filter((training) => training.id !== id);
   } catch (error) {
     console.error("Error deleting training:", error);
@@ -95,7 +95,7 @@ onMounted(async () => {
     if (trainingsStore.trainings.length > 0) {
       trainings.value = trainingsStore.trainings;
     } else {
-      trainings.value = await getTrainings();
+      trainings.value = await WorkoutService.getWorkouts();
       trainingsStore.setTrainings(trainings.value);
     }
   } else {

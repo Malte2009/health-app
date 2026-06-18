@@ -86,7 +86,7 @@
           addExerciseLog = false;
           reloadTrainingFromStore();
         "
-        :trainingId="trainingsId"
+        :workoutId="trainingsId"
       ></AddExercise>
     </div>
 
@@ -96,6 +96,7 @@
           changeExerciseLogCon = false;
           reloadTrainingFromStore();
         "
+        :workoutId="trainingsId"
         :exerciseLogId="editExerciseLogId"
       ></ChangeExercise>
     </div>
@@ -106,7 +107,8 @@
           addSet = false;
           reloadTrainingFromStore();
         "
-        :exerciseLogId="selectedExerciseLogId"
+        :workoutId="trainingsId"
+        :workoutExerciseId="selectedExerciseLogId"
       ></AddSet>
     </div>
 
@@ -116,6 +118,8 @@
           changeSetCon = false;
           reloadTrainingFromStore();
         "
+        :workoutId="trainingsId"
+        :workoutExerciseId="editSetWorkoutExerciseId"
         :setId="editSetId"
       ></ChangeSet>
     </div>
@@ -163,9 +167,9 @@ import AddSet from "@/components/Set/AddSet.vue";
 import ChangeSet from "@/components/Set/ChangeSet.vue";
 import ChangeExercise from "@/components/Exercise/ChangeExercise.vue";
 import type { getTrainingResponseType } from "@/types/trainingType.ts";
-import { getTrainingById, updateTraining } from "@/services/trainingService.ts";
-import { deleteExerciseLogRequest } from "@/services/exerciseLogService.ts";
-import { deleteSetRequest } from "@/services/setService.ts";
+import WorkoutService from "@/services/trainingService.ts";
+import WorkoutExerciseService from "@/services/exerciseLogService.ts";
+import WorkoutSetService from "@/services/setService.ts";
 import { useTypeStore } from "@/stores/type.ts";
 import { getDateString } from "@/utility/date.ts";
 
@@ -197,6 +201,7 @@ const selectedSetId = ref<string>("");
 
 const editExerciseLogId = ref<string>("");
 const editSetId = ref<string>("");
+const editSetWorkoutExerciseId = ref<string>("");
 
 const formatTrainingLength = (duration: number): string => {
   const minutes = duration > 600 ? Math.round(duration / 60) : duration;
@@ -212,12 +217,14 @@ function confirmDelete() {
   showConfirmDelete.value = false;
   editExerciseLogId.value = "";
   editSetId.value = "";
+  editSetWorkoutExerciseId.value = "";
 }
 
 function cancelDelete() {
   showConfirmDelete.value = false;
   editExerciseLogId.value = "";
   editSetId.value = "";
+  editSetWorkoutExerciseId.value = "";
 }
 
 function handleMobileEdit(event: MouseEvent, id: string, type: "exercise" | "set") {
@@ -279,7 +286,13 @@ function onExerciseDrop(targetIndex: number) {
 
   trainingStore.changeTraining(trainingsId, training.value);
 
-  updateTraining(trainingsId, training.value);
+  training.value.exerciseLogs.forEach((exerciseLog) => {
+    WorkoutExerciseService.changeWorkoutExercise({
+      id: exerciseLog.id,
+      workoutId: trainingsId,
+      order: exerciseLog.order,
+    });
+  });
 
   draggingExerciseIndex.value = null;
 }
@@ -306,7 +319,14 @@ function onSetDrop(targetExerciseIndex: number, targetSetIndex: number) {
     set.order = index;
   });
 
-  updateTraining(trainingsId, training.value);
+  training.value.exerciseLogs[targetExerciseIndex].sets.forEach((set, index) => {
+    WorkoutSetService.changeWorkoutSet({
+      id: set.id,
+      workoutId: trainingsId,
+      workoutExerciseId: training.value!.exerciseLogs[targetExerciseIndex].id,
+      order: index,
+    });
+  });
 
   draggingSetIndex.value = null;
 }
@@ -365,6 +385,7 @@ function setContextMenu(event: MouseEvent, setId: string) {
   event.preventDefault();
   // Logic to handle context menu for set
   editSetId.value = setId;
+  editSetWorkoutExerciseId.value = training.value?.exerciseLogs.find((exercise) => exercise.sets.some((set) => set.id === setId))?.id || "";
 
   const menu = document.querySelector(".set-context-menu") as HTMLDivElement;
   if (menu) {
@@ -401,14 +422,15 @@ async function changeSet() {
 
 async function deleteExercise() {
   trainingStore.removeExerciseLog(editExerciseLogId.value);
-  await deleteExerciseLogRequest(editExerciseLogId.value);
+  await WorkoutExerciseService.deleteWorkoutExercise(trainingsId, editExerciseLogId.value);
   editExerciseLogId.value = "";
 }
 
 async function deleteSet() {
   trainingStore.removeSet(editSetId.value);
-  await deleteSetRequest(editSetId.value);
+  await WorkoutSetService.deleteWorkoutSet(trainingsId, editSetWorkoutExerciseId.value, editSetId.value);
   editSetId.value = "";
+  editSetWorkoutExerciseId.value = "";
 }
 
 function closeExerciseContextMenu() {
@@ -435,7 +457,7 @@ function reloadTrainingFromStore() {
 onBeforeMount(async () => {
   typeStore.checkTypes();
   if (!training.value) {
-    const getTraining = await getTrainingById(trainingsId);
+    const getTraining = await WorkoutService.getWorkoutById(trainingsId);
 
     if (getTraining) {
       training.value = getTraining;

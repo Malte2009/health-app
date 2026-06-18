@@ -1,55 +1,74 @@
 import api from "./api";
-import type {
-  createTrainingLogRequestType,
-  getTrainingResponseType, training
-} from "@/types/trainingType.ts";
+import type { createWorkoutRequest, getTrainingResponseType, getWorkoutResponse, training } from "@/types/trainingType.ts";
 
-export const getTrainings = async (): Promise<getTrainingResponseType[]> => {
-  try {
-    return (await api.get("/training")).data;
-  } catch (error) {
-    console.error(error);
-    return [];
-  }
-};
+function normalizeWorkout(workout: getWorkoutResponse): getTrainingResponseType {
+  const workoutExercises = workout.workoutExercises ?? [];
+  return {
+    ...workout,
+    type: workout.type ?? "",
+    exerciseLogs: workoutExercises.map((workoutExercise) => ({
+      ...workoutExercise,
+      trainingId: workoutExercise.workoutId,
+      sets: (workoutExercise.sets ?? []).map((set) => ({
+        ...set,
+        exerciseLogId: set.workoutExerciseId,
+      })),
+    })),
+  };
+}
 
-export const getTrainingById = async (id: string): Promise<getTrainingResponseType | void> => {
-  try {
-    return (await api.get(`/training/${id}`)).data;
-  } catch (error) {
-    console.error(error);
+class WorkoutService {
+  async getWorkouts(): Promise<getTrainingResponseType[]> {
+    try {
+      return ((await api.get("/workouts")).data as getWorkoutResponse[]).map(normalizeWorkout);
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
-};
 
-export const getTrainingNames= async (): Promise<string[]> => {
-  try {
-    return (await api.get("/training/names")).data;
-  } catch (error) {
-    console.error(error);
-    return [];
+  async getWorkoutById(workoutId: string): Promise<getTrainingResponseType | void> {
+    try {
+      return normalizeWorkout((await api.get(`/workouts/${workoutId}`)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const updateTraining = async (id: string, training: training): Promise<training | void> => {
-  try {
-    return (await api.patch(`/training/${id}`, training)).data;
-  } catch (error) {
-    console.error(error);
+  async getWorkoutNames(): Promise<string[]> {
+    try {
+      return (await api.get("/workouts/names")).data;
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
-};
 
-export const createTrainingLog = async (training: createTrainingLogRequestType): Promise<training | void> => {
-  try {
-    return (await api.post("/training", training)).data;
-  } catch (error) {
-    console.error(error);
+  async createWorkout(workout: createWorkoutRequest): Promise<training | void> {
+    try {
+      return normalizeWorkout((await api.post("/workouts", workout)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const deleteTrainingRequest = async (id: string): Promise<void> => {
-  try {
-    await api.delete(`/training/${id}`);
-  } catch (error) {
-    console.error(error);
+  async updateWorkout(workoutId: string, workout: Partial<createWorkoutRequest>): Promise<training | void> {
+    try {
+      return normalizeWorkout((await api.patch(`/workouts/${workoutId}`, workout)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
+
+  async deleteWorkout(workoutId: string): Promise<void> {
+    try {
+      await api.delete(`/workouts/${workoutId}`);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
+
+const workoutService = new WorkoutService();
+
+export default workoutService;
