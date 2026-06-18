@@ -22,8 +22,8 @@
         <label>Context</label>
         <input v-model="context" type="text" placeholder="e.g. Awake, Sleeping" />
 
-        <label>Training Log ID (optional)</label>
-        <input v-model="trainingLogId" type="text" placeholder="Training Log ID" />
+        <label>Workout ID (optional)</label>
+        <input v-model="workoutId" type="text" placeholder="Workout ID" />
 
         <label>Sleep Log ID (optional)</label>
         <input v-model="sleepLogId" type="text" placeholder="Sleep Log ID" />
@@ -39,8 +39,9 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { updateHrvRecording, getHrvRecording } from "../../services/hrvService";
+import { updateHrvRecording, getHrvRecording } from "@/services/hrvService";
 import { toLocalDateTimeString } from "@/utility/date";
+import { AxiosError } from "axios";
 
 const props = defineProps<{
   id: string;
@@ -54,9 +55,17 @@ const startTime = ref("");
 const endTime = ref("");
 const device = ref("");
 const context = ref("");
-const trainingLogId = ref("");
+const workoutId = ref("");
 const sleepLogId = ref("");
 const rrdata = ref("");
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof AxiosError) {
+    return error.response?.data?.message || error.response?.data || error.message;
+  }
+
+  return error instanceof Error ? error.message : String(error);
+}
 
 function toDateTimeLocal(d: string | Date | undefined) {
   if (!d) return "";
@@ -75,7 +84,7 @@ onMounted(async () => {
       endTime.value = toDateTimeLocal(r.endDateTime);
       device.value = r.device || "";
       context.value = r.context || "";
-      trainingLogId.value = r.trainingLogId || "";
+      workoutId.value = r.workoutId || "";
       sleepLogId.value = r.sleepLogId || "";
     }
   } catch (error) {
@@ -91,7 +100,7 @@ async function submit() {
     endTime: endTime.value ? new Date(endTime.value).toISOString() : undefined,
     device: device.value || undefined,
     context: context.value || undefined,
-    trainingLogId: trainingLogId.value || undefined,
+    workoutId: workoutId.value || undefined,
     sleepLogId: sleepLogId.value || undefined,
   };
 
@@ -100,8 +109,8 @@ async function submit() {
     console.log("Successfully submitted");
     emit("reload");
     emit("close");
-  } catch (error: any) {
-    const errorMsg = error.response?.data?.message || error.response?.data || error.message || String(error);
+  } catch (error: unknown) {
+    const errorMsg = getErrorMessage(error);
     alert("Failed to edit HRV recording: " + errorMsg);
     console.error("Failed to edit HRV recording:", error);
   }

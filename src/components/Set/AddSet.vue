@@ -28,17 +28,17 @@
 </template>
 
 <script setup lang="ts">
-import type { createSetRequestType } from "@/types/setType.ts";
-import WorkoutSetService from "@/services/setService.ts";
+import type { createWorkoutSetType } from "@/types/workout/workoutSet.type.ts";
+import WorkoutSetService from "@/services/workout/workoutSet.service.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
-import { useTrainingStore } from "@/stores/trainingStore.ts";
+import { useWorkoutStore } from "@/stores/workoutStore.ts";
 
 const emit = defineEmits(["close", "reload"]);
 
 const typeStore = useTypeStore();
-const trainingStore = useTrainingStore();
+const workoutStore = useWorkoutStore();
 
 const props = defineProps<{
   workoutId: string;
@@ -92,14 +92,12 @@ async function submit() {
   if (customTypeInput.value) type = (document.getElementById("type") as HTMLInputElement).value;
   if (customRepUnitInput.value) repUnit = (document.getElementById("repUnit") as HTMLInputElement).value;
 
-  const setData: createSetRequestType = {
+  const setData: createWorkoutSetType = {
     type,
     reps,
     weight,
-    workoutId: props.workoutId,
-    workoutExerciseId: props.workoutExerciseId,
     repUnit,
-    order: trainingStore.getExerciseLogById(props.workoutExerciseId)?.sets.length || 0,
+    order: workoutStore.getWorkoutExerciseById(props.workoutExerciseId)?.workoutSets?.length || 0,
     ...(Number.isFinite(setTime) ? { setTime } : {}),
   };
 
@@ -107,7 +105,7 @@ async function submit() {
     const newSet = await WorkoutSetService.createWorkoutSet(props.workoutId, props.workoutExerciseId, setData);
 
     if (newSet) {
-      trainingStore.addSet(newSet);
+      workoutStore.addWorkoutSet(newSet);
 
       if (customRepUnitInput.value) typeStore.addSetUnitType(repUnit);
       if (customTypeInput.value) typeStore.addSetType(type);

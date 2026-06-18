@@ -74,12 +74,12 @@
                   <p><strong>Hours Since Last Drink:</strong> {{ formatValue(selectedViewSymptom.hoursSinceLastDrink) }}</p>
                   <p><strong>Salt Supplementation:</strong> {{ formatBoolean(selectedViewSymptom.saltSupplementation) }}</p>
                   <p><strong>Injuries:</strong> {{ selectedViewSymptom.injuries || '-' }}</p>
-                  <p><strong>Training Log Id:</strong> {{ selectedViewSymptom.trainingLogId || '-' }}</p>
+                  <p><strong>Workout ID:</strong> {{ selectedViewSymptom.workoutId || '-' }}</p>
                 </div>
 
-                <div class="detail-block" v-if="selectedViewSymptom.trainingLog">
-                  <h4>Linked Training</h4>
-                  <pre>{{ formatObject(selectedViewSymptom.trainingLog) }}</pre>
+                <div class="detail-block" v-if="selectedViewSymptom.workout">
+                  <h4>Linked Workout</h4>
+                  <pre>{{ formatObject(selectedViewSymptom.workout) }}</pre>
                 </div>
 
                 <div class="detail-block" v-if="selectedViewSymptom.symptoms && selectedViewSymptom.symptoms.length > 0">

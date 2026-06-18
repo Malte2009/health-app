@@ -6,10 +6,10 @@
     </div>
 
     <div class="section-cards">
-      <div class="section-card training-card" @click="goToSection('training')">
+      <div class="section-card workout-card" @click="goToSection('workouts')">
         <div class="card-icon">&#127947;</div>
         <div class="card-content">
-          <h2 class="card-title">Training</h2>
+          <h2 class="card-title">Workouts</h2>
           <p class="card-desc">Track workouts, exercises, body measurements, and progression over time</p>
         </div>
         <div class="card-features">
@@ -140,7 +140,7 @@ onMounted(async () => {
   border-radius: 20px 20px 0 0;
 }
 
-.training-card::before {
+.workout-card::before {
   background: linear-gradient(90deg, #90caf9, #42a5f5);
 }
 
@@ -152,7 +152,7 @@ onMounted(async () => {
   background: linear-gradient(90deg, #ef4444, #f87171);
 }
 
-.training-card:hover {
+.workout-card:hover {
   border-color: #42a5f5;
   transform: translateY(-4px);
   box-shadow: 0 8px 32px rgba(66, 165, 245, 0.15);
@@ -204,7 +204,7 @@ onMounted(async () => {
   font-weight: 500;
 }
 
-.training-card:hover .feature-chip {
+.workout-card:hover .feature-chip {
   background: rgba(66, 165, 245, 0.12);
   color: #90caf9;
 }
@@ -230,7 +230,7 @@ onMounted(async () => {
   transform: translateX(4px);
 }
 
-.training-card:hover .card-arrow {
+.workout-card:hover .card-arrow {
   color: #42a5f5;
 }
 

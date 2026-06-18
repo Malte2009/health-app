@@ -86,8 +86,8 @@
         <label v-if="type === 'SYNCOPE'">Injuries</label>
         <input v-if="type === 'SYNCOPE'" v-model="injuries" placeholder="e.g Cut" />
 
-        <label v-if="type === 'SYNCOPE'">Training Log ID</label>
-        <input v-if="type === 'SYNCOPE'" v-model="trainingLogId" />
+        <label v-if="type === 'SYNCOPE'">Workout ID</label>
+        <input v-if="type === 'SYNCOPE'" v-model="workoutId" />
 
         <label>Notes</label>
         <textarea v-model="notes" placeholder="Additional notes..." rows="4"></textarea>
@@ -106,6 +106,10 @@ import type { SyncopeLog } from "@/types/symptoms/syncopeType.ts";
 import type { SymptomLog } from "@/types/symptoms/symptomType.ts";
 import SymptomService from "@/services/symptomService.ts";
 
+type SymptomName = NonNullable<SymptomLog["name"]>;
+type SyncopeName = NonNullable<SyncopeLog["name"]>;
+type IcpTrigger = "" | "BENDING_FORWARD" | "LYING_DOWN" | "BETTER_LYING_DOWN";
+
 // Props: optionally receive an initial log to enable edit mode
 const props = defineProps<{
   initialData?: SymptomLog | SyncopeLog | null
@@ -116,9 +120,9 @@ const emit = defineEmits(["close", "reload"]);
 const type = ref<"SYMPTOM" | "SYNCOPE">("SYMPTOM");
 const timestamp = ref(toLocalDateTimeString());
 const severity = ref<string>("5");
-const name = ref<any>(undefined);
+const name = ref<SymptomName | SyncopeName | undefined>(undefined);
 const notes = ref<string | undefined>(undefined);
-const icpTrigger = ref<any>(undefined);
+const icpTrigger = ref<IcpTrigger>("");
 const pulsatile = ref(false);
 const trigger = ref<string | undefined>(undefined);
 const position = ref<string | undefined>(undefined);
@@ -127,11 +131,11 @@ const syncopeId = ref<string | undefined>(undefined);
 const hadAmnesia = ref(false);
 const amnesiaLength = ref<number | undefined>(undefined);
 const injuries = ref<string | undefined>(undefined);
-const trainingLogId = ref<string | undefined>(undefined);
+const workoutId = ref<string | undefined>(undefined);
 const activityBefore = ref<string | undefined>(undefined);
 
 function populateFromInitial() {
-  const data = props.initialData as any;
+  const data = props.initialData;
   if (!data) return;
 
   type.value = data.type || "SYMPTOM";
@@ -140,7 +144,7 @@ function populateFromInitial() {
   name.value = data.name;
   notes.value = data.notes;
   trigger.value = data.trigger;
-  position.value = (data.position as any) || undefined;
+  position.value = data.position || undefined;
 
   if (type.value === "SYMPTOM") {
     icpTrigger.value = "";
@@ -155,7 +159,7 @@ function populateFromInitial() {
     hadAmnesia.value = Boolean((data as SyncopeLog).amnesia);
     amnesiaLength.value = (data as SyncopeLog).amnesiaDurationMinutes;
     injuries.value = (data as SyncopeLog).injuries;
-    trainingLogId.value = (data as SyncopeLog).trainingLogId;
+    workoutId.value = (data as SyncopeLog).workoutId;
     activityBefore.value = (data as SyncopeLog).activityBefore;
   }
 }
@@ -177,15 +181,15 @@ async function submit() {
       type: type.value,
       timestamp: timestamp.value,
       severity: parseInt(String(severity.value)) || 0,
-      name: name.value,
+      name: name.value as SyncopeName,
       notes: notes.value,
       trigger: trigger.value,
       position: position.value,
       outcome: outcome.value,
       amnesia: hadAmnesia.value,
-      amnesiaDurationMinutes: amnesiaLength != null ? Number(amnesiaLength) : undefined,
+      amnesiaDurationMinutes: amnesiaLength.value != null ? Number(amnesiaLength.value) : undefined,
       injuries: injuries.value,
-      trainingLogId: trainingLogId.value,
+      workoutId: workoutId.value,
       activityBefore: activityBefore.value,
     };
 
@@ -200,7 +204,7 @@ async function submit() {
       type: type.value,
       timestamp: timestamp.value,
       severity: parseInt(String(severity.value)) || 0,
-      name: name.value,
+      name: name.value as SymptomName,
       notes: notes.value,
       trigger: trigger.value,
       position: position.value,

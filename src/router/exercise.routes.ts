@@ -13,6 +13,6 @@ export default [
   {
     path: "/exercise/edit/:id",
     name: "editExercise",
-    component: () => import("../views/Exercise/EditExerciseLogView.vue"),
+    component: () => import("../views/Exercise/EditExerciseView.vue"),
   },
 ]

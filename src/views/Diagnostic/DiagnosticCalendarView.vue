@@ -42,7 +42,7 @@
           <label class="toggle-label"><input type="checkbox" v-model="toggles.syncopes" /> Syncopes</label>
           <label class="toggle-label"><input type="checkbox" v-model="toggles.bp" /> Blood Pressure</label>
           <label class="toggle-label"><input type="checkbox" v-model="toggles.sleep" /> Sleep</label>
-          <label class="toggle-label"><input type="checkbox" v-model="toggles.training" /> Training</label>
+          <label class="toggle-label"><input type="checkbox" v-model="toggles.workouts" /> Workouts</label>
           <label class="toggle-label"><input type="checkbox" v-model="toggles.daily" /> Daily Logs</label>
           <label class="toggle-label"><input type="checkbox" v-model="toggles.intake" /> Intake Logs</label>
         </div>
@@ -110,13 +110,13 @@
             </div>
 
             <template v-if="toggles.sleep && Array.isArray(day.sleep) && day.sleep.length > 0">
-              <div v-for="(s, idx) in day.sleep" :key="s.id ?? idx" :class="['event-pill', isNap(s) ? 'nap' : 'sleep']">
+              <div v-for="(s, idx) in day.sleep" :key="s.id ?? idx" class="event-pill" :class="{ nap: isNap(s), sleep: !isNap(s) }">
                 {{ formatSleepPill(s) }}
               </div>
             </template>
 
-            <div v-if="toggles.training && Array.isArray(day.training) && day.training.length > 0" class="event-pill training">
-              {{ day.training.length }} Workout{{ day.training.length > 1 ? "s" : "" }}
+            <div v-if="toggles.workouts && Array.isArray(day.workouts) && day.workouts.length > 0" class="event-pill workout">
+              {{ day.workouts.length }} Workout{{ day.workouts.length > 1 ? "s" : "" }}
             </div>
 
             <div v-if="toggles.daily && Array.isArray(day.daily) && day.daily.length > 0" class="event-pill daily">Daily</div>
@@ -153,7 +153,7 @@ import {
   getSyncopesOverMonth,
   getBloodPressureOverMonth,
   getSleepOverMonth,
-  getTrainingOverMonth,
+  getWorkoutsOverMonth,
   getDailyLogsOverMonth,
   getIntakeLogsOverMonth,
   getFoodOverMonth,
@@ -179,7 +179,7 @@ interface DayDetails {
   syncopes?: Record<string, any>[];
   bp?: Record<string, any>[];
   sleep?: Record<string, any>[];
-  training?: Record<string, any>[];
+  workouts?: Record<string, any>[];
   daily?: Record<string, any>[];
   intake?: Record<string, any>[];
   food?: any[] | null;
@@ -193,7 +193,7 @@ const toggles = reactive({
   syncopes: true,
   bp: true,
   sleep: true,
-  training: true,
+  workouts: true,
   daily: true,
   intake: true,
 });
@@ -209,7 +209,7 @@ const data = reactive<Record<string, unknown>>({
   syncopes: [],
   bp: [],
   sleep: [],
-  training: [],
+  workouts: [],
   daily: [],
   intake: [],
   food: [],
@@ -347,12 +347,6 @@ const getBloodPressurePulse = (bp: any): number | null => {
   return Number.isNaN(value) ? null : value;
 };
 
-const formatTrainingDurationMinutes = (durationValue: any): number | null => {
-  const duration = Number(durationValue);
-  if (Number.isNaN(duration) || duration <= 0) return null;
-  return duration > 600 ? Math.round(duration / 60) : duration;
-};
-
 const normalizeBloodPressureEntries = (bp: any): any[] => {
   if (!bp) return [];
   if (Array.isArray(bp)) return bp;
@@ -387,52 +381,6 @@ const formatAverageBloodPressureDetails = (bp: any): string => {
     : '';
 
   return `Average blood pressure: ${Math.round(avgSystolic)}/${Math.round(avgDiastolic)} mmHg (${validEntries.length} reading${validEntries.length > 1 ? 's' : ''})${pulseText}`;
-};
-
-const formatBloodPressureSummary = (bp: any): string => {
-  if (!bp) return '';
-  const pulse = getBloodPressurePulse(bp);
-  return pulse !== null ? `${bp.systolic}/${bp.diastolic} · ${pulse} bpm` : `${bp.systolic}/${bp.diastolic}`;
-};
-
-const formatBloodPressureDetails = (bp: any): string => {
-  if (!bp) return '';
-  const pulse = getBloodPressurePulse(bp);
-  return pulse !== null ? `${bp.systolic}/${bp.diastolic} mmHg · Pulse: ${pulse} bpm` : `${bp.systolic}/${bp.diastolic} mmHg`;
-};
-
-const formatTrainingSummary = (training: any, fallbackName = 'Workout'): string => {
-  if (!training) return fallbackName;
-
-  const parts: string[] = [];
-
-  const duration = formatTrainingDurationMinutes(training.duration);
-  if (duration !== null) parts.push(`${duration}m`);
-
-  const avgHeartRate = Number(training.avgHeartRate);
-  if (!Number.isNaN(avgHeartRate) && avgHeartRate > 0) parts.push(`${avgHeartRate} bpm`);
-
-  const calories = Number(training.caloriesBurned ?? training.calories);
-  if (!Number.isNaN(calories) && calories > 0) parts.push(`${calories} kcal`);
-
-  return parts.length > 0 ? `${fallbackName} · ${parts.join(' · ')}` : fallbackName;
-};
-
-const formatTrainingDetails = (training: any): string => {
-  if (!training) return '';
-
-  const parts: string[] = [];
-
-  const duration = formatTrainingDurationMinutes(training.duration);
-  if (duration !== null) parts.push(`Length: ${duration} min`);
-
-  const avgHeartRate = Number(training.avgHeartRate);
-  if (!Number.isNaN(avgHeartRate) && avgHeartRate > 0) parts.push(`Avg HR: ${avgHeartRate} bpm`);
-
-  const calories = Number(training.caloriesBurned ?? training.calories);
-  if (!Number.isNaN(calories) && calories > 0) parts.push(`Calories Burned: ${calories} kcal`);
-
-  return parts.join(' · ');
 };
 
 const MICROS_LIST = [
@@ -515,13 +463,13 @@ const fetchData = async () => {
   const endStr = formatDate(end);
 
   try {
-    const [microRes, symptomsRes, syncopesRes, bpRes, sleepRes, trainingRes, dailyRes, intakeRes, foodRes] = await Promise.all([
+    const [microRes, symptomsRes, syncopesRes, bpRes, sleepRes, workoutsRes, dailyRes, intakeRes, foodRes] = await Promise.all([
       getMicroOverMonth(startStr, endStr),
       getSymptomsOverMonth(startStr, endStr),
       getSyncopesOverMonth(startStr, endStr),
       getBloodPressureOverMonth(startStr, endStr),
       getSleepOverMonth(startStr, endStr),
-      getTrainingOverMonth(startStr, endStr),
+      getWorkoutsOverMonth(startStr, endStr),
       getDailyLogsOverMonth(startStr, endStr),
       getIntakeLogsOverMonth(startStr, endStr),
       getFoodOverMonth(startStr, endStr),
@@ -532,7 +480,7 @@ const fetchData = async () => {
     data.syncopes = syncopesRes;
     data.bp = bpRes;
     data.sleep = sleepRes;
-    data.training = trainingRes;
+    data.workouts = workoutsRes;
     data.daily = dailyRes;
     data.intake = intakeRes;
     data.food = foodRes;
@@ -617,7 +565,7 @@ const calendarDays = computed(() => {
   const syncopesMap = buildMap(data.syncopes as any[]);
   const bpMap = buildMap(data.bp as any[]);
   const sleepMap = buildMap(data.sleep as any[]);
-  const trainingMap = buildMap(data.training as any[]);
+  const workoutsMap = buildMap(data.workouts as any[]);
   const dailyMap = buildMap(data.daily as any[]);
   const intakeMap = buildMap(data.intake as any[]);
 
@@ -649,7 +597,7 @@ const calendarDays = computed(() => {
       syncopes: (syncopesMap[dateStr] as any[]) || [],
       bp: (bpMap[dateStr] as any[]) || [],
       sleep: (sleepMap[dateStr] as any[]) || [],
-      training: (trainingMap[dateStr] as any[]) || [],
+      workouts: (workoutsMap[dateStr] as any[]) || [],
       daily: (dailyMap[dateStr] as any[]) || [],
       intake: (intakeMap[dateStr] as any[]) || [],
       food: (foodMap[dateStr] as any[]) || null,
@@ -912,7 +860,7 @@ onMounted(() => {
   /* distinct color for naps */
   background: linear-gradient(135deg, #7dd3fc, #38bdf8);
 }
-.training {
+.workout {
   background: linear-gradient(135deg, #10b981, #059669);
 }
 .daily {
@@ -930,148 +878,8 @@ onMounted(() => {
   background: linear-gradient(135deg, #6b7280, #4b5563);
 }
 
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  animation: fadeIn 0.2s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.modal {
-  background: var(--bg-main);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.modal-header {
-  padding: 20px 24px;
-  border-bottom: 1px solid var(--border);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.modal-header h3 {
-  margin: 0;
-  font-size: 1.25rem;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.8rem;
-  line-height: 1;
-  cursor: pointer;
-  transition: color 0.2s;
-  padding: 0;
-}
-
-.close-btn:hover {
-  color: var(--text-main);
-}
-
-.modal-body {
-  padding: 24px;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.details-card {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.card-title {
-  margin: 0 0 12px 0;
-  font-size: 1.1rem;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-}
-
-.symptom-text {
-  color: #ef4444;
-}
-.food-text {
-  color: #f59e0b;
-}
-.syncope-text {
-  color: #b91c1c;
-}
-.bp-text {
-  color: #f59e0b;
-}
-.sleep-text {
-  color: #3b82f6;
-}
-.training-text {
-  color: #10b981;
-}
-.micro-text {
-  color: #8b5cf6;
-}
-
-.detail-list {
-  padding-left: 20px;
-  margin: 0;
-  color: var(--text-secondary);
-}
-
-.detail-list li {
-  margin-bottom: 6px;
-}
-
 .micro-stats p {
   margin: 4px 0;
   color: var(--text-secondary);
-}
-
-.empty-state {
-  text-align: center;
-  padding: 40px 20px;
-  color: var(--text-secondary);
-  background: var(--bg-surface);
-  border-radius: 8px;
-  border: 1px dashed var(--border);
 }
 </style>

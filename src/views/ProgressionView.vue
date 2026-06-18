@@ -16,9 +16,9 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import ProgressionService from "@/services/training/progression.service.ts";
+import ProgressionService from "@/services/workout/progression.service.ts";
 import { useExerciseStore } from "@/stores/exerciseStore.ts";
-import ExerciseService from "@/services/training/exercise.service.ts";
+import ExerciseService from "@/services/workout/exercise.service.ts";
 import { Chart, TimeScale, LinearScale, PointElement, LineElement, LineController, Title, Tooltip, Legend } from "chart.js";
 import "chartjs-adapter-date-fns";
 
@@ -27,6 +27,7 @@ Chart.register(TimeScale, LinearScale, PointElement, LineElement, LineController
 const exerciseStore = useExerciseStore();
 
 const exerciseId = ref("");
+type ProgressionPoint = { x: Date; y: number };
 
 const chartData = ref<
   {
@@ -35,7 +36,7 @@ const chartData = ref<
   }[]
 >([]);
 
-let progressionChart: Chart | null = null;
+let progressionChart: Chart<"line", ProgressionPoint[], unknown> | null = null;
 
 async function updateChartData() {
   chartData.value = [];
@@ -60,13 +61,13 @@ async function createChart() {
   const canvas = document.getElementById("progression-canvas") as HTMLCanvasElement;
   if (!canvas) return;
 
-  progressionChart = new Chart(canvas, {
+  progressionChart = new Chart<"line", ProgressionPoint[], unknown>(canvas, {
     type: "line",
     data: {
       datasets: [
         {
           label: "Progression Score",
-          data: chartData.value.map(d => ({ x: d.createdAt, y: d.score })) as any,
+          data: chartData.value.map((d) => ({ x: d.createdAt, y: d.score })),
           borderColor: "rgb(75, 192, 192)",
           tension: 0.1
         }

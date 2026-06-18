@@ -1,5 +1,5 @@
 import type { SymptomLog } from "@/types/symptoms/symptomType.ts";
-import type { training } from "@/types/trainingType.ts";
+import type { Workout } from "@/types/workout/workout.type.ts";
 
 export type SyncopeLog = {
   id?: string,
@@ -29,8 +29,8 @@ export type SyncopeLog = {
 
   symptoms?: SymptomLog[],
 
-  trainingLogId?: string,
-  trainingLog?: training,
+  workoutId?: string,
+  workout?: Workout,
 
   notes?: string
 }

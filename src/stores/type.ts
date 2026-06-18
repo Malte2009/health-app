@@ -1,24 +1,24 @@
 import { defineStore } from "pinia";
-import WorkoutService from "@/services/trainingService.ts";
-import WorkoutSetService from "@/services/setService.ts";
-import ExerciseService from "@/services/training/exercise.service.ts";
+import WorkoutService from "@/services/workout/workout.service.ts";
+import WorkoutSetService from "@/services/workout/workoutSet.service.ts";
+import ExerciseService from "@/services/workout/exercise.service.ts";
 
 export const useTypeStore = defineStore("typeStore", {
   state: () => ({
-    trainingNames: [] as string[],
+    workoutNames: [] as string[],
     setTypes: [] as string[],
     exerciseTypes: [] as string[],
     setRepUnitTypes: [] as string[],
   }),
   getters: {
-    getTrainingNames: (state) => state.trainingNames,
+    getWorkoutNames: (state) => state.workoutNames,
     getSetTypes: (state) => state.setTypes,
     getExerciseTypes: (state) => state.exerciseTypes,
     getSetRepUnitTypes: (state) => state.setRepUnitTypes,
   },
   actions: {
-    setTrainingNames(types: string[]) {
-      this.trainingNames = types;
+    setWorkoutNames(types: string[]) {
+      this.workoutNames = types;
     },
     setSetTypes(types: string[]) {
       this.setTypes = types;
@@ -29,9 +29,9 @@ export const useTypeStore = defineStore("typeStore", {
     setSetUnitTypes(types: string[]) {
       this.setRepUnitTypes = types;
     },
-    addTrainingName(type: string) {
-      if (!this.trainingNames.includes(type)) {
-        this.trainingNames.push(type);
+    addWorkoutName(type: string) {
+      if (!this.workoutNames.includes(type)) {
+        this.workoutNames.push(type);
       }
     },
     addSetType(type: string) {
@@ -50,17 +50,17 @@ export const useTypeStore = defineStore("typeStore", {
       }
     },
     clearTypes() {
-      this.trainingNames = [];
+      this.workoutNames = [];
       this.setTypes = [];
     },
     async loadTypes() {
-      this.trainingNames = await WorkoutService.getWorkoutNames();
+      this.workoutNames = await WorkoutService.getWorkoutNames();
       this.setTypes = await WorkoutSetService.getSetTypes();
       this.exerciseTypes = await ExerciseService.getExerciseNames() || [];
       this.setRepUnitTypes = await WorkoutSetService.getSetUnits();
     },
     checkTypes() {
-      if (this.trainingNames.length === 0 || this.setTypes.length === 0 || this.exerciseTypes.length === 0 || this.setRepUnitTypes.length === 0) {
+      if (this.workoutNames.length === 0 || this.setTypes.length === 0 || this.exerciseTypes.length === 0 || this.setRepUnitTypes.length === 0) {
         this.loadTypes();
       }
     },

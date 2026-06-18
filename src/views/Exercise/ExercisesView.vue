@@ -47,7 +47,7 @@
 import router from "@/router";
 import { onMounted, ref } from "vue";
 import type { Exercise } from "@/types/exerciseType.ts";
-import ExerciseService from "@/services/training/exercise.service.ts";
+import ExerciseService from "@/services/workout/exercise.service.ts";
 import { useExerciseStore } from "@/stores/exerciseStore.ts";
 
 const exerciseStore = useExerciseStore();

@@ -25,8 +25,8 @@ export const getSleepOverMonth = async (start_date: string, end_date: string) =>
   return response.data;
 };
 
-export const getTrainingOverMonth = async (start_date: string, end_date: string) => {
-  const response = await api.get('/analysis/calender/trainingOverMonth', { params: { start_date, end_date } });
+export const getWorkoutsOverMonth = async (start_date: string, end_date: string) => {
+  const response = await api.get('/analysis/calender/workoutOverMonth', { params: { start_date, end_date } });
   return response.data;
 };
 

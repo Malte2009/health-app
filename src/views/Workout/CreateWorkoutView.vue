@@ -1,24 +1,24 @@
 <template>
-  <div class="create-training">
-    <h1 class="heading">Create Training</h1>
+  <div class="create-workout">
+    <h1 class="heading">Create Workout</h1>
 
     <div class="inputs">
-      <form id="trainingForm" @submit.prevent="submit">
-        <select @change="checkInput()" id="trainingNameSelect" name="trainingName" @keydown.enter.prevent="changeFocus('trainingDate')">
-          <option value="" disabled selected>Select Training Name</option>
-          <option v-for="name in typeStore.getTrainingNames" :key="name" :value="name">{{ name }}</option>
+      <form id="workoutForm" @submit.prevent="submit">
+        <select @change="checkInput()" id="workoutNameSelect" name="workoutName" @keydown.enter.prevent="changeFocus('workoutDate')">
+          <option value="" disabled selected>Select Workout Name</option>
+          <option v-for="name in typeStore.getWorkoutNames" :key="name" :value="name">{{ name }}</option>
           <option value="Custom">Custom</option>
         </select>
         <input
           v-if="showCustomInput"
-          placeholder="Training Name"
-          id="trainingName"
-          name="trainingName"
+          placeholder="Workout Name"
+          id="workoutName"
+          name="workoutName"
           type="text"
-          @keydown.enter.prevent="changeFocus('trainingType')"
+          @keydown.enter.prevent="changeFocus('workoutType')"
         />
-        <select id="trainingType" name="trainingType" @keydown.enter.prevent="changeFocus('averageHeartRate')">
-          <option value="" disabled selected>Select Training Mode</option>
+        <select id="workoutType" name="workoutType" @keydown.enter.prevent="changeFocus('averageHeartRate')">
+          <option value="" disabled selected>Select Workout Mode</option>
           <option value="Weights">Weights</option>
           <option value="Cardio">Cardio</option>
         </select>
@@ -29,12 +29,12 @@
           type="number"
           min="30"
           max="220"
-          @keydown.enter.prevent="changeFocus('trainingDuration')"
+          @keydown.enter.prevent="changeFocus('workoutDuration')"
         />
         <input
-          placeholder="Training Duration (minutes)"
-          id="trainingDuration"
-          name="trainingDuration"
+          placeholder="Workout Duration (minutes)"
+          id="workoutDuration"
+          name="workoutDuration"
           type="number"
           min="1"
           max="600"
@@ -52,15 +52,15 @@
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import type { createWorkoutRequest } from "@/types/trainingType.ts";
-import WorkoutService from "@/services/trainingService.ts";
-import { useTrainingStore } from "@/stores/trainingStore.ts";
+import type { createWorkoutType } from "@/types/workout/workout.type.ts";
+import WorkoutService from "@/services/workout/workout.service";
+import { useWorkoutStore } from "@/stores/workoutStore.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
 import { getUserAge, isAuthenticated } from "@/services/authService.ts";
 
-const trainingStore = useTrainingStore();
+const workoutStore = useWorkoutStore();
 const typeStore = useTypeStore();
 const router = useRouter();
 
@@ -69,7 +69,7 @@ const showCustomInput = ref(false);
 const HFmax = ref(0);
 
 function checkInput() {
-  const input = document.getElementById("trainingNameSelect") as HTMLSelectElement;
+  const input = document.getElementById("workoutNameSelect") as HTMLSelectElement;
 
   showCustomInput.value = input.value === "Custom";
 }
@@ -80,43 +80,43 @@ function optionalInteger(value: string): number | undefined {
 }
 
 async function submit() {
-  let trainingName = (document.getElementById("trainingNameSelect") as HTMLInputElement).value;
-  const trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
-  const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
+  let workoutName = (document.getElementById("workoutNameSelect") as HTMLInputElement).value;
+  const workoutType = (document.getElementById("workoutType") as HTMLInputElement).value;
+  const workoutDuration = (document.getElementById("workoutDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
   const pauses = optionalInteger((document.getElementById("pauses") as HTMLInputElement).value);
   const pauseLength = optionalInteger((document.getElementById("pauseLength") as HTMLInputElement).value);
 
   if (showCustomInput.value) {
-    trainingName = (document.getElementById("trainingName") as HTMLInputElement).value;
+    workoutName = (document.getElementById("workoutName") as HTMLInputElement).value;
   }
 
-  console.log(trainingName, trainingDuration, averageHeartRate, pauses, pauseLength);
+  console.log(workoutName, workoutDuration, averageHeartRate, pauses, pauseLength);
 
-  const trainingData: createWorkoutRequest = {
-    name: trainingName,
-    type: trainingType || undefined,
-    duration: optionalInteger(trainingDuration),
+  const workoutData: createWorkoutType = {
+    name: workoutName,
+    type: workoutType || undefined,
+    duration: optionalInteger(workoutDuration),
     avgHeartRate: optionalInteger(averageHeartRate),
     ...(pauses !== undefined ? { pauses } : {}),
     ...(pauseLength !== undefined ? { pauseLength } : {}),
     notes: (document.getElementById("notes") as HTMLInputElement).value || undefined,
   };
 
-  let trainingLog;
+  let workout;
 
   try {
-    trainingLog = await WorkoutService.createWorkout(trainingData);
+    workout = await WorkoutService.createWorkout(workoutData);
   } catch (error) {
     handleError(error as AxiosError);
     return;
   }
 
-  if (!trainingLog) return;
+  if (!workout) return;
 
-  trainingStore.setCurrentTraining(trainingLog.id);
+  workoutStore.setCurrentWorkout(workout.id);
 
-  await router.push({ name: "training", params: { id: trainingLog.id } });
+  await router.push({ name: "workoutDetails", params: { id: workout.id } });
 }
 
 function handleError(error: AxiosError) {
@@ -124,24 +124,24 @@ function handleError(error: AxiosError) {
     console.log(error.response.data);
 
     switch (error.response.data) {
-      case "Training type is required":
-        let trainingTypeInput = document.getElementById("trainingTypeSelect") as HTMLInputElement;
+      case "Workout type is required":
+        let workoutTypeInput = document.getElementById("workoutTypeSelect") as HTMLInputElement;
 
-        if (showCustomInput.value) trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
+        if (showCustomInput.value) workoutTypeInput = document.getElementById("workoutType") as HTMLInputElement;
 
-        trainingTypeInput.style.borderColor = "var(--danger)";
+        workoutTypeInput.style.borderColor = "var(--danger)";
 
-        trainingTypeInput.addEventListener("keydown", () => {
-          trainingTypeInput.style.borderColor = "var(--border)";
+        workoutTypeInput.addEventListener("keydown", () => {
+          workoutTypeInput.style.borderColor = "var(--border)";
         });
         break;
       case "Invalid date format, use YYYY-MM-DD":
-        const trainingDateInput = document.getElementById("trainingDate") as HTMLInputElement;
+        const workoutDateInput = document.getElementById("workoutDate") as HTMLInputElement;
 
-        trainingDateInput.style.borderColor = "var(--danger)";
+        workoutDateInput.style.borderColor = "var(--danger)";
 
-        trainingDateInput.addEventListener("focus", () => {
-          trainingDateInput.style.borderColor = "var(--border)";
+        workoutDateInput.addEventListener("focus", () => {
+          workoutDateInput.style.borderColor = "var(--border)";
         });
         break;
       case "Invalid heart rate (30-220)":
@@ -154,12 +154,12 @@ function handleError(error: AxiosError) {
         });
         break;
       case "Invalid duration (1-600 minutes)":
-        const trainingDurationInput = document.getElementById("trainingDuration") as HTMLInputElement;
+        const workoutDurationInput = document.getElementById("workoutDuration") as HTMLInputElement;
 
-        trainingDurationInput.style.borderColor = "var(--danger)";
+        workoutDurationInput.style.borderColor = "var(--danger)";
 
-        trainingDurationInput.addEventListener("keydown", () => {
-          trainingDurationInput.style.borderColor = "var(--border)";
+        workoutDurationInput.addEventListener("keydown", () => {
+          workoutDurationInput.style.borderColor = "var(--border)";
         });
         break;
     }

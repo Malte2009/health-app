@@ -1,24 +1,24 @@
 <template>
-  <div class="edit-training">
-    <h1 class="heading">Edit Training</h1>
+  <div class="edit-workout">
+    <h1 class="heading">Edit Workout</h1>
 
     <div class="inputs">
-      <form id="trainingForm" @submit.prevent="submit">
-        <select @change="checkInput()" id="trainingNameSelect" name="trainingsName" @keydown.enter.prevent="changeFocus('trainingDate')">
-          <option value="" disabled selected>Select Training Name</option>
-          <option v-for="name in trainingNames" :key="name" :value="name">{{ name }}</option>
+      <form id="workoutForm" @submit.prevent="submit">
+        <select @change="checkInput()" id="workoutNameSelect" name="workoutName" @keydown.enter.prevent="changeFocus('workoutDate')">
+          <option value="" disabled selected>Select Workout Name</option>
+          <option v-for="name in workoutNames" :key="name" :value="name">{{ name }}</option>
           <option value="Custom">Custom</option>
         </select>
         <input
           v-if="showCustomInput"
-          placeholder="Training Name"
-          id="trainingName"
-          name="trainingName"
+          placeholder="Workout Name"
+          id="workoutName"
+          name="workoutName"
           type="text"
-          @keydown.enter.prevent="changeFocus('trainingType')"
+          @keydown.enter.prevent="changeFocus('workoutType')"
         />
-        <select id="trainingType" name="trainingType" @keydown.enter.prevent="changeFocus('averageHeartRate')">
-          <option value="" disabled selected>Select Training Type</option>
+        <select id="workoutType" name="workoutType" @keydown.enter.prevent="changeFocus('averageHeartRate')">
+          <option value="" disabled selected>Select Workout Type</option>
           <option value="Weights">Weights</option>
           <option value="Cardio">Cardio</option>
         </select>
@@ -29,12 +29,12 @@
           type="number"
           min="30"
           max="220"
-          @keydown.enter.prevent="changeFocus('trainingDuration')"
+          @keydown.enter.prevent="changeFocus('workoutDuration')"
         />
         <input
-          placeholder="Training Duration (minutes)"
-          id="trainingDuration"
-          name="trainingDuration"
+          placeholder="Workout Duration (minutes)"
+          id="workoutDuration"
+          name="workoutDuration"
           type="number"
           min="1"
           max="600"
@@ -52,58 +52,58 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import WorkoutService from "@/services/trainingService.ts";
-import { useTrainingStore } from "@/stores/trainingStore.ts";
+import WorkoutService from "@/services/workout/workout.service";
+import { useWorkoutStore } from "@/stores/workoutStore.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
 import { getUserAge, isAuthenticated } from "@/services/authService.ts";
-import type { createWorkoutRequest } from "@/types/trainingType.ts";
+import type { updateWorkoutType } from "@/types/workout/workout.type.ts";
 
-const trainingStore = useTrainingStore();
+const workoutStore = useWorkoutStore();
 const typeStore = useTypeStore();
 const router = useRouter();
 const route = useRoute();
 
 const HFmax = ref(0);
 
-const trainingNames = ref<string[]>([]);
+const workoutNames = ref<string[]>([]);
 const showCustomInput = ref(false);
 
-const trainingsId = route.params.id as string;
+const workoutId = route.params.id as string;
 
 function loadValues() {
-  const trainingNameSelect = document.getElementById("trainingNameSelect") as HTMLSelectElement;
-  const trainingNameInput = document.getElementById("trainingName") as HTMLInputElement;
-  const trainingType = document.getElementById("trainingType") as HTMLSelectElement;
+  const workoutNameSelect = document.getElementById("workoutNameSelect") as HTMLSelectElement;
+  const workoutNameInput = document.getElementById("workoutName") as HTMLInputElement;
+  const workoutType = document.getElementById("workoutType") as HTMLSelectElement;
   const averageHeartRateInput = document.getElementById("averageHeartRate") as HTMLInputElement;
-  const trainingDurationInput = document.getElementById("trainingDuration") as HTMLInputElement;
+  const workoutDurationInput = document.getElementById("workoutDuration") as HTMLInputElement;
   const notesInput = document.getElementById("notes") as HTMLInputElement;
   const pausesInput = document.getElementById("pauses") as HTMLInputElement;
   const pauseLengthInput = document.getElementById("pauseLength") as HTMLInputElement;
 
-  const training = trainingStore.getTrainingById(trainingsId);
+  const workout = workoutStore.getWorkoutById(workoutId);
 
-  if (training) {
+  if (workout) {
     if (showCustomInput.value) {
-      trainingNameInput.value = training.type;
+      workoutNameInput.value = workout.type || "";
     } else {
-      trainingNameSelect.value = training.type;
+      workoutNameSelect.value = workout.type || "";
     }
 
-    console.log("Training:", training);
+    console.log("Workout:", workout);
 
-    trainingNameSelect.value = training.name;
-    trainingType.value = training.type || "";
-    averageHeartRateInput.value = training?.avgHeartRate?.toString() || "";
-    trainingDurationInput.value = training?.duration?.toString() || "";
-    notesInput.value = training.notes || "";
-    pausesInput.value = training.pauses?.toString() || "";
-    pauseLengthInput.value = training.pauseLength?.toString() || "";
+    workoutNameSelect.value = workout.name;
+    workoutType.value = workout.type || "";
+    averageHeartRateInput.value = workout?.avgHeartRate?.toString() || "";
+    workoutDurationInput.value = workout?.duration?.toString() || "";
+    notesInput.value = workout.notes || "";
+    pausesInput.value = workout.pauses?.toString() || "";
+    pauseLengthInput.value = workout.pauseLength?.toString() || "";
   }
 }
 
 function checkInput() {
-  const input = document.getElementById("trainingNameSelect") as HTMLSelectElement;
+  const input = document.getElementById("workoutNameSelect") as HTMLSelectElement;
 
   showCustomInput.value = input.value === "Custom";
 }
@@ -114,28 +114,28 @@ function optionalInteger(value: string): number | undefined {
 }
 
 async function submit() {
-  let trainingName = (document.getElementById("trainingNameSelect") as HTMLInputElement).value;
-  const trainingType = (document.getElementById("trainingType") as HTMLInputElement).value;
-  const trainingDuration = (document.getElementById("trainingDuration") as HTMLInputElement).value;
+  let workoutName = (document.getElementById("workoutNameSelect") as HTMLInputElement).value;
+  const workoutType = (document.getElementById("workoutType") as HTMLInputElement).value;
+  const workoutDuration = (document.getElementById("workoutDuration") as HTMLInputElement).value;
   const averageHeartRate = (document.getElementById("averageHeartRate") as HTMLInputElement).value;
   const pauses = optionalInteger((document.getElementById("pauses") as HTMLInputElement).value);
   const pauseLength = optionalInteger((document.getElementById("pauseLength") as HTMLInputElement).value);
 
   if (showCustomInput.value) {
-    trainingName = (document.getElementById("trainingName") as HTMLInputElement).value;
+    workoutName = (document.getElementById("workoutName") as HTMLInputElement).value;
   }
 
-  const newTraining = trainingStore.getTrainingById(trainingsId);
+  const currentWorkout = workoutStore.getWorkoutById(workoutId);
 
-  if (!newTraining) {
-    console.error("Training not found");
+  if (!currentWorkout) {
+    console.error("Workout not found");
     return;
   }
 
-  const workoutData: createWorkoutRequest = {
-    name: trainingName,
-    type: trainingType || undefined,
-    duration: optionalInteger(trainingDuration),
+  const workoutData: updateWorkoutType = {
+    name: workoutName,
+    type: workoutType || undefined,
+    duration: optionalInteger(workoutDuration),
     avgHeartRate: optionalInteger(averageHeartRate),
     notes: (document.getElementById("notes") as HTMLInputElement).value || undefined,
     ...(pauses !== undefined ? { pauses } : {}),
@@ -143,46 +143,46 @@ async function submit() {
   };
 
   if (!workoutData.name) {
-    const trainingNameInput = showCustomInput.value
-      ? (document.getElementById("trainingName") as HTMLInputElement)
-      : (document.getElementById("trainingNameSelect") as HTMLInputElement);
-    trainingNameInput.style.borderColor = "var(--danger)";
+    const workoutNameInput = showCustomInput.value
+      ? (document.getElementById("workoutName") as HTMLInputElement)
+      : (document.getElementById("workoutNameSelect") as HTMLInputElement);
+    workoutNameInput.style.borderColor = "var(--danger)";
 
-    trainingNameInput.addEventListener("keydown", () => {
-      trainingNameInput.style.borderColor = "var(--border)";
+    workoutNameInput.addEventListener("keydown", () => {
+      workoutNameInput.style.borderColor = "var(--border)";
     });
 
     return;
   }
 
   if (!workoutData.type) {
-    const trainingTypeInput = document.getElementById("trainingType") as HTMLInputElement;
-    trainingTypeInput.style.borderColor = "var(--danger)";
+    const workoutTypeInput = document.getElementById("workoutType") as HTMLInputElement;
+    workoutTypeInput.style.borderColor = "var(--danger)";
 
-    trainingTypeInput.addEventListener("focus", () => {
-      trainingTypeInput.style.borderColor = "var(--border)";
+    workoutTypeInput.addEventListener("focus", () => {
+      workoutTypeInput.style.borderColor = "var(--border)";
     });
 
     return;
   }
 
   try {
-    const updatedWorkout = await WorkoutService.updateWorkout(trainingsId, workoutData);
+    const updatedWorkout = await WorkoutService.updateWorkout(workoutId, workoutData);
     if (updatedWorkout) {
-      trainingStore.changeTraining(trainingsId, updatedWorkout);
+      workoutStore.changeWorkout(workoutId, updatedWorkout);
     }
   } catch (error) {
-    console.error("Failed to update training:", error);
+    console.error("Failed to update workout:", error);
     return;
   }
 
-  trainingStore.setCurrentTraining(trainingsId);
+  workoutStore.setCurrentWorkout(workoutId);
 
-  const trainings = await WorkoutService.getWorkouts();
+  const workouts = await WorkoutService.getWorkouts(false, false);
 
-  trainingStore.setTrainings(trainings);
+  workoutStore.setWorkouts(workouts);
 
-  await router.push({ name: "trainingDetails", params: { id: trainingsId } });
+  await router.push({ name: "workoutDetails", params: { id: workoutId } });
 }
 
 function changeFocus(elementId: string) {
@@ -198,9 +198,9 @@ onMounted(async () => {
   }
 
   try {
-    trainingNames.value = typeStore.getTrainingNames;
+    workoutNames.value = typeStore.getWorkoutNames;
   } catch (error) {
-    console.error("Failed to fetch training types:", error);
+    console.error("Failed to fetch workout types:", error);
   }
 
   const userAge = await getUserAge();

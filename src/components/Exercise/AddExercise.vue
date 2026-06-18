@@ -1,18 +1,18 @@
 <template>
-  <div class="add-exerciseLog">
+  <div class="add-workoutExercise">
     <div class="container">
       <div @click="$emit('close')" class="close">x</div>
       <h1>Add Exercise</h1>
       <div class="inputs">
-        <select id="exerciseLogName" @change="checkInput()">
+        <select id="workoutExerciseName" @change="checkInput()">
           <option value="" disabled selected>Select an exercise</option>
           <option v-for="exercise in typeStore.getExerciseTypes" :key="exercise" :value="exercise">
             {{ exercise }}
           </option>
           <option value="Custom">Custom</option>
         </select>
-        <input v-if="showCustomInput" id="customName" placeholder="Exercise Name" type="text" @keydown.enter="changeFocus('exerciseLogNotes')" />
-        <input id="exerciseLogNotes" placeholder="Notes (optional)" type="text" @keydown.enter="submit()" />
+        <input v-if="showCustomInput" id="customName" placeholder="Exercise Name" type="text" @keydown.enter="changeFocus('workoutExerciseNotes')" />
+        <input id="workoutExerciseNotes" placeholder="Notes (optional)" type="text" @keydown.enter="submit()" />
         <button class="button" @click="submit">Submit</button>
       </div>
     </div>
@@ -20,13 +20,13 @@
 </template>
 
 <script setup lang="ts">
-import WorkoutExerciseService from "@/services/exerciseLogService.ts";
-import type { createWorkoutExerciseRequest } from "@/types/exerciseLogType.ts";
+import WorkoutExerciseService from "@/services/workout/workoutExercise.service.ts";
+import type { createWorkoutExerciseType } from "@/types/workout/workoutExercise.type.ts";
 import { onMounted, ref } from "vue";
-import { useTrainingStore } from "@/stores/trainingStore.ts";
+import { useWorkoutStore } from "@/stores/workoutStore.ts";
 import { useTypeStore } from "@/stores/type.ts";
 
-const trainingStore = useTrainingStore();
+const workoutStore = useWorkoutStore();
 const typeStore = useTypeStore();
 
 const emit = defineEmits(["close", "reload"]);
@@ -38,20 +38,20 @@ const props = defineProps<{
 const showCustomInput = ref(false);
 
 function checkInput() {
-  const input = document.getElementById("exerciseLogName") as HTMLSelectElement;
+  const input = document.getElementById("workoutExerciseName") as HTMLSelectElement;
 
   showCustomInput.value = input.value === "Custom";
 }
 
 async function submit() {
-  let exerciseName = (document.getElementById("exerciseLogName") as HTMLInputElement).value;
+  let exerciseName = (document.getElementById("workoutExerciseName") as HTMLInputElement).value;
 
   if (showCustomInput.value) {
     exerciseName = (document.getElementById("customName") as HTMLInputElement).value;
   }
 
   if (exerciseName.trim() === "") {
-    const exerciseInput = document.getElementById("exerciseLogName") as HTMLInputElement;
+    const exerciseInput = document.getElementById("workoutExerciseName") as HTMLInputElement;
 
     exerciseInput.style.borderColor = "var(--danger)";
 
@@ -59,25 +59,25 @@ async function submit() {
       exerciseInput.style.borderColor = "var(--border)";
     });
 
-    await trainingStore.sortExerciseLogs(props.workoutId);
+    await workoutStore.sortWorkoutExercises(props.workoutId);
 
     return;
   }
 
-  const exerciseData: createWorkoutExerciseRequest = {
+  const exerciseData: createWorkoutExerciseType = {
     name: exerciseName,
-    order: trainingStore.getTrainingById(props.workoutId)?.exerciseLogs.length || 0,
-    notes: (document.getElementById("exerciseLogNotes") as HTMLTextAreaElement).value || undefined,
+    order: workoutStore.getWorkoutById(props.workoutId)?.workoutExercises?.length || 0,
+    notes: (document.getElementById("workoutExerciseNotes") as HTMLTextAreaElement).value || undefined,
   };
 
-  const newExerciseLog = await WorkoutExerciseService.createWorkoutExercise(props.workoutId, exerciseData);
+  const newWorkoutExercise = await WorkoutExerciseService.createWorkoutExercise(props.workoutId, exerciseData);
 
-  if (!newExerciseLog) {
-    console.error("Failed to create exerciseLog");
+  if (!newWorkoutExercise) {
+    console.error("Failed to create workoutExercise");
     return;
   }
 
-  trainingStore.addExerciseLog(newExerciseLog);
+  workoutStore.addWorkoutExercise(newWorkoutExercise);
 
   emit("close");
 
@@ -92,7 +92,7 @@ function changeFocus(elementId: string) {
 }
 
 onMounted(async () => {
-  const exerciseNameInput = document.getElementById("exerciseLogName") as HTMLInputElement;
+  const exerciseNameInput = document.getElementById("workoutExerciseName") as HTMLInputElement;
   exerciseNameInput.focus();
 
   checkInput();
@@ -100,7 +100,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.add-exerciseLog {
+.add-workoutExercise {
   padding: 20px;
   background-color: var(--bg-surface);
   border-radius: 8px;

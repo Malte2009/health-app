@@ -1,6 +1,6 @@
 <template>
-  <div class="createExerciseLogViewContainer">
-    <h1 class="heading">Edit Exercise Log</h1>
+  <div class="editExerciseViewContainer">
+    <h1 class="heading">Edit Exercise</h1>
 
     <div class="inputs">
       <input placeholder="Exercise Name" id="exerciseName" name="exerciseName" type="text" @keydown.enter="submit"/>
@@ -15,7 +15,7 @@
 import { useExerciseStore } from "@/stores/exerciseStore.ts";
 import { useRoute } from "vue-router";
 import { onMounted } from "vue";
-import ExerciseService from "@/services/training/exercise.service.ts";
+import ExerciseService from "@/services/workout/exercise.service.ts";
 import router from "@/router";
 
 const exerciseStore = useExerciseStore();

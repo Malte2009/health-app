@@ -28,17 +28,17 @@
 </template>
 
 <script setup lang="ts">
-import WorkoutSetService from "@/services/setService.ts";
+import WorkoutSetService from "@/services/workout/workoutSet.service.ts";
 import { onMounted, ref } from "vue";
-import type { changeSetRequestType } from "@/types/setType.ts";
+import type { updateWorkoutSetType } from "@/types/workout/workoutSet.type.ts";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
-import { useTrainingStore } from "@/stores/trainingStore.ts";
+import { useWorkoutStore } from "@/stores/workoutStore.ts";
 
 const emit = defineEmits(["close", "reload"]);
 
 const typeStore = useTypeStore();
-const trainingStore = useTrainingStore();
+const workoutStore = useWorkoutStore();
 
 const props = defineProps<{
   setId: string;
@@ -64,8 +64,8 @@ function checkTypeInput() {
   } else {
     const weightInput = document.getElementById("weight") as HTMLInputElement;
     const repUnitInput = document.getElementById("repUnit-selection") as HTMLInputElement;
-    const oldWeight = trainingStore.getSetById(props.setId)?.weight;
-    const oldRepUnit = trainingStore.getSetById(props.setId)?.repUnit;
+    const oldWeight = workoutStore.getWorkoutSetById(props.setId)?.weight;
+    const oldRepUnit = workoutStore.getWorkoutSetById(props.setId)?.repUnit;
 
     weightInput.style.display = "block";
 
@@ -98,10 +98,7 @@ async function submit() {
 
   if (customRepUnitInput.value) repUnit = (document.getElementById("repUnit") as HTMLInputElement).value;
 
-  const setData: changeSetRequestType = {
-    id: props.setId,
-    workoutId: props.workoutId,
-    workoutExerciseId: props.workoutExerciseId,
+  const setData: updateWorkoutSetType = {
     type,
     reps,
     weight,
@@ -110,10 +107,10 @@ async function submit() {
   };
 
   try {
-    const changedSet = await WorkoutSetService.changeWorkoutSet(setData);
+    const changedSet = await WorkoutSetService.updateWorkoutSet(props.workoutId, props.workoutExerciseId, props.setId, setData);
 
     if (changedSet) {
-      trainingStore.updateSet(changedSet);
+      workoutStore.updateWorkoutSet(changedSet);
 
       if (customRepUnitInput.value) typeStore.addSetUnitType(repUnit);
       if (customTypeInput.value) typeStore.addSetType(type);
@@ -216,7 +213,7 @@ async function loadOldSetData() {
   if (!setId) return;
 
   try {
-    const setData = trainingStore.getSetById(setId);
+    const setData = workoutStore.getWorkoutSetById(setId);
 
     if (setData) {
       if (setData.type) {

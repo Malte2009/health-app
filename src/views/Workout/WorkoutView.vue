@@ -1,31 +1,31 @@
 <template>
-  <div class="training-view">
-    <h1>Training Log</h1>
-    <div class="training">
+  <div class="workout-view">
+    <h1>Workout</h1>
+    <div class="workout">
       <div class="board">
-        <h2>Training Overview</h2>
-        <div v-if="training">
-          <p class="bold">Name: {{ training.name }}</p>
-          <p v-if="training.duration" class="bold">Length: {{ formatTrainingLength(training.duration) }}</p>
-          <p v-if="training.avgHeartRate" class="bold">Average Heart Rate: {{ training.avgHeartRate }} bpm</p>
-          <p v-if="training.caloriesBurned" class="bold">Calories Burned: {{ training.caloriesBurned }} kcal</p>
-          <p>Date: {{ getDateString(training.createdAt) }}</p>
-          <p>Notes: {{ training.notes }}</p>
+        <h2>Workout Overview</h2>
+        <div v-if="workout">
+          <p class="bold">Name: {{ workout.name }}</p>
+          <p v-if="workout.duration" class="bold">Length: {{ formatWorkoutLength(workout.duration) }}</p>
+          <p v-if="workout.avgHeartRate" class="bold">Average Heart Rate: {{ workout.avgHeartRate }} bpm</p>
+          <p v-if="workout.caloriesBurned" class="bold">Calories Burned: {{ workout.caloriesBurned }} kcal</p>
+          <p>Date: {{ getDateString(workout.createdAt) }}</p>
+          <p>Notes: {{ workout.notes }}</p>
         </div>
       </div>
       <div class="board">
-        <p v-if="!training">Loading...</p>
+        <p v-if="!workout">Loading...</p>
         <div v-else>
           <h2>Exercises</h2>
           <div>
             <table class="exercise-table">
               <tr>
                 <th>Exercises</th>
-                <th v-for="sets in getHeadingNames(training)" :key="sets">{{ sets }}</th>
+                <th v-for="sets in getHeadingNames(workout)" :key="sets">{{ sets }}</th>
               </tr>
               <tr
                 :class="{ dragging: draggingExerciseIndex === index, focused: currentExerciseIndex === index }"
-                v-for="(exercise, index) in training.exerciseLogs"
+                v-for="(exercise, index) in workout.workoutExercises ?? []"
                 :key="exercise.id"
               >
                 <td
@@ -40,7 +40,7 @@
                   @contextmenu="exerciseContextMenu($event, exercise.id)"
                   @click="handleMobileEdit($event, exercise.id, 'exercise')"
                 >
-                  <div>{{ exercise.name }}</div>
+                  <div>{{ exercise?.exercise?.name }}</div>
                   <div v-if="exercise.notes">({{ exercise.notes }})</div>
                 </td>
                 <td
@@ -61,7 +61,7 @@
                   }"
                   @contextmenu="setContextMenu($event, set.id)"
                   @click="handleMobileEdit($event, set.id, 'set')"
-                  v-for="(set, setIndex) in exercise.sets"
+                  v-for="(set, setIndex) in exercise.workoutSets"
                   :key="set.id"
                 >
                   <p v-if="set?.type != 'Pause'">{{ set.reps + set.repUnit}} | {{ set.weight }}kg</p>
@@ -71,7 +71,7 @@
               </tr>
               <tr>
                 <td colspan="100%">
-                  <button class="add-Exercise-Button" @click="addExerciseToTraining(trainingsId)">Add Exercise</button>
+                  <button class="add-Exercise-Button" @click="addExerciseToWorkout(workoutId)">Add Exercise</button>
                 </td>
               </tr>
             </table>
@@ -80,35 +80,35 @@
       </div>
     </div>
 
-    <div v-if="addExerciseLog" class="add-Exercise">
+    <div v-if="addWorkoutExercise" class="add-Exercise">
       <AddExercise
         @close="
-          addExerciseLog = false;
-          reloadTrainingFromStore();
+          addWorkoutExercise = false;
+          reloadWorkoutFromStore();
         "
-        :workoutId="trainingsId"
+        :workoutId="workoutId"
       ></AddExercise>
     </div>
 
-    <div v-if="changeExerciseLogCon" class="add-Exercise">
+    <div v-if="changeWorkoutExerciseCon" class="add-Exercise">
       <ChangeExercise
         @close="
-          changeExerciseLogCon = false;
-          reloadTrainingFromStore();
+          changeWorkoutExerciseCon = false;
+          reloadWorkoutFromStore();
         "
-        :workoutId="trainingsId"
-        :exerciseLogId="editExerciseLogId"
+        :workoutId="workoutId"
+        :workoutExerciseId="editWorkoutExerciseId"
       ></ChangeExercise>
     </div>
 
-    <div v-if="addSet" class="add-Set">
+    <div v-if="addWorkoutSet" class="add-Set">
       <AddSet
         @close="
-          addSet = false;
-          reloadTrainingFromStore();
+          addWorkoutSet = false;
+          reloadWorkoutFromStore();
         "
-        :workoutId="trainingsId"
-        :workoutExerciseId="selectedExerciseLogId"
+        :workoutId="workoutId"
+        :workoutExerciseId="selectedWorkoutExerciseId"
       ></AddSet>
     </div>
 
@@ -116,9 +116,9 @@
       <ChangeSet
         @close="
           changeSetCon = false;
-          reloadTrainingFromStore();
+          reloadWorkoutFromStore();
         "
-        :workoutId="trainingsId"
+        :workoutId="workoutId"
         :workoutExerciseId="editSetWorkoutExerciseId"
         :setId="editSetId"
       ></ChangeSet>
@@ -150,7 +150,7 @@
 
     <div v-if="showConfirmDelete" id="confirmDeleteModal" class="modal">
       <div class="modal-content">
-        <p>Are you sure you want to delete this training?</p>
+        <p>Are you sure you want to delete this workout?</p>
         <button class="button button-danger" @click="confirmDelete()">Delete</button>
         <button class="button button-secondary" @click="cancelDelete()">Cancel</button>
       </div>
@@ -160,32 +160,32 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import { useTrainingStore } from "@/stores/trainingStore.ts";
+import { useWorkoutStore } from "@/stores/workoutStore.ts";
 import { onBeforeMount, ref } from "vue";
 import AddExercise from "@/components/Exercise/AddExercise.vue";
 import AddSet from "@/components/Set/AddSet.vue";
 import ChangeSet from "@/components/Set/ChangeSet.vue";
 import ChangeExercise from "@/components/Exercise/ChangeExercise.vue";
-import type { getTrainingResponseType } from "@/types/trainingType.ts";
-import WorkoutService from "@/services/trainingService.ts";
-import WorkoutExerciseService from "@/services/exerciseLogService.ts";
-import WorkoutSetService from "@/services/setService.ts";
+import type { Workout } from "@/types/workout/workout.type.ts";
+import WorkoutService from "@/services/workout/workout.service";
+import WorkoutExerciseService from "@/services/workout/workoutExercise.service.ts";
+import WorkoutSetService from "@/services/workout/workoutSet.service.ts";
 import { useTypeStore } from "@/stores/type.ts";
 import { getDateString } from "@/utility/date.ts";
 
 const isMobile = window.innerWidth <= 768;
 
-const trainingStore = useTrainingStore();
+const workoutStore = useWorkoutStore();
 const typeStore = useTypeStore();
 const router = useRouter();
 const route = useRoute();
 
-const trainingsId = route.params.id as string;
-const training = ref(trainingStore.getTrainingById(trainingsId));
+const workoutId = route.params.id as string;
+const workout = ref(workoutStore.getWorkoutById(workoutId));
 
-const addExerciseLog = ref(false);
-const changeExerciseLogCon = ref(false);
-const addSet = ref(false);
+const addWorkoutExercise = ref(false);
+const changeWorkoutExerciseCon = ref(false);
+const addWorkoutSet = ref(false);
 const changeSetCon = ref(false);
 const showConfirmDelete = ref(false);
 
@@ -195,34 +195,34 @@ const currentExerciseIndex = ref<number | null>(null);
 const draggingSetIndex = ref<{ setIndex: number; index: number } | null>(null);
 const currentSetIndex = ref<{ setIndex: number; index: number } | null>(null);
 
-const selectedExerciseLogId = ref<string>("");
+const selectedWorkoutExerciseId = ref<string>("");
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const selectedSetId = ref<string>("");
 
-const editExerciseLogId = ref<string>("");
+const editWorkoutExerciseId = ref<string>("");
 const editSetId = ref<string>("");
 const editSetWorkoutExerciseId = ref<string>("");
 
-const formatTrainingLength = (duration: number): string => {
+const formatWorkoutLength = (duration: number): string => {
   const minutes = duration > 600 ? Math.round(duration / 60) : duration;
   return `${minutes} minutes`;
 };
 
 function confirmDelete() {
-  if (editExerciseLogId.value) {
+  if (editWorkoutExerciseId.value) {
     deleteExercise();
   } else if (editSetId.value) {
-    deleteSet();
+    deleteWorkoutSet();
   }
   showConfirmDelete.value = false;
-  editExerciseLogId.value = "";
+  editWorkoutExerciseId.value = "";
   editSetId.value = "";
   editSetWorkoutExerciseId.value = "";
 }
 
 function cancelDelete() {
   showConfirmDelete.value = false;
-  editExerciseLogId.value = "";
+  editWorkoutExerciseId.value = "";
   editSetId.value = "";
   editSetWorkoutExerciseId.value = "";
 }
@@ -270,27 +270,26 @@ function onExerciseDrop(targetIndex: number) {
     return;
   }
 
-  const moved = training.value?.exerciseLogs[draggingExerciseIndex.value];
-  if (!moved || !training.value) {
+  const workoutExercises = workout.value?.workoutExercises;
+  const moved = workoutExercises?.[draggingExerciseIndex.value];
+  if (!moved || !workout.value || !workoutExercises) {
     draggingExerciseIndex.value = null;
     return;
   }
 
-  training.value.exerciseLogs.splice(draggingExerciseIndex.value, 1);
+  workoutExercises.splice(draggingExerciseIndex.value, 1);
 
-  training.value.exerciseLogs.splice(targetIndex, 0, moved);
+  workoutExercises.splice(targetIndex, 0, moved);
 
-  training.value.exerciseLogs.forEach((exerciseLog, index) => {
-    exerciseLog.order = index;
+  workoutExercises.forEach((workoutExercise, index) => {
+    workoutExercise.order = index;
   });
 
-  trainingStore.changeTraining(trainingsId, training.value);
+  workoutStore.changeWorkout(workoutId, workout.value);
 
-  training.value.exerciseLogs.forEach((exerciseLog) => {
-    WorkoutExerciseService.changeWorkoutExercise({
-      id: exerciseLog.id,
-      workoutId: trainingsId,
-      order: exerciseLog.order,
+  workoutExercises.forEach((workoutExercise) => {
+    WorkoutExerciseService.updateWorkoutExercise(workoutId, workoutExercise.id, {
+      order: workoutExercise.order,
     });
   });
 
@@ -303,27 +302,26 @@ function onSetDrop(targetExerciseIndex: number, targetSetIndex: number) {
     return;
   }
 
-  const moved = training.value?.exerciseLogs[targetExerciseIndex].sets[draggingSetIndex.value.setIndex];
-  if (!moved || !training.value) {
+  const workoutExercise = workout.value?.workoutExercises?.[targetExerciseIndex];
+  const workoutSets = workoutExercise?.workoutSets;
+  const moved = workoutSets?.[draggingSetIndex.value.setIndex];
+  if (!moved || !workout.value || !workoutExercise) {
     draggingSetIndex.value = null;
     return;
   }
 
-  training.value.exerciseLogs[targetExerciseIndex].sets.splice(draggingSetIndex.value.setIndex, 1);
+  workoutSets.splice(draggingSetIndex.value.setIndex, 1);
 
-  training.value.exerciseLogs[targetExerciseIndex].sets.splice(targetSetIndex, 0, moved);
+  workoutSets.splice(targetSetIndex, 0, moved);
 
-  trainingStore.changeTraining(trainingsId, training.value);
+  workoutStore.changeWorkout(workoutId, workout.value);
 
-  training.value.exerciseLogs[targetExerciseIndex].sets.forEach((set, index) => {
+  workoutSets.forEach((set, index) => {
     set.order = index;
   });
 
-  training.value.exerciseLogs[targetExerciseIndex].sets.forEach((set, index) => {
-    WorkoutSetService.changeWorkoutSet({
-      id: set.id,
-      workoutId: trainingsId,
-      workoutExerciseId: training.value!.exerciseLogs[targetExerciseIndex].id,
+  workoutSets.forEach((set, index) => {
+    WorkoutSetService.updateWorkoutSet(workoutId, workoutExercise.id, set.id, {
       order: index,
     });
   });
@@ -331,13 +329,13 @@ function onSetDrop(targetExerciseIndex: number, targetSetIndex: number) {
   draggingSetIndex.value = null;
 }
 
-function getHeadingNames(training: getTrainingResponseType): string[] {
-  if (!training.exerciseLogs || training.exerciseLogs.length === 0) return [];
+function getHeadingNames(workout: Workout): string[] {
+  if (!workout.workoutExercises || workout.workoutExercises.length === 0) return [];
 
   let maxSetCount = 0;
 
-  for (const exercise of training.exerciseLogs) {
-    const setCount = exercise.sets?.length || 0;
+  for (const exercise of workout.workoutExercises) {
+    const setCount = exercise.workoutSets?.length || 0;
     if (setCount > maxSetCount) {
       maxSetCount = setCount;
     }
@@ -357,20 +355,20 @@ function getHeadingNames(training: getTrainingResponseType): string[] {
 }
 
 function addSetToExercise(exerciseId: string) {
-  addSet.value = true;
-  selectedExerciseLogId.value = exerciseId;
+  addWorkoutSet.value = true;
+  selectedWorkoutExerciseId.value = exerciseId;
   console.log(`Add set to exercise with ID: ${exerciseId}`);
 }
 
-function addExerciseToTraining(trainingId: string) {
-  addExerciseLog.value = true;
-  console.log(`Add new exercise to training with ID: ${trainingId}`);
+function addExerciseToWorkout(workoutId: string) {
+  addWorkoutExercise.value = true;
+  console.log(`Add new exercise to workout with ID: ${workoutId}`);
 }
 
 function exerciseContextMenu(event: MouseEvent, exerciseId: string) {
   event.preventDefault();
   // Logic to handle context menu for exercise
-  editExerciseLogId.value = exerciseId;
+  editWorkoutExerciseId.value = exerciseId;
 
   const menu = document.querySelector(".exercise-context-menu") as HTMLDivElement;
   if (menu) {
@@ -385,7 +383,8 @@ function setContextMenu(event: MouseEvent, setId: string) {
   event.preventDefault();
   // Logic to handle context menu for set
   editSetId.value = setId;
-  editSetWorkoutExerciseId.value = training.value?.exerciseLogs.find((exercise) => exercise.sets.some((set) => set.id === setId))?.id || "";
+  editSetWorkoutExerciseId.value =
+    workout.value?.workoutExercises?.find((exercise) => exercise.workoutSets?.some((set) => set.id === setId))?.id || "";
 
   const menu = document.querySelector(".set-context-menu") as HTMLDivElement;
   if (menu) {
@@ -409,7 +408,7 @@ function hideContextMenu() {
 }
 
 async function changeExercise() {
-  changeExerciseLogCon.value = true;
+  changeWorkoutExerciseCon.value = true;
 
   hideContextMenu();
 }
@@ -421,14 +420,14 @@ async function changeSet() {
 }
 
 async function deleteExercise() {
-  trainingStore.removeExerciseLog(editExerciseLogId.value);
-  await WorkoutExerciseService.deleteWorkoutExercise(trainingsId, editExerciseLogId.value);
-  editExerciseLogId.value = "";
+  workoutStore.removeWorkoutExercise(editWorkoutExerciseId.value);
+  await WorkoutExerciseService.deleteWorkoutExercise(workoutId, editWorkoutExerciseId.value);
+  editWorkoutExerciseId.value = "";
 }
 
-async function deleteSet() {
-  trainingStore.removeSet(editSetId.value);
-  await WorkoutSetService.deleteWorkoutSet(trainingsId, editSetWorkoutExerciseId.value, editSetId.value);
+async function deleteWorkoutSet() {
+  workoutStore.removeWorkoutSet(editSetId.value);
+  await WorkoutSetService.deleteWorkoutSet(workoutId, editSetWorkoutExerciseId.value, editSetId.value);
   editSetId.value = "";
   editSetWorkoutExerciseId.value = "";
 }
@@ -447,28 +446,34 @@ function closeSetContextMenu() {
   }
 }
 
-function reloadTrainingFromStore() {
-  training.value = trainingStore.getTrainingById(trainingsId);
-  if (!training.value) {
+function reloadWorkoutFromStore() {
+  workout.value = workoutStore.getWorkoutById(workoutId);
+  if (!workout.value) {
     router.push({ name: "home" });
   }
 }
 
+async function loadWorkoutDetails() {
+  const getWorkout = await WorkoutService.getWorkoutById(workoutId, false, false);
+
+  if (getWorkout) {
+    workoutStore.addWorkout(getWorkout);
+  } else if (!workout.value) {
+    await router.push({ name: "home" });
+    return;
+  }
+
+  const workoutExercises = await WorkoutExerciseService.getWorkoutExercises(workoutId, true);
+  workoutStore.setWorkoutExercises(workoutId, workoutExercises);
+  workout.value = workoutStore.getWorkoutById(workoutId);
+}
+
 onBeforeMount(async () => {
   typeStore.checkTypes();
-  if (!training.value) {
-    const getTraining = await WorkoutService.getWorkoutById(trainingsId);
-
-    if (getTraining) {
-      training.value = getTraining;
-      trainingStore.addTraining(training.value);
-    } else {
-      await router.push({ name: "home" });
-    }
-  }
-  if (training.value) {
-    await trainingStore.sortExerciseLogs(training.value.id);
-    await trainingStore.sortSets(training.value.id);
+  await loadWorkoutDetails();
+  if (workout.value) {
+    await workoutStore.sortWorkoutExercises(workout.value.id);
+    await workoutStore.sortWorkoutSets(workout.value.id);
   }
 });
 </script>
@@ -543,7 +548,7 @@ h1 {
 .bold {
   font-weight: bold;
 }
-.training {
+.workout {
   display: flex;
   flex-direction: row;
 }
@@ -686,7 +691,7 @@ h1 {
 }
 
 @media (max-width: 768px) {
-  .training {
+  .workout {
     flex-direction: column;
     width: fit-content;
     margin: 0 auto;

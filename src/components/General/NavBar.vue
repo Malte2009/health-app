@@ -5,14 +5,21 @@
         <span class="home-icon">&#9776;</span>
       </button>
 
-      <div :class="['section-pill', currentSection]">
-        {{ currentSection === 'training' ? 'Training' : currentSection === 'food' ? 'Nutrition' : 'Health' }}
+      <div
+        class="section-pill"
+        :class="{
+          workouts: currentSection === 'workouts',
+          food: currentSection === 'food',
+          health: currentSection === 'health',
+        }"
+      >
+        {{ currentSection === 'workouts' ? 'Workouts' : currentSection === 'food' ? 'Nutrition' : 'Health' }}
       </div>
 
       <div class="nav-scroll">
-        <template v-if="currentSection === 'training'">
+        <template v-if="currentSection === 'workouts'">
           <button :class="{ active: route.name === 'progression' }" @click="router.push({ name: 'progression' })">Progression</button>
-          <button :class="{ active: route.name === 'training' || route.name === 'trainingDetails' || route.name === 'editTraining' || route.name === 'createTraining' }" @click="router.push({ name: 'training' })">Trainings</button>
+          <button :class="{ active: route.name === 'workouts' || route.name === 'workoutDetails' || route.name === 'editWorkout' || route.name === 'createWorkout' }" @click="router.push({ name: 'workouts' })">Workouts</button>
           <button :class="{ active: route.name === 'body' || route.name === 'createBodyLog' || route.name === 'editBodyLog' }" @click="router.push({ name: 'body' })">Body</button>
         </template>
 
@@ -46,8 +53,8 @@ import { useRoute, useRouter } from "vue-router";
 const router = useRouter();
 const route = useRoute();
 
-const TRAINING_ROUTES = new Set([
-  "progression", "training", "trainingDetails", "editTraining", "createTraining",
+const WORKOUT_ROUTES = new Set([
+  "progression", "workouts", "workoutDetails", "editWorkout", "createWorkout",
   "body", "createBodyLog", "editBodyLog",
   "exercise", "exerciseDetails", "editExercise",
 ]);
@@ -65,9 +72,9 @@ function goHome() {
   router.push({ name: "home" });
 }
 
-const currentSection = computed<"training" | "food" | "health" | null>(() => {
+const currentSection = computed<"workouts" | "food" | "health" | null>(() => {
   const name = route.name as string;
-  if (TRAINING_ROUTES.has(name)) return "training";
+  if (WORKOUT_ROUTES.has(name)) return "workouts";
   if (FOOD_ROUTES.has(name)) return "food";
   if (HEALTH_ROUTES.has(name)) return "health";
   return null;
@@ -126,7 +133,7 @@ const currentSection = computed<"training" | "food" | "health" | null>(() => {
   user-select: none;
 }
 
-.section-pill.training {
+.section-pill.workouts {
   background: rgba(66, 165, 245, 0.12);
   color: #90caf9;
 }
@@ -176,7 +183,7 @@ const currentSection = computed<"training" | "food" | "health" | null>(() => {
   background: #3d4347;
 }
 
-/* Training active */
+/* Workout active */
 .active {
   background: #1c2839 !important;
   color: #90caf9 !important;

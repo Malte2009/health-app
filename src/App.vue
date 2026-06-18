@@ -10,7 +10,7 @@ import { onMounted, ref } from "vue";
 import { isAuthenticated } from "@/services/authService.ts";
 import NavBar from "@/components/General/NavBar.vue";
 import { useTypeStore } from "@/stores/type.ts";
-import ExerciseService from "@/services/training/exercise.service.ts";
+import ExerciseService from "@/services/workout/exercise.service.ts";
 import { useExerciseStore } from "@/stores/exerciseStore.ts";
 
 const typeStore = useTypeStore();

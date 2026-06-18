@@ -1,11 +1,11 @@
 <template>
-  <div class="trainings-view">
-    <h1>Trainings</h1>
+  <div class="workouts-view">
+    <h1>Workouts</h1>
 
-    <table class="trainings-table">
+    <table class="workouts-table">
       <thead>
         <tr>
-          <th v-if="!isMobile">Training ID</th>
+          <th v-if="!isMobile">Workout ID</th>
           <th>Date</th>
           <th>Name</th>
           <th>Type</th>
@@ -19,26 +19,26 @@
       <tbody>
         <tr>
           <td colspan="9">
-            <button class="button" @click="router.push({ name: 'createTraining' })">Create New Training</button>
+            <button class="button" @click="router.push({ name: 'createWorkout' })">Create New Workout</button>
           </td>
         </tr>
-        <tr v-for="training in trainings" :key="training.id">
-          <td v-if="!isMobile">{{ training.id }}</td>
-          <td>{{ getDateString(training.createdAt) }}</td>
-          <td>{{ training.name }}</td>
-          <td>{{ training.type }}</td>
-          <td>{{ training.duration || "" }}</td>
-          <td>{{ training.avgHeartRate || "" }}</td>
-          <td>{{ training.caloriesBurned || "" }}</td>
-          <td>{{ training.notes || "" }}</td>
+        <tr v-for="workout in workouts" :key="workout.id">
+          <td v-if="!isMobile">{{ workout.id }}</td>
+          <td>{{ getDateString(workout.createdAt) }}</td>
+          <td>{{ workout.name }}</td>
+          <td>{{ workout.type }}</td>
+          <td>{{ workout.duration || "" }}</td>
+          <td>{{ workout.avgHeartRate || "" }}</td>
+          <td>{{ workout.caloriesBurned || "" }}</td>
+          <td>{{ workout.notes || "" }}</td>
           <td>
-            <button class="button button-primary" @click="router.push({ name: 'trainingDetails', params: { id: training.id } })">View</button>
-            <button class="button button-secondary" @click="router.push({ name: 'editTraining', params: { id: training.id } })">Edit</button>
+            <button class="button button-primary" @click="router.push({ name: 'workoutDetails', params: { id: workout.id } })">View</button>
+            <button class="button button-secondary" @click="router.push({ name: 'editWorkout', params: { id: workout.id } })">Edit</button>
             <button
               class="button button-danger"
               @click="
                 showConfirmDelete = true;
-                deleteTrainingId = training.id;
+                deleteWorkoutId = workout.id;
               "
             >
               Delete
@@ -49,8 +49,8 @@
     </table>
     <div v-if="showConfirmDelete" id="confirmDeleteModal" class="modal">
       <div class="modal-content">
-        <p>Are you sure you want to delete this training?</p>
-        <button class="button button-danger" @click="confirmDelete(deleteTrainingId)">Delete</button>
+        <p>Are you sure you want to delete this workout?</p>
+        <button class="button button-danger" @click="confirmDelete(deleteWorkoutId)">Delete</button>
         <button class="button button-secondary" @click="cancelDelete()">Cancel</button>
       </div>
     </div>
@@ -60,44 +60,40 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
-import type { getTrainingResponseType } from "@/types/trainingType.ts";
-import WorkoutService from "@/services/trainingService.ts";
-import { useTrainingStore } from "@/stores/trainingStore.ts";
+import type { Workout } from "@/types/workout/workout.type.ts";
+import WorkoutService from "@/services/workout/workout.service";
+import { useWorkoutStore } from "@/stores/workoutStore.ts";
 import { getDateString } from "@/utility/date.ts";
 import { isAuthenticated } from "@/services/authService.ts";
 
 const isMobile = window.innerWidth <= 768;
 const showConfirmDelete = ref(false);
-const deleteTrainingId = ref<string>("");
+const deleteWorkoutId = ref<string>("");
 const router = useRouter();
-const trainingsStore = useTrainingStore();
-const trainings = ref([] as getTrainingResponseType[]);
+const workoutsStore = useWorkoutStore();
+const workouts = ref([] as Workout[]);
 
 async function confirmDelete(id: string) {
   try {
     await WorkoutService.deleteWorkout(id);
-    trainings.value = trainings.value.filter((training) => training.id !== id);
+    workouts.value = workouts.value.filter((workout) => workout.id !== id);
   } catch (error) {
-    console.error("Error deleting training:", error);
+    console.error("Error deleting workout:", error);
   }
 
   showConfirmDelete.value = false;
-  deleteTrainingId.value = "";
+  deleteWorkoutId.value = "";
 }
 
 function cancelDelete() {
   showConfirmDelete.value = false;
-  deleteTrainingId.value = "";
+  deleteWorkoutId.value = "";
 }
 
 onMounted(async () => {
   if (await isAuthenticated()) {
-    if (trainingsStore.trainings.length > 0) {
-      trainings.value = trainingsStore.trainings;
-    } else {
-      trainings.value = await WorkoutService.getWorkouts();
-      trainingsStore.setTrainings(trainings.value);
-    }
+    workouts.value = await WorkoutService.getWorkouts(false, false);
+    workoutsStore.setWorkouts(workouts.value);
   } else {
     await router.push({ name: "login" });
   }
@@ -124,7 +120,7 @@ onMounted(async () => {
   align-items: center;
 }
 
-.trainings-table {
+.workouts-table {
   width: fit-content;
   border-collapse: collapse;
   margin-top: 20px;
@@ -132,12 +128,12 @@ onMounted(async () => {
   background: var(--bg-surface);
 }
 
-.trainings-table td {
+.workouts-table td {
   padding: 10px;
   border: 1px solid var(--border);
 }
 
-.trainings-table th {
+.workouts-table th {
   padding: 10px;
   border: 1px solid var(--border);
   background-color: var(--bg-surface-secondary);

@@ -3,7 +3,7 @@ import HomeView from "../views/HomeView.vue";
 import { isAuthenticated } from "@/services/authService.ts";
 
 import bodyRoutes from "@/router/body.routes.ts";
-import trainingRoutes from "@/router/training.routes.ts";
+import workoutRoutes from "@/router/workout.routes.ts";
 import loginRoutes from "@/router/login.routes.ts";
 import exerciseRoutes from "@/router/exercise.routes.ts";
 import foodRoutes from "@/router/food.routes.ts";
@@ -11,7 +11,7 @@ import healthTrackingRoutes from "@/router/healthTracking.routes.ts";
 
 const routes = [
   ...loginRoutes,
-  ...trainingRoutes,
+  ...workoutRoutes,
   ...bodyRoutes,
   ...exerciseRoutes,
   ...foodRoutes,

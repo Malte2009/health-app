@@ -8,16 +8,16 @@
     <div v-if="loading" class="loading">Loading data...</div>
 
     <div v-else class="dashboard-grid">
-      <!-- Training -->
-      <div class="card" v-if="data.training.length > 0" @click="goTo('/training')">
-        <h3 class="card-title training-text">Training</h3>
+      <!-- Workout -->
+      <div class="card" v-if="data.workouts.length > 0" @click="goTo('/workouts')">
+        <h3 class="card-title workout-text">Workouts</h3>
         <ul class="detail-list">
-          <li v-for="t in data.training" :key="t.id" @click.stop="goTo('/training/' + t.id)" class="clickable-item">
+          <li v-for="t in data.workouts" :key="t.id" @click.stop="goTo('/workouts/' + t.id)" class="clickable-item">
             <strong>{{ t.name }}</strong>
-            <div class="note" v-if="formatTrainingDetails(t)">{{ formatTrainingDetails(t) }}</div>
+            <div class="note" v-if="formatWorkoutDetails(t)">{{ formatWorkoutDetails(t) }}</div>
           </li>
         </ul>
-        <div class="card-footer">Click to view all trainings &rarr;</div>
+        <div class="card-footer">Click to view all workouts &rarr;</div>
       </div>
 
       <!-- Sleep -->
@@ -189,7 +189,7 @@ import {
   getSyncopesOverMonth,
   getBloodPressureOverMonth,
   getSleepOverMonth,
-  getTrainingOverMonth,
+  getWorkoutsOverMonth,
   getDailyLogsOverMonth,
   getIntakeLogsOverMonth,
   getFoodOverMonth,
@@ -216,7 +216,7 @@ const data = reactive<any>({
   syncopes: [],
   bp: [],
   sleep: [],
-  training: [],
+  workouts: [],
   daily: [],
   intake: [],
   food: null,
@@ -266,23 +266,23 @@ const formatSyncopeOutcome = (outcome?: string) => {
   return outcome.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
-const formatTrainingDetails = (training: any): string => {
-  if (!training) return "";
+const formatWorkoutDetails = (workout: any): string => {
+  if (!workout) return "";
 
   const parts: string[] = [];
 
-  const duration = Number(training.duration);
+  const duration = Number(workout.duration);
   if (!Number.isNaN(duration) && duration > 0) {
     const durationMinutes = duration > 600 ? Math.round(duration / 60) : duration;
     parts.push(`Length: ${durationMinutes} min`);
   }
 
-  const avgHeartRate = Number(training.avgHeartRate);
+  const avgHeartRate = Number(workout.avgHeartRate);
   if (!Number.isNaN(avgHeartRate) && avgHeartRate > 0) {
     parts.push(`Avg HR: ${avgHeartRate} bpm`);
   }
 
-  const calories = Number(training.caloriesBurned ?? training.calories);
+  const calories = Number(workout.caloriesBurned ?? workout.calories);
   if (!Number.isNaN(calories) && calories > 0) {
     parts.push(`Calories Burned: ${calories} kcal`);
   }
@@ -315,7 +315,7 @@ const isEmpty = computed(() => {
          data.syncopes.length === 0 &&
          data.bp.length === 0 &&
          data.sleep.length === 0 &&
-         data.training.length === 0 &&
+         data.workouts.length === 0 &&
          data.daily.length === 0 &&
          activeFoods.value.length === 0 &&
          (!data.micro || Object.keys(data.micro).length === 0);
@@ -399,13 +399,13 @@ onMounted(async () => {
   const end = formatDate(endOfMonth);
 
   try {
-    const [microRes, symptomsRes, syncopesRes, bpRes, sleepRes, trainingRes, dailyRes, intakeRes, foodRes, hrvRes] = await Promise.all([
+    const [microRes, symptomsRes, syncopesRes, bpRes, sleepRes, workoutsRes, dailyRes, intakeRes, foodRes, hrvRes] = await Promise.all([
       getMicroOverMonth(start, end),
       getSymptomsOverMonth(start, end),
       getSyncopesOverMonth(start, end),
       getBloodPressureOverMonth(start, end),
       getSleepOverMonth(start, end),
-      getTrainingOverMonth(start, end),
+      getWorkoutsOverMonth(start, end),
       getDailyLogsOverMonth(start, end),
       getIntakeLogsOverMonth(start, end),
       getFoodOverMonth(start, end),
@@ -417,7 +417,7 @@ onMounted(async () => {
     const syncopesMap = buildMap(syncopesRes as any[]);
     const bpMap = buildMap(bpRes as any[]);
     const sleepMap = buildMap(sleepRes as any[]);
-    const trainingMap = buildMap(trainingRes as any[]);
+    const workoutsMap = buildMap(workoutsRes as any[]);
     const dailyMap = buildMap(dailyRes as any[]);
     const intakeMap = buildMap(intakeRes as any[]);
     const foodMap = buildFoodMap(foodRes);
@@ -429,7 +429,7 @@ onMounted(async () => {
     data.syncopes = syncopesMap[targetDate] || [];
     data.bp = bpMap[targetDate] || [];
     data.sleep = sleepMap[targetDate] || [];
-    data.training = trainingMap[targetDate] || [];
+    data.workouts = workoutsMap[targetDate] || [];
     data.daily = dailyMap[targetDate] || [];
     data.intake = intakeMap[targetDate] || [];
     data.food = foodMap[targetDate] || [];
@@ -440,7 +440,7 @@ onMounted(async () => {
     if (!Array.isArray(data.syncopes)) data.syncopes = [data.syncopes];
     if (!Array.isArray(data.bp)) data.bp = [data.bp];
     if (!Array.isArray(data.sleep)) data.sleep = [data.sleep];
-    if (!Array.isArray(data.training)) data.training = [data.training];
+    if (!Array.isArray(data.workouts)) data.workouts = [data.workouts];
     if (!Array.isArray(data.daily)) data.daily = [data.daily];
     if (!Array.isArray(data.intake)) data.intake = [data.intake];
     if (!Array.isArray(data.food)) data.food = [data.food];
@@ -514,7 +514,7 @@ onMounted(async () => {
   padding-bottom: 0.5rem;
 }
 
-.training-text { border-bottom-color: #10b981; color: #10b981; }
+.workout-text { border-bottom-color: #10b981; color: #10b981; }
 .sleep-text { border-bottom-color: #3b82f6; color: #3b82f6; }
 .hrv-text { border-bottom-color: #8b5cf6; color: #8b5cf6; }
 .symptom-text { border-bottom-color: #ef4444; color: #ef4444; }
