@@ -16,9 +16,9 @@ class ExerciseService {
       return [];
     }
   }
-  async getExerciseById(id: string): Promise<Exercise | void> {
+  async getExerciseById(id: string, includeWorkoutExercises: boolean = true): Promise<Exercise | void> {
     try {
-      return (await api.get(`/exercise/${id}`)).data;
+      return (await api.get(`/exercise/${id}?includeWorkoutExercises=${includeWorkoutExercises}`)).data;
     } catch (error) {
       return;
     }
