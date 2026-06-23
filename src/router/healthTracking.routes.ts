@@ -30,6 +30,11 @@ export default [
     component: () => import("../views/HRV/HrvDetailsView.vue")
   },
   {
+    path: "/hrv/:id/windows",
+    name: "hrvWindows",
+    component: () => import("../views/HRV/HrvWindowsView.vue")
+  },
+  {
     path: "/calendar",
     name: "diagnostic-calendar",
     component: () => import("@/views/Diagnostic/DiagnosticCalendarView.vue")

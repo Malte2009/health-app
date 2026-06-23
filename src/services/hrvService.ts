@@ -1,4 +1,5 @@
 import api from "./api";
+import type { HrvWindowsResponse } from "@/types/hrv/hrvWindow.type.ts";
 
 export type HrvRecordingQueryParams = {
     name?: string;
@@ -25,6 +26,10 @@ export const getHrvData = async (id: string, filters?: string) => {
 
 export const getHrvWindowData = async (id: string, filters?: string) => {
     return (await api.get(`/hrv/window-data/${id}${filters ? `?filters=${filters}` : ''}`, { responseType: 'text' })).data;
+}
+
+export const getHrvWindows = async (recordingId: string): Promise<HrvWindowsResponse> => {
+    return (await api.get(`/hrv/${recordingId}/windows`)).data;
 }
 
 export const getHrvMetrics = async (id: string, filters: string) => {

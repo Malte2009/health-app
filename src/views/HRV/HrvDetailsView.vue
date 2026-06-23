@@ -19,6 +19,23 @@
         <button @click="copyVisibleRR" class="apply-btn" style="background-color: var(--bg-surface-secondary); color: var(--text-main);">
           Copy Visible RR
         </button>
+        <RouterLink
+          :to="{ name: 'hrvWindows', params: { id: recordingId } }"
+          class="windows-link"
+          title="Compare the recording's five-minute HRV windows"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="7" height="7" rx="1" />
+            <rect x="14" y="4" width="7" height="7" rx="1" />
+            <rect x="3" y="15" width="7" height="5" rx="1" />
+            <rect x="14" y="15" width="7" height="5" rx="1" />
+          </svg>
+          <span>
+            <strong>Window analysis</strong>
+            <small>5-minute segments</small>
+          </span>
+          <span class="windows-link-arrow" aria-hidden="true">→</span>
+        </RouterLink>
       </div>
       <div v-if="isLoading" class="loading-spinner"></div>
     </div>
@@ -215,7 +232,7 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive } from "vue";
 import { getHrvData, getHrvRecording, getHrvMetrics } from "@/services/hrvService.ts";
-import { toLocalTimeString, formatTime } from '@/utility/date';
+import { formatTime } from '@/utility/date';
 import { useRoute } from "vue-router";
 import { roundTo } from "@/utility/math.ts";
 import Chart from "chart.js/auto";
@@ -505,6 +522,59 @@ td {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+}
+
+.windows-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-left: auto;
+  padding: 7px 10px;
+  color: var(--text-main);
+  text-decoration: none;
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.18s, background-color 0.18s;
+}
+
+.windows-link:hover {
+  background: var(--bg-main);
+  border-color: var(--primary);
+}
+
+.windows-link svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 1.6;
+}
+
+.windows-link span:not(.windows-link-arrow) {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.windows-link strong {
+  font-size: 0.82rem;
+}
+
+.windows-link small {
+  margin-top: 3px;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+}
+
+.windows-link-arrow {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 900px) {
+  .windows-link {
+    margin-left: 0;
+  }
 }
 
 .control-panel {

@@ -37,7 +37,7 @@
           <button :class="{ 'active-health': route.name === 'diagnostic-calendar' }" @click="router.push({ name: 'diagnostic-calendar' })">Calendar</button>
           <button :class="{ 'active-health': route.name === 'sleep-tracker' }" @click="router.push({ name: 'sleep-tracker' })">Sleep</button>
           <button :class="{ 'active-health': route.name === 'vitals' }" @click="router.push({ name: 'vitals' })">Vitals</button>
-          <button :class="{ 'active-health': route.name === 'hrv' }" @click="router.push({ name: 'hrv' })">HRV</button>
+          <button :class="{ 'active-health': ['hrv', 'hrvDetails', 'hrvWindows'].includes(String(route.name)) }" @click="router.push({ name: 'hrv' })">HRV</button>
           <button :class="{ 'active-health': route.name === 'symptoms' }" @click="router.push({ name: 'symptoms' })">Symptoms</button>
           <button :class="{ 'active-health': route.name === 'mcas' }" @click="router.push({ name: 'mcas' })">MCAS</button>
         </template>
@@ -64,7 +64,7 @@ const FOOD_ROUTES = new Set([
 ]);
 
 const HEALTH_ROUTES = new Set([
-  "daily-tracking", "intake-log", "diagnostic-calendar", "sleep-tracker", "vitals", "hrv", "symptoms", "mcas",
+  "daily-tracking", "intake-log", "diagnostic-calendar", "sleep-tracker", "vitals", "hrv", "hrvDetails", "hrvWindows", "symptoms", "mcas",
 ]);
 
 function goHome() {

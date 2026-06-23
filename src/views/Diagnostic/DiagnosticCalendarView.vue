@@ -43,6 +43,7 @@
           <label class="toggle-label"><input type="checkbox" v-model="toggles.bp" /> Blood Pressure</label>
           <label class="toggle-label"><input type="checkbox" v-model="toggles.sleep" /> Sleep</label>
           <label class="toggle-label"><input type="checkbox" v-model="toggles.workouts" /> Workouts</label>
+          <label class="toggle-label"><input type="checkbox" v-model="toggles.hrv" /> HRV</label>
           <label class="toggle-label"><input type="checkbox" v-model="toggles.daily" /> Daily Logs</label>
           <label class="toggle-label"><input type="checkbox" v-model="toggles.intake" /> Intake Logs</label>
         </div>
@@ -51,7 +52,7 @@
           <div class="sub-toggle-group" v-if="toggles.micro">
             <div class="sub-toggle-header" @click="uiState.showMicroFilters = !uiState.showMicroFilters">
               <span class="sub-label">Micro Focus</span>
-              <span class="toggle-icon">{{ uiState.showMicroFilters ? '▼ Hide Filters' : '▶ Show Filters' }}</span>
+              <span class="toggle-icon">{{ uiState.showMicroFilters ? "▼ Hide Filters" : "▶ Show Filters" }}</span>
             </div>
             <div class="micro-filters" v-if="uiState.showMicroFilters">
               <label class="toggle-label" v-for="micro in MICROS_LIST" :key="micro">
@@ -63,20 +64,21 @@
           <div class="sub-toggle-group">
             <div class="sub-toggle-header" @click="uiState.showFoodFilters = !uiState.showFoodFilters">
               <span class="sub-label">Food Focus</span>
-              <span class="toggle-icon">{{ uiState.showFoodFilters ? '▼ Hide Filters' : '▶ Show Filters' }}</span>
+              <span class="toggle-icon">{{ uiState.showFoodFilters ? "▼ Hide Filters" : "▶ Show Filters" }}</span>
             </div>
             <div class="micro-filters" v-if="uiState.showFoodFilters">
               <label class="toggle-label" v-for="foodName in uniqueFoodList" :key="foodName">
                 <input type="checkbox" v-model="foodToggles[foodName]" /> {{ foodName }}
               </label>
-              <div v-if="uniqueFoodList.length === 0" style="color:var(--text-secondary); font-size:0.9rem;">
-                No foods logged in this month.
-              </div>
+              <div v-if="uniqueFoodList.length === 0" style="color: var(--text-secondary); font-size: 0.9rem">No foods logged in this month.</div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <div v-if="loadError" class="calendar-status error" role="alert">{{ loadError }}</div>
+    <div v-else-if="isLoading" class="calendar-status" role="status">Loading health data…</div>
 
     <div class="calendar-container">
       <div class="calendar-grid">
@@ -119,20 +121,38 @@
               {{ day.workouts.length }} Workout{{ day.workouts.length > 1 ? "s" : "" }}
             </div>
 
+            <template v-if="toggles.hrv && Array.isArray(day.hrv) && day.hrv.length > 0">
+              <button
+                v-for="recording in day.hrv"
+                :key="recording.id"
+                class="event-pill hrv"
+                :title="formatHrvTitle(recording)"
+                @click.stop="goToHrvDetails(recording.id)"
+              >
+                {{ recording.name || "HRV recording" }}
+              </button>
+            </template>
+
             <div v-if="toggles.daily && Array.isArray(day.daily) && day.daily.length > 0" class="event-pill daily">Daily</div>
 
-            <div v-if="toggles.intake && Array.isArray(day.intake) && day.intake.length > 0" class="event-pill intake">{{ day.intake.length }} Intake</div>
+            <div v-if="toggles.intake && Array.isArray(day.intake) && day.intake.length > 0" class="event-pill intake">
+              {{ day.intake.length }} Intake
+            </div>
 
             <template v-if="activeFoods(day.food).length">
               <div v-for="(food, index) in activeFoods(day.food)" :key="index" class="event-pill food">
-                {{ food.name }}{{ food.totalWeight_g ? (': ' + food.totalWeight_g + 'g') : '' }}
+                {{ food.name }}{{ food.totalWeight_g ? ": " + food.totalWeight_g + "g" : "" }}
               </div>
             </template>
 
             <template v-if="toggles.micro && day.micro">
               <template v-for="micro in MICROS_LIST" :key="micro">
                 <!-- only show micro if the global micro toggle is on AND the specific micro filter is enabled -->
-                <div v-if="microToggles[micro] === true && typeof day.micro[micro] === 'number' && day.micro[micro] > 0" class="event-pill micro" :class="micro">
+                <div
+                  v-if="microToggles[micro] === true && typeof day.micro[micro] === 'number' && day.micro[micro] > 0"
+                  class="event-pill micro"
+                  :class="micro"
+                >
                   {{ formatMicroName(micro) }}: {{ day.micro[micro] }}
                 </div>
               </template>
@@ -147,17 +167,18 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
+import healthDayService from "@/services/daily/healthDay.service.ts";
+import type { HealthDay } from "@/types/daily/healthDay.type.ts";
+import type { HrvRecording } from "@/types/hrv/hrvRecording.type.ts";
 import {
-  getMicroOverMonth,
-  getSymptomsOverMonth,
-  getSyncopesOverMonth,
-  getBloodPressureOverMonth,
-  getSleepOverMonth,
-  getWorkoutsOverMonth,
-  getDailyLogsOverMonth,
-  getIntakeLogsOverMonth,
-  getFoodOverMonth,
-} from "@/services/diagnosticService";
+  calculateMicronutrientTotals,
+  getHealthDayFoodLogs,
+  HEALTH_DAY_SUMMARY_INCLUDES,
+  MICRONUTRIENT_KEYS,
+  summarizeFoodLogs,
+  type FoodSummary,
+  type MicronutrientTotals,
+} from "@/utility/healthDay.ts";
 
 const router = useRouter();
 
@@ -174,15 +195,16 @@ interface DayDetails {
   inMonth: boolean;
   isToday: boolean;
   // keep these permissive so the calendar can accept various backend shapes
-  micro?: Record<string, any> | null;
+  micro?: MicronutrientTotals | null;
   symptoms?: Record<string, any>[];
   syncopes?: Record<string, any>[];
   bp?: Record<string, any>[];
   sleep?: Record<string, any>[];
   workouts?: Record<string, any>[];
+  hrv?: HrvRecording[];
   daily?: Record<string, any>[];
   intake?: Record<string, any>[];
-  food?: any[] | null;
+  food?: FoodSummary[] | null;
 }
 
 const currentDate = ref(new Date());
@@ -194,6 +216,7 @@ const toggles = reactive({
   bp: true,
   sleep: true,
   workouts: true,
+  hrv: false,
   daily: true,
   intake: true,
 });
@@ -203,111 +226,40 @@ const uiState = reactive({
   showFoodFilters: false,
 });
 
-const data = reactive<Record<string, unknown>>({
-  micro: [],
-  symptoms: [],
-  syncopes: [],
-  bp: [],
-  sleep: [],
-  workouts: [],
-  daily: [],
-  intake: [],
-  food: [],
-});
+const healthDays = ref<HealthDay[]>([]);
+const isLoading = ref(false);
+const loadError = ref("");
+let requestId = 0;
+
+const monthFoodLogs = computed(() => healthDays.value.flatMap((day) => getHealthDayFoodLogs(day)));
 
 const foodToggles = reactive<Record<string, boolean>>({});
 
-// Helper: extract a stable set of food names from various backend payload shapes
-const extractFoodNames = (payload: any): Set<string> => {
-  const names = new Set<string>();
-  if (!payload) return names;
-
-  // small helper to pull a name from a possibly nested food object
-  const handleItem = (it: any) => {
-    if (!it) return;
-    const name = it.name ?? it.food?.name ?? it.food_item?.name ?? it.foodItem?.name;
-    if (name) names.add(String(name));
-  };
-
-  // If an array of day/entry objects
-  if (Array.isArray(payload)) {
-    payload.forEach((entry: any) => {
-      if (!entry) return;
-      if (Array.isArray(entry.items)) {
-        entry.items.forEach((f: any) => handleItem(f));
-      } else if (Array.isArray(entry.data)) {
-        entry.data.forEach((f: any) => handleItem(f));
-      } else if (Array.isArray(entry.foodLogs) || Array.isArray(entry.food_logs) || Array.isArray(entry.foods)) {
-        const arr = entry.foodLogs ?? entry.food_logs ?? entry.foods;
-        if (Array.isArray(arr)) arr.forEach((f: any) => handleItem(f));
-      } else {
-        handleItem(entry);
-      }
-    });
-    return names;
-  }
-
-  // If payload is an object: could be wrapper { data: [...] } or a date->array map
-  if (payload && typeof payload === "object") {
-    if (Array.isArray(payload.data)) return extractFoodNames(payload.data);
-    if (Array.isArray(payload.items)) return extractFoodNames(payload.items);
-
-    // treat as mapping date->array or wrapper with keys
-    for (const val of Object.values(payload as any)) {
-      if (!val) continue;
-      if (Array.isArray(val)) {
-        val.forEach((v: any) => handleItem(v));
-      } else if (val && typeof val === "object") {
-        if (Array.isArray((val as any).items)) (val as any).items.forEach((v: any) => handleItem(v));
-        else handleItem(val);
-      }
-    }
-  }
-
-  return names;
-};
-
 // keep foodToggles in sync with names found for the current month
 watch(
-  () => data.food,
+  monthFoodLogs,
   (newFood) => {
-    const names = extractFoodNames(newFood);
-    names.forEach((n) => {
+    summarizeFoodLogs(newFood).forEach(({ name }) => {
       // Default foods to OFF so the calendar stays uncluttered. Users can enable specific foods manually.
-      if (foodToggles[n] === undefined) foodToggles[n] = false;
+      if (foodToggles[name] === undefined) foodToggles[name] = false;
     });
   },
   { deep: true, immediate: true },
 );
 
 const uniqueFoodList = computed(() => {
-  return Array.from(extractFoodNames(data.food)).sort();
+  return summarizeFoodLogs(monthFoodLogs.value).map(({ name }) => name);
 });
 
-// Normalize various food item shapes into a small display object
-type FoodDisplay = { name: string; totalWeight_g?: any; weightLogs?: any; raw?: any };
-const normalizeFoodItem = (it: any): FoodDisplay | null => {
-  if (!it) return null;
-  const name = it.name ?? it.food?.name ?? it.food_item?.name ?? it.foodItem?.name;
-  if (!name) return null;
-  const totalWeight_g = it.totalWeight_g ?? it.total_weight_g ?? it.totalWeight ?? it.weight_g ?? it.weightG ?? it.food?.weight_g;
-  const weightLogs = it.weightLogs ?? it.logs ?? it.weight_logs ?? undefined;
-  return { name: String(name), totalWeight_g, weightLogs, raw: it };
-};
-
-const activeFoods = (foods: any): FoodDisplay[] => {
-  if (!foods) return [];
-  const foodsArray = Array.isArray(foods) ? foods : [foods];
-  const mapped = foodsArray.map((f: any) => normalizeFoodItem(f));
-  // narrow out nulls and ensure TypeScript knows we return concrete FoodDisplay items
-  return mapped.filter((f): f is FoodDisplay => Boolean(f) && Boolean((f as any).name) && foodToggles[(f as any).name] !== false);
+const activeFoods = (foods?: FoodSummary[] | null): FoodSummary[] => {
+  return (foods ?? []).filter((food) => foodToggles[food.name] === true);
 };
 
 // Format a sleep entry into a short label for calendar pills (e.g. "1h 15m Sleep")
 const formatSleepPill = (s: any): string => {
   if (!s) return "";
   const mins = s.totalSleepMinutes ?? s.total_sleep_minutes ?? s.durationMinutes ?? s.duration_min ?? s.duration ?? null;
-  const suffix = isNap(s) ? 'Nap' : 'Sleep';
+  const suffix = isNap(s) ? "Nap" : "Sleep";
   if (mins != null && !isNaN(Number(mins))) {
     const total = Number(mins);
     const hrs = Math.floor(total / 60);
@@ -328,21 +280,21 @@ const formatSleepPill = (s: any): string => {
     }
   }
 
-  const label = s.sleepType ?? s.type ?? s.label ?? s.name ?? '';
+  const label = s.sleepType ?? s.type ?? s.label ?? s.name ?? "";
   return (label || suffix) as string;
 };
 
 // Detect whether a sleep entry represents a nap (flexible across different payload shapes)
 const isNap = (s: any): boolean => {
   if (!s) return false;
-  const val = (s.sleepType ?? s.type ?? s.sleep_type ?? s.label ?? s.name ?? '').toString().toLowerCase();
+  const val = (s.sleepType ?? s.type ?? s.sleep_type ?? s.label ?? s.name ?? "").toString().toLowerCase();
   if (!val) return false;
-  return val.includes('nap');
+  return val.includes("nap");
 };
 
 const getBloodPressurePulse = (bp: any): number | null => {
   const pulse = bp?.pulse ?? bp?.heartRate ?? bp?.hr;
-  if (pulse == null || pulse === '') return null;
+  if (pulse == null || pulse === "") return null;
   const value = Number(pulse);
   return Number.isNaN(value) ? null : value;
 };
@@ -357,7 +309,7 @@ const formatAverageBloodPressurePill = (bp: any): string => {
   const entries = normalizeBloodPressureEntries(bp);
   const validEntries = entries.filter((entry) => Number(entry?.systolic) > 0 && Number(entry?.diastolic) > 0);
 
-  if (validEntries.length === 0) return 'BP';
+  if (validEntries.length === 0) return "BP";
 
   const avgSystolic = validEntries.reduce((sum, entry) => sum + Number(entry.systolic), 0) / validEntries.length;
   const avgDiastolic = validEntries.reduce((sum, entry) => sum + Number(entry.diastolic), 0) / validEntries.length;
@@ -368,57 +320,19 @@ const formatAverageBloodPressureDetails = (bp: any): string => {
   const entries = normalizeBloodPressureEntries(bp);
   const validEntries = entries.filter((entry) => Number(entry?.systolic) > 0 && Number(entry?.diastolic) > 0);
 
-  if (validEntries.length === 0) return '';
+  if (validEntries.length === 0) return "";
 
   const avgSystolic = validEntries.reduce((sum, entry) => sum + Number(entry.systolic), 0) / validEntries.length;
   const avgDiastolic = validEntries.reduce((sum, entry) => sum + Number(entry.diastolic), 0) / validEntries.length;
 
-  const pulseValues = validEntries
-    .map((entry) => getBloodPressurePulse(entry))
-    .filter((value): value is number => value !== null);
-  const pulseText = pulseValues.length > 0
-    ? ` · Avg Pulse: ${Math.round(pulseValues.reduce((sum, value) => sum + value, 0) / pulseValues.length)} bpm`
-    : '';
+  const pulseValues = validEntries.map((entry) => getBloodPressurePulse(entry)).filter((value): value is number => value !== null);
+  const pulseText =
+    pulseValues.length > 0 ? ` · Avg Pulse: ${Math.round(pulseValues.reduce((sum, value) => sum + value, 0) / pulseValues.length)} bpm` : "";
 
-  return `Average blood pressure: ${Math.round(avgSystolic)}/${Math.round(avgDiastolic)} mmHg (${validEntries.length} reading${validEntries.length > 1 ? 's' : ''})${pulseText}`;
+  return `Average blood pressure: ${Math.round(avgSystolic)}/${Math.round(avgDiastolic)} mmHg (${validEntries.length} reading${validEntries.length > 1 ? "s" : ""})${pulseText}`;
 };
 
-const MICROS_LIST = [
-  "vitamin_a",
-  "vitamin_d",
-  "vitamin_e",
-  "vitamin_k",
-  "vitamin_b1",
-  "vitamin_b2",
-  "vitamin_b3",
-  "vitamin_b5",
-  "vitamin_b6",
-  "vitamin_b7",
-  "vitamin_b9",
-  "vitamin_b12",
-  "choline",
-  "caffeine",
-  "calcium",
-  "phosphorus",
-  "magnesium",
-  "sodium",
-  "potassium",
-  "chloride",
-  "sulfur",
-  "iron",
-  "zinc",
-  "selenium",
-  "iodine",
-  "copper",
-  "manganese",
-  "chromium",
-  "molybdenum",
-  "fluoride",
-  "vitamin_c",
-  "omega_3",
-  "omega_6",
-  "omega_9",
-];
+const MICROS_LIST = MICRONUTRIENT_KEYS;
 
 const microToggles = reactive<Record<string, boolean>>({});
 MICROS_LIST.forEach((micro) => {
@@ -430,7 +344,15 @@ const formatMicroName = (name: string): string => {
 };
 
 const goToDayDetails = (dateStr: string) => {
-  router.push({ name: 'day-details', params: { date: dateStr } });
+  router.push({ name: "day-details", params: { date: dateStr } });
+};
+
+const goToHrvDetails = (id: string) => {
+  router.push({ name: "hrvDetails", params: { id } });
+};
+
+const formatHrvTitle = (recording: HrvRecording): string => {
+  return [recording.name, recording.context, recording.device].filter(Boolean).join(" · ") || "Open HRV recording";
 };
 
 const currentYear = computed(() => currentDate.value.getFullYear());
@@ -455,100 +377,35 @@ const formatDate = (date: Date) => {
 };
 
 const fetchData = async () => {
-  // Use local time limits to fetch the month (start of current month to start of next month)
+  const activeRequest = ++requestId;
+  isLoading.value = true;
+  loadError.value = "";
+
+  // HealthDay date filters are inclusive.
   const start = new Date(currentYear.value, currentMonth.value, 1);
-  const end = new Date(currentYear.value, currentMonth.value + 1, 1);
+  const inclusiveEnd = new Date(currentYear.value, currentMonth.value + 1, 0);
 
   const startStr = formatDate(start);
-  const endStr = formatDate(end);
+  const inclusiveEndStr = formatDate(inclusiveEnd);
 
   try {
-    const [microRes, symptomsRes, syncopesRes, bpRes, sleepRes, workoutsRes, dailyRes, intakeRes, foodRes] = await Promise.all([
-      getMicroOverMonth(startStr, endStr),
-      getSymptomsOverMonth(startStr, endStr),
-      getSyncopesOverMonth(startStr, endStr),
-      getBloodPressureOverMonth(startStr, endStr),
-      getSleepOverMonth(startStr, endStr),
-      getWorkoutsOverMonth(startStr, endStr),
-      getDailyLogsOverMonth(startStr, endStr),
-      getIntakeLogsOverMonth(startStr, endStr),
-      getFoodOverMonth(startStr, endStr),
-    ]);
+    const result = await healthDayService.getHealthDays({
+      startDate: startStr,
+      endDate: inclusiveEndStr,
+      include: HEALTH_DAY_SUMMARY_INCLUDES,
+    });
 
-    data.micro = microRes;
-    data.symptoms = symptomsRes;
-    data.syncopes = syncopesRes;
-    data.bp = bpRes;
-    data.sleep = sleepRes;
-    data.workouts = workoutsRes;
-    data.daily = dailyRes;
-    data.intake = intakeRes;
-    data.food = foodRes;
+    if (activeRequest !== requestId) return;
+    healthDays.value = result;
   } catch (error) {
-    console.error("Failed to fetch diagnostic data", error);
-  }
-};
-
-const buildMap = (arr: any[] = []) => {
-  const map: Record<string, any> = {};
-  if (!Array.isArray(arr)) return map;
-  for (const item of arr) {
-    if (!item) continue;
-    const date = item.date ?? item.day ?? item.dateStr ?? item.date_str;
-    if (!date) continue;
-    map[String(date)] = item.items !== undefined ? item.items : item;
-  }
-  return map;
-};
-
-// Build a flexible date->items map for food payloads that may be shaped differently
-const buildFoodMap = (payload: any): Record<string, any[]> => {
-  const map: Record<string, any[]> = {};
-  if (!payload) return map;
-
-  const push = (date: string | undefined, item: any) => {
-    if (!date) return;
-    if (!map[date]) map[date] = [];
-    if (Array.isArray(item)) map[date].push(...item);
-    else map[date].push(item);
-  };
-
-  if (Array.isArray(payload)) {
-    for (const entry of payload as any[]) {
-      const date = entry?.date ?? entry?.day ?? entry?.dateStr ?? entry?.date_str;
-      if (Array.isArray(entry.items)) push(String(date), entry.items);
-      else if (Array.isArray(entry.data)) push(String(date), entry.data);
-      else if (Array.isArray(entry.foodLogs) || Array.isArray(entry.food_logs) || Array.isArray(entry.foods)) {
-        const arr = entry.foodLogs ?? entry.food_logs ?? entry.foods;
-        if (Array.isArray(arr)) push(String(date), arr);
-      } else if (entry && (entry.name || entry.food)) {
-        push(String(date), entry);
-      }
+    if (activeRequest === requestId) {
+      healthDays.value = [];
+      loadError.value = "Calendar data could not be loaded.";
     }
-    return map;
+    console.error("Failed to fetch calendar data", error);
+  } finally {
+    if (activeRequest === requestId) isLoading.value = false;
   }
-
-  if (payload && typeof payload === "object") {
-    if (Array.isArray(payload.data)) return buildFoodMap(payload.data);
-    if (Array.isArray(payload.items)) return buildFoodMap(payload.items);
-
-    // treat as mapping date -> array/object
-    for (const [k, v] of Object.entries(payload as any)) {
-      if (k === "data" || k === "items") continue;
-      if (Array.isArray(v)) {
-        v.forEach((e: any) => {
-          if (Array.isArray(e.items)) push(String(e.date ?? k), e.items);
-          else if (e?.date) push(String(e.date), e);
-          else push(k, e);
-        });
-      } else if (v && typeof v === "object") {
-        if (Array.isArray((v as any).items)) push(k, (v as any).items);
-        else push(k, v);
-      }
-    }
-  }
-
-  return map;
 };
 
 const calendarDays = computed(() => {
@@ -560,17 +417,7 @@ const calendarDays = computed(() => {
 
   const days: DayDetails[] = [];
 
-  const microMap = buildMap(data.micro as any[]);
-  const symptomsMap = buildMap(data.symptoms as any[]);
-  const syncopesMap = buildMap(data.syncopes as any[]);
-  const bpMap = buildMap(data.bp as any[]);
-  const sleepMap = buildMap(data.sleep as any[]);
-  const workoutsMap = buildMap(data.workouts as any[]);
-  const dailyMap = buildMap(data.daily as any[]);
-  const intakeMap = buildMap(data.intake as any[]);
-
-  // Build a flexible food map from the returned payload (handles arrays, wrappers or date->array maps)
-  const foodMap = buildFoodMap((data.food ?? []) as any);
+  const healthDayMap = new Map(healthDays.value.map((day) => [day.date.slice(0, 10), day]));
 
   // padding for previous month
   // Monday as first day: if getDay() is 0 (Sun), then offset is 6. Otherwise getDay() - 1
@@ -586,21 +433,26 @@ const calendarDays = computed(() => {
   for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
     const d = new Date(year, month, i);
     const dateStr = formatDate(d);
+    const healthDay = healthDayMap.get(dateStr);
+    const foodLogs = getHealthDayFoodLogs(healthDay);
+    const food = summarizeFoodLogs(foodLogs);
+    const micro = calculateMicronutrientTotals(foodLogs);
 
     days.push({
       dayNumber: i,
       inMonth: true,
       dateStr,
       isToday: dateStr === todayStr,
-      micro: microMap[dateStr] || null,
-      symptoms: (symptomsMap[dateStr] as any[]) || [],
-      syncopes: (syncopesMap[dateStr] as any[]) || [],
-      bp: (bpMap[dateStr] as any[]) || [],
-      sleep: (sleepMap[dateStr] as any[]) || [],
-      workouts: (workoutsMap[dateStr] as any[]) || [],
-      daily: (dailyMap[dateStr] as any[]) || [],
-      intake: (intakeMap[dateStr] as any[]) || [],
-      food: (foodMap[dateStr] as any[]) || null,
+      micro: Object.keys(micro).length > 0 ? micro : null,
+      symptoms: healthDay?.symptomLogs ?? [],
+      syncopes: healthDay?.syncopeLogs ?? [],
+      bp: healthDay?.bloodPressureLogs ?? [],
+      sleep: healthDay?.sleepLogs ?? [],
+      workouts: healthDay?.workouts ?? [],
+      hrv: healthDay?.hrvRecordings ?? [],
+      daily: healthDay?.dailyLog ? [healthDay.dailyLog] : [],
+      intake: healthDay?.intakeLogs ?? [],
+      food: food.length > 0 ? food : null,
     });
   }
 
@@ -631,6 +483,16 @@ onMounted(() => {
 
 .calendar-header {
   margin-bottom: 24px;
+}
+
+.calendar-status {
+  margin: -12px 0 12px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.calendar-status.error {
+  color: #ef4444;
 }
 
 .month-controls {
@@ -862,6 +724,14 @@ onMounted(() => {
 }
 .workout {
   background: linear-gradient(135deg, #10b981, #059669);
+}
+.hrv {
+  border: 0;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+  background: linear-gradient(135deg, #ec4899, #be185d);
+  cursor: pointer;
 }
 .daily {
   background: linear-gradient(135deg, #8b5cf6, #7c3aed);
