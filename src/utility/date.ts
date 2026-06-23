@@ -1,4 +1,4 @@
-export function getDateString(date: Date | undefined): string {
+export function getDateString(date: Date | string | null | undefined): string {
   if (!date) return "";
   return new Intl.DateTimeFormat("de-DE", {
     dateStyle: "short",
@@ -25,20 +25,26 @@ export function toLocalTimeString(date: Date = new Date()): string {
 export function formatDateTime(date: string | Date | undefined): string {
   if (!date) return "";
   return new Date(date).toLocaleString("de-DE", {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit', hour12: false
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }
 
 export function formatTime(date: string | Date): string {
   if (!date) return "";
   return new Date(date).toLocaleTimeString("de-DE", {
-    hour: '2-digit', minute: '2-digit', hour12: false
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }
 
 export function createLocalTimeDate(timeStr: string): Date {
-  const [hours, minutes] = timeStr.split(':').map(Number);
+  const [hours, minutes] = timeStr.split(":").map(Number);
   const date = new Date();
   date.setHours(hours, minutes, 0, 0);
   return date;
