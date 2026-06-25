@@ -13,14 +13,26 @@
           health: currentSection === 'health',
         }"
       >
-        {{ currentSection === 'workouts' ? 'Workouts' : currentSection === 'food' ? 'Nutrition' : 'Health' }}
+        {{ currentSection === "workouts" ? "Workouts" : currentSection === "food" ? "Nutrition" : "Health" }}
       </div>
 
       <div class="nav-scroll">
         <template v-if="currentSection === 'workouts'">
           <button :class="{ active: route.name === 'progression' }" @click="router.push({ name: 'progression' })">Progression</button>
-          <button :class="{ active: route.name === 'workouts' || route.name === 'workoutDetails' || route.name === 'editWorkout' || route.name === 'createWorkout' }" @click="router.push({ name: 'workouts' })">Workouts</button>
-          <button :class="{ active: route.name === 'body' || route.name === 'createBodyLog' || route.name === 'editBodyLog' }" @click="router.push({ name: 'body' })">Body</button>
+          <button
+            :class="{
+              active: route.name === 'workouts' || route.name === 'workoutDetails' || route.name === 'editWorkout' || route.name === 'createWorkout',
+            }"
+            @click="router.push({ name: 'workouts' })"
+          >
+            Workouts
+          </button>
+          <button
+            :class="{ active: route.name === 'body' || route.name === 'createBodyLog' || route.name === 'editBodyLog' }"
+            @click="router.push({ name: 'body' })"
+          >
+            Body
+          </button>
         </template>
 
         <template v-if="currentSection === 'food'">
@@ -34,10 +46,18 @@
         <template v-if="currentSection === 'health'">
           <button :class="{ 'active-health': route.name === 'daily-tracking' }" @click="router.push({ name: 'daily-tracking' })">Daily</button>
           <button :class="{ 'active-health': route.name === 'intake-log' }" @click="router.push({ name: 'intake-log' })">Intake</button>
-          <button :class="{ 'active-health': route.name === 'diagnostic-calendar' }" @click="router.push({ name: 'diagnostic-calendar' })">Calendar</button>
+          <button :class="{ 'active-health': route.name === 'diagnostic-calendar' }" @click="router.push({ name: 'diagnostic-calendar' })">
+            Calendar
+          </button>
+          <button :class="{ 'active-health': route.name === 'charts' }" @click="router.push({ name: 'charts' })">Charts</button>
           <button :class="{ 'active-health': route.name === 'sleep-tracker' }" @click="router.push({ name: 'sleep-tracker' })">Sleep</button>
           <button :class="{ 'active-health': route.name === 'vitals' }" @click="router.push({ name: 'vitals' })">Vitals</button>
-          <button :class="{ 'active-health': ['hrv', 'hrvDetails', 'hrvWindows'].includes(String(route.name)) }" @click="router.push({ name: 'hrv' })">HRV</button>
+          <button
+            :class="{ 'active-health': ['hrv', 'hrvDetails', 'hrvWindows'].includes(String(route.name)) }"
+            @click="router.push({ name: 'hrv' })"
+          >
+            HRV
+          </button>
           <button :class="{ 'active-health': route.name === 'symptoms' }" @click="router.push({ name: 'symptoms' })">Symptoms</button>
           <button :class="{ 'active-health': route.name === 'mcas' }" @click="router.push({ name: 'mcas' })">MCAS</button>
         </template>
@@ -54,17 +74,33 @@ const router = useRouter();
 const route = useRoute();
 
 const WORKOUT_ROUTES = new Set([
-  "progression", "workouts", "workoutDetails", "editWorkout", "createWorkout",
-  "body", "createBodyLog", "editBodyLog",
-  "exercise", "exerciseDetails", "editExercise",
+  "progression",
+  "workouts",
+  "workoutDetails",
+  "editWorkout",
+  "createWorkout",
+  "body",
+  "createBodyLog",
+  "editBodyLog",
+  "exercise",
+  "exerciseDetails",
+  "editExercise",
 ]);
 
-const FOOD_ROUTES = new Set([
-  "food", "foodProgress", "foodManage", "foodRecipes", "foodGoals",
-]);
+const FOOD_ROUTES = new Set(["food", "foodProgress", "foodManage", "foodRecipes", "foodGoals"]);
 
 const HEALTH_ROUTES = new Set([
-  "daily-tracking", "intake-log", "diagnostic-calendar", "sleep-tracker", "vitals", "hrv", "hrvDetails", "hrvWindows", "symptoms", "mcas",
+  "daily-tracking",
+  "intake-log",
+  "diagnostic-calendar",
+  "charts",
+  "sleep-tracker",
+  "vitals",
+  "hrv",
+  "hrvDetails",
+  "hrvWindows",
+  "symptoms",
+  "mcas",
 ]);
 
 function goHome() {
@@ -114,7 +150,9 @@ const currentSection = computed<"workouts" | "food" | "health" | null>(() => {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .home-btn:hover {
@@ -172,7 +210,10 @@ const currentSection = computed<"workouts" | "food" | "health" | null>(() => {
   cursor: pointer;
   padding: 6px 14px;
   height: 34px;
-  transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    box-shadow 0.18s;
   outline: none;
   white-space: nowrap;
   flex-shrink: 0;
