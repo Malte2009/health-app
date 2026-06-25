@@ -68,11 +68,48 @@
         </button>
       </div>
 
+      <section v-if="windowData.windows.length > 0" class="chart-card">
+        <div class="chart-toolbar">
+          <div>
+            <h2>Metrics over time</h2>
+            <p>Mean heart rate and RMSSD are shown first. Add any other window metric when needed.</p>
+          </div>
+          <button
+            class="metric-picker-button"
+            type="button"
+            :aria-expanded="chartMetricPickerOpen"
+            @click="chartMetricPickerOpen = !chartMetricPickerOpen"
+          >
+            Metrics
+            <span>{{ selectedChartMetricKeys.length }}</span>
+          </button>
+        </div>
+
+        <div v-if="chartMetricPickerOpen" class="metric-picker" aria-label="Chart metric selection">
+          <button
+            v-for="item in chartMetricItems"
+            :key="item.key"
+            type="button"
+            class="metric-toggle"
+            :class="{ active: selectedChartMetricKeys.includes(item.key) }"
+            :aria-pressed="selectedChartMetricKeys.includes(item.key)"
+            @click="toggleChartMetric(item.key)"
+          >
+            {{ metricColumnLabel(item) }}
+          </button>
+        </div>
+
+        <div v-if="selectedChartMetricKeys.length === 0" class="chart-empty">Select at least one metric to draw the chart.</div>
+        <div class="metric-chart-container" :class="{ empty: selectedChartMetricKeys.length === 0 }">
+          <canvas ref="metricChartCanvas" aria-label="HRV window metrics over time"></canvas>
+        </div>
+      </section>
+
       <section class="table-card">
         <div class="table-toolbar">
           <div>
             <h2>Window comparison</h2>
-            <p>Compare consistent metrics across the recording, then open a row for the full result.</p>
+            <p>Compare consistent metrics across the recording, or extend the table to show every value.</p>
           </div>
           <div class="toolbar-actions">
             <div class="variant-selector" role="group" aria-label="Metric filtering">
@@ -88,12 +125,7 @@
                 <span>{{ metricAvailability[option.value] }}</span>
               </button>
             </div>
-            <button
-              class="expand-table-button"
-              type="button"
-              :aria-expanded="showAllMetrics"
-              @click="showAllMetrics = !showAllMetrics"
-            >
+            <button class="expand-table-button" type="button" :aria-expanded="showAllMetrics" @click="showAllMetrics = !showAllMetrics">
               <span aria-hidden="true">{{ showAllMetrics ? "↤" : "↦" }}</span>
               {{ showAllMetrics ? "Compact table" : "Show all metrics" }}
             </button>
@@ -141,31 +173,31 @@
               </thead>
               <tbody>
                 <tr v-for="(hrvWindow, index) in windowData.windows" :key="hrvWindow.id">
-                    <td>
-                      <span class="window-number">{{ String(index + 1).padStart(2, "0") }}</span>
-                      <span v-if="hrvWindow.eventTag" class="event-tag">{{ hrvWindow.eventTag }}</span>
-                    </td>
-                    <td class="time-cell">{{ formatWindowRange(hrvWindow) }}</td>
-                    <template v-if="hrvWindow.metrics[selectedVariant]">
-                      <template v-if="showAllMetrics">
-                        <td v-for="item in allMetricColumns" :key="item.key">
-                          {{ formatMetricCell(hrvWindow.metrics[selectedVariant], item) }}
-                        </td>
-                      </template>
-                      <template v-else>
-                        <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.mean_hr_bpm, 1) }} bpm</td>
-                        <td>{{ formatHeartRateRange(hrvWindow.metrics[selectedVariant]) }}</td>
-                        <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.sdnn_ms, 1) }} ms</td>
-                        <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.rmssd_ms, 1) }} ms</td>
-                        <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.pnn50_percent, 1) }}%</td>
-                        <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.lf_hf_ratio, 2) }}</td>
-                        <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.dfa_alpha1, 2) }}</td>
-                        <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.artifact_percent, 1) }}%</td>
-                      </template>
+                  <td>
+                    <span class="window-number">{{ String(index + 1).padStart(2, "0") }}</span>
+                    <span v-if="hrvWindow.eventTag" class="event-tag">{{ hrvWindow.eventTag }}</span>
+                  </td>
+                  <td class="time-cell">{{ formatWindowRange(hrvWindow) }}</td>
+                  <template v-if="hrvWindow.metrics[selectedVariant]">
+                    <template v-if="showAllMetrics">
+                      <td v-for="item in allMetricColumns" :key="item.key">
+                        {{ formatMetricCell(hrvWindow.metrics[selectedVariant], item) }}
+                      </td>
                     </template>
-                    <td v-else :colspan="showAllMetrics ? allMetricColumns.length : 8" class="missing-metrics">
-                      No {{ selectedVariantLabel.toLowerCase() }} metrics
-                    </td>
+                    <template v-else>
+                      <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.mean_hr_bpm, 1) }} bpm</td>
+                      <td>{{ formatHeartRateRange(hrvWindow.metrics[selectedVariant]) }}</td>
+                      <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.sdnn_ms, 1) }} ms</td>
+                      <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.rmssd_ms, 1) }} ms</td>
+                      <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.pnn50_percent, 1) }}%</td>
+                      <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.lf_hf_ratio, 2) }}</td>
+                      <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.dfa_alpha1, 2) }}</td>
+                      <td>{{ formatNumber(hrvWindow.metrics[selectedVariant]?.artifact_percent, 1) }}%</td>
+                    </template>
+                  </template>
+                  <td v-else :colspan="showAllMetrics ? allMetricColumns.length : 8" class="missing-metrics">
+                    No {{ selectedVariantLabel.toLowerCase() }} metrics
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -177,7 +209,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import Chart from "chart.js/auto";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import { getHrvWindows } from "@/services/hrvService.ts";
 import type { HrvMetricVariant, HrvWindowMetrics, HrvWindowsResponse, HrvWindowSummary } from "@/types/hrv/hrvWindow.type.ts";
@@ -194,6 +227,8 @@ type MetricGroup = {
   items: MetricItem[];
 };
 
+type ChartAxisId = "bpm" | "ms" | "percent" | "power" | "count" | "other";
+
 const route = useRoute();
 const recordingId = route.params.id as string;
 
@@ -203,7 +238,11 @@ const isRefreshing = ref(false);
 const loadError = ref("");
 const selectedVariant = ref<HrvMetricVariant>("standard");
 const showAllMetrics = ref(false);
+const chartMetricPickerOpen = ref(false);
+const selectedChartMetricKeys = ref<Array<keyof HrvWindowMetrics>>(["mean_hr_bpm", "rmssd_ms"]);
+const metricChartCanvas = ref<HTMLCanvasElement | null>(null);
 let refreshTimer: number | undefined;
+let metricChart: Chart | null = null;
 
 const variantOptions: Array<{ value: HrvMetricVariant; label: string }> = [
   { value: "none", label: "Unfiltered" },
@@ -288,6 +327,17 @@ const metricGroups: MetricGroup[] = [
 ];
 
 const allMetricColumns = metricGroups.flatMap((group) => group.items);
+const chartMetricItems = allMetricColumns.filter((item) => item.key !== "merged_with_previous");
+const chartColors = ["#00bfae", "#ff9f40", "#36a2eb", "#ff6384", "#9966ff", "#4bc0c0", "#ffcd56", "#7dd3fc", "#a3e635", "#f472b6"];
+
+const chartAxisLabels: Record<ChartAxisId, string> = {
+  bpm: "bpm",
+  ms: "ms",
+  percent: "%",
+  power: "ms²",
+  count: "count",
+  other: "value",
+};
 
 const recordingTitle = computed(() => windowData.value?.recording.name?.trim() || "HRV recording");
 
@@ -372,6 +422,8 @@ const generatedAtLabel = computed(() => {
   }).format(new Date(generatedAt));
 });
 
+const selectedChartMetricItems = computed(() => chartMetricItems.filter((item) => selectedChartMetricKeys.value.includes(item.key)));
+
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" }).format(new Date(value));
 }
@@ -420,6 +472,143 @@ function formatMetricCell(metric: HrvWindowMetrics | null, item: MetricItem): st
   return formatNumber(value, item.digits ?? 2);
 }
 
+function toggleChartMetric(key: keyof HrvWindowMetrics): void {
+  selectedChartMetricKeys.value = selectedChartMetricKeys.value.includes(key)
+    ? selectedChartMetricKeys.value.filter((selectedKey) => selectedKey !== key)
+    : [...selectedChartMetricKeys.value, key];
+}
+
+function chartAxisForMetric(item: MetricItem): ChartAxisId {
+  if (item.unit === "bpm" || item.unit === "breaths/min") return "bpm";
+  if (item.unit === "ms") return "ms";
+  if (item.unit === "%") return "percent";
+  if (item.unit === "ms²") return "power";
+  if (item.digits === 0) return "count";
+  return "other";
+}
+
+function getMetricChartValue(metric: HrvWindowMetrics | null, item: MetricItem): number | null {
+  if (!metric) return null;
+  const value = metric[item.key];
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function formatChartWindowLabel(hrvWindow: HrvWindowSummary, index: number): string {
+  const start = new Date(hrvWindow.windowStart);
+  return `${String(index + 1).padStart(2, "0")} · ${new Intl.DateTimeFormat("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(start)}`;
+}
+
+function buildChartScales() {
+  const visibleAxes = new Set(selectedChartMetricItems.value.map(chartAxisForMetric));
+  const makeYAxis = (axisId: ChartAxisId, position: "left" | "right") => ({
+    type: "linear" as const,
+    display: visibleAxes.has(axisId),
+    position,
+    title: {
+      display: true,
+      text: chartAxisLabels[axisId],
+    },
+    grid: {
+      drawOnChartArea: axisId === "bpm",
+      color: "rgba(148, 163, 184, 0.16)",
+    },
+    ticks: {
+      color: "rgba(226, 232, 240, 0.72)",
+    },
+  });
+
+  return {
+    x: {
+      grid: {
+        color: "rgba(148, 163, 184, 0.12)",
+      },
+      ticks: {
+        color: "rgba(226, 232, 240, 0.72)",
+        maxRotation: 0,
+        autoSkip: true,
+      },
+    },
+    bpm: makeYAxis("bpm", "left"),
+    ms: makeYAxis("ms", "right"),
+    percent: makeYAxis("percent", "right"),
+    power: makeYAxis("power", "right"),
+    count: makeYAxis("count", "right"),
+    other: makeYAxis("other", "right"),
+  };
+}
+
+async function renderMetricChart(): Promise<void> {
+  await nextTick();
+  if (!metricChartCanvas.value || !windowData.value?.windows.length) {
+    metricChart?.destroy();
+    metricChart = null;
+    return;
+  }
+
+  const windows = windowData.value.windows;
+  const datasets = selectedChartMetricItems.value.map((item, index) => {
+    const color = chartColors[index % chartColors.length];
+    return {
+      label: metricColumnLabel(item),
+      data: windows.map((hrvWindow) => getMetricChartValue(hrvWindow.metrics[selectedVariant.value], item)),
+      borderColor: color,
+      backgroundColor: color,
+      borderWidth: 2,
+      pointRadius: 2.5,
+      pointHoverRadius: 5,
+      spanGaps: true,
+      tension: 0.24,
+      yAxisID: chartAxisForMetric(item),
+    };
+  });
+
+  metricChart?.destroy();
+  metricChart = new Chart(metricChartCanvas.value, {
+    type: "line",
+    data: {
+      labels: windows.map(formatChartWindowLabel),
+      datasets,
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {
+        mode: "index",
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "rgba(226, 232, 240, 0.82)",
+            usePointStyle: true,
+            boxWidth: 8,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const index = items[0]?.dataIndex;
+              if (index === undefined) return "";
+              return formatWindowRange(windows[index]);
+            },
+            label: (item) => {
+              const metricItem = selectedChartMetricItems.value[item.datasetIndex];
+              if (!metricItem) return "";
+              const metric = windows[item.dataIndex]?.metrics[selectedVariant.value] ?? null;
+              return `${metricColumnLabel(metricItem)}: ${formatMetricCell(metric, metricItem)}`;
+            },
+          },
+        },
+      },
+      scales: buildChartScales(),
+    },
+  });
+}
+
 function scheduleRefresh(): void {
   window.clearTimeout(refreshTimer);
   const status = windowData.value?.generationStatus;
@@ -448,8 +637,13 @@ async function loadWindows(background = false): Promise<void> {
   }
 }
 
+watch([windowData, selectedVariant, selectedChartMetricKeys], () => void renderMetricChart(), { deep: true });
+
 onMounted(() => void loadWindows());
-onUnmounted(() => window.clearTimeout(refreshTimer));
+onUnmounted(() => {
+  window.clearTimeout(refreshTimer);
+  metricChart?.destroy();
+});
 </script>
 
 <style scoped>
@@ -653,6 +847,112 @@ h1 {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
+.chart-card {
+  margin-bottom: 18px;
+  padding: 18px 20px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
+.chart-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+
+.chart-toolbar h2 {
+  margin-bottom: 5px;
+  font-size: 1.1rem;
+}
+
+.chart-toolbar p {
+  margin-bottom: 0;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+}
+
+.metric-picker-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  padding: 9px 12px;
+  color: var(--text-main);
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.metric-picker-button:hover,
+.metric-picker-button[aria-expanded="true"] {
+  background: var(--bg-main);
+  border-color: var(--primary);
+}
+
+.metric-picker-button span {
+  min-width: 20px;
+  padding: 1px 6px;
+  color: var(--primary);
+  background: rgba(0, 191, 174, 0.12);
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.metric-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-bottom: 15px;
+  padding: 12px;
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.metric-toggle {
+  padding: 7px 9px;
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.74rem;
+  transition:
+    border-color 0.18s,
+    color 0.18s,
+    background-color 0.18s;
+}
+
+.metric-toggle:hover,
+.metric-toggle.active {
+  color: var(--text-main);
+  background: rgba(0, 191, 174, 0.1);
+  border-color: var(--primary);
+}
+
+.chart-empty {
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+}
+
+.metric-chart-container {
+  height: 360px;
+  min-height: 280px;
+}
+
+.metric-chart-container.empty {
+  opacity: 0.35;
+}
+
 .table-toolbar {
   display: flex;
   align-items: center;
@@ -728,7 +1028,9 @@ h1 {
   cursor: pointer;
   font-size: 0.78rem;
   white-space: nowrap;
-  transition: border-color 0.18s, background-color 0.18s;
+  transition:
+    border-color 0.18s,
+    background-color 0.18s;
 }
 
 .expand-table-button:hover,
@@ -873,6 +1175,7 @@ tbody tr:hover {
   }
 
   .page-header,
+  .chart-toolbar,
   .table-toolbar,
   .generation-banner,
   .error-state {
