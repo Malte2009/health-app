@@ -19,12 +19,39 @@
 
     <!-- Create Food Toggle -->
     <div class="create-section">
-      <button class="toggle-create-btn" @click="showCreateForm = !showCreateForm">
+      <button class="toggle-create-btn" @click="toggleCreateForm">
         {{ showCreateForm ? "▲ Cancel" : "+ Create New Food" }}
       </button>
 
       <div v-if="showCreateForm" class="create-form">
-        <h3>New Food</h3>
+        <div class="create-form-header">
+          <h3>New Food</h3>
+          <button class="json-import-toggle" type="button" @click="toggleJsonImport">
+            {{ showJsonImport ? "Hide JSON import" : "Import JSON" }}
+          </button>
+        </div>
+        <div v-if="showJsonImport" class="json-import">
+          <div class="json-import-header">
+            <label for="food-json-input">Food JSON</label>
+            <div class="json-import-actions">
+              <button class="btn btn-secondary btn-sm" :disabled="saving || !foodJsonInput.trim()" @click="loadFoodJsonIntoForm">
+                Load JSON
+              </button>
+              <button class="btn btn-primary btn-sm" :disabled="saving || !foodJsonInput.trim()" @click="submitJsonCreate">
+                {{ saving ? "Saving..." : "Create from JSON" }}
+              </button>
+            </div>
+          </div>
+          <textarea
+            id="food-json-input"
+            v-model="foodJsonInput"
+            class="json-import-input"
+            rows="8"
+            spellcheck="false"
+            placeholder="Paste food JSON"
+          ></textarea>
+          <span v-if="jsonImportError" class="error-msg">{{ jsonImportError }}</span>
+        </div>
         <div class="form-grid">
           <div class="form-field full">
             <label>Name *</label>
@@ -345,9 +372,12 @@ const searchQuery = ref("");
 const filter = ref<"all" | "mine">("all");
 const loadingFoods = ref(false);
 const showCreateForm = ref(false);
+const showJsonImport = ref(false);
 const showNutrients = ref(false);
 const saving = ref(false);
 const createError = ref("");
+const foodJsonInput = ref("");
+const jsonImportError = ref("");
 const editError = ref("");
 const editingId = ref<string | null>(null);
 const deleteId = ref<string | null>(null);
@@ -378,6 +408,21 @@ const displayedFoods = computed<Food[]>(() => {
   if (searchQuery.value.length >= 1) return searchResults.value;
   return filter.value === "mine" ? myFoods.value : foods.value;
 });
+
+function toggleCreateForm() {
+  showCreateForm.value = !showCreateForm.value;
+  if (!showCreateForm.value) {
+    showJsonImport.value = false;
+    jsonImportError.value = "";
+  }
+}
+
+function toggleJsonImport() {
+  showJsonImport.value = !showJsonImport.value;
+  if (!showJsonImport.value) {
+    jsonImportError.value = "";
+  }
+}
 
 function setFilter(f: "all" | "mine") {
   filter.value = f;
@@ -433,6 +478,136 @@ function validateFatSplitFields(payload: Partial<CreateFoodRequest>): string | n
     return "Saturated fat + unsaturated fat must be less than or equal to total fat.";
   }
   return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function coerceNonNegativeNumber(raw: unknown, label: string): number {
+  const value = typeof raw === "number" ? raw : typeof raw === "string" && raw.trim() !== "" ? Number(raw) : NaN;
+  if (!Number.isFinite(value) || value < 0) {
+    throw new Error(`${label} must be a non-negative number.`);
+  }
+  return value;
+}
+
+function readNumber(
+  source: Record<string, unknown>,
+  keys: string[],
+  label: string,
+  required = false,
+): number | undefined {
+  const key = keys.find((candidate) => source[candidate] != null && source[candidate] !== "");
+  if (!key) {
+    if (required) throw new Error(`${label} is required.`);
+    return undefined;
+  }
+  return coerceNonNegativeNumber(source[key], label);
+}
+
+function readDefaultUnit(source: Record<string, unknown>): PortionUnit | undefined {
+  const raw = source.defaultUnit ?? source.default_unit;
+  if (raw == null || raw === "") return undefined;
+  if (typeof raw !== "string") throw new Error("Default unit must be G, ML, or PORTION.");
+
+  const unit = raw.trim().toUpperCase();
+  if (unit === "G" || unit === "ML" || unit === "PORTION") return unit;
+  throw new Error("Default unit must be G, ML, or PORTION.");
+}
+
+function parseNutrientsJson(raw: unknown): Partial<Nutrient> {
+  if (raw == null) return {};
+  if (!isRecord(raw)) throw new Error("Nutrients must be an object.");
+
+  const parsed: Partial<Nutrient> = {};
+  for (const field of [...vitamins, ...minerals, ...fattyAcids]) {
+    const key = field.key as string;
+    const camelKey = key.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase());
+    const value = raw[key] ?? raw[camelKey];
+    if (value == null || value === "") continue;
+    parsed[field.key] = coerceNonNegativeNumber(value, field.label);
+  }
+  return parsed;
+}
+
+function parseFoodJsonPayload(): CreateFoodRequest | null {
+  jsonImportError.value = "";
+
+  try {
+    const parsed = JSON.parse(foodJsonInput.value) as unknown;
+    if (!isRecord(parsed)) throw new Error("Food JSON must be an object.");
+
+    const name = typeof parsed.name === "string" ? parsed.name.trim() : "";
+    if (!name) throw new Error("Name is required.");
+
+    const nutrients = parseNutrientsJson(parsed.nutrients ?? parsed.nutrientFacts ?? parsed.nutrient_facts);
+    const payload = normalizePortionFields({
+      name,
+      calories_per_100g: readNumber(parsed, ["calories_per_100g", "caloriesPer100g"], "Calories", true)!,
+      protein_g: readNumber(parsed, ["protein_g", "proteinG"], "Protein", true)!,
+      carbs_g: readNumber(parsed, ["carbs_g", "carbsG"], "Carbs", true)!,
+      fat_g: readNumber(parsed, ["fat_g", "fatG"], "Fat", true)!,
+      fiber_g: readNumber(parsed, ["fiber_g", "fiberG"], "Fiber") ?? 0,
+      sugar_g: readNumber(parsed, ["sugar_g", "sugarG"], "Sugar"),
+      saturated_fat_g: readNumber(parsed, ["saturated_fat_g", "saturatedFatG"], "Saturated fat"),
+      unsaturated_fat_g: readNumber(parsed, ["unsaturated_fat_g", "unsaturatedFatG"], "Unsaturated fat"),
+      salt_g: readNumber(parsed, ["salt_g", "saltG"], "Salt"),
+      defaultAmount: readNumber(parsed, ["defaultAmount", "default_amount"], "Default amount"),
+      defaultUnit: readDefaultUnit(parsed),
+      density_g_per_ml: readNumber(parsed, ["density_g_per_ml", "densityGPerMl"], "Density"),
+      g_per_portion: readNumber(parsed, ["g_per_portion", "gPerPortion"], "Grams per portion"),
+      ...(Object.keys(nutrients).length > 0 ? { nutrients } : {}),
+    }) as CreateFoodRequest;
+
+    const portionError = validatePortionFields(payload);
+    if (portionError) throw new Error(portionError);
+
+    const fatSplitError = validateFatSplitFields(payload);
+    if (fatSplitError) throw new Error(fatSplitError);
+
+    return payload;
+  } catch (error) {
+    jsonImportError.value = error instanceof Error ? error.message : "Invalid food JSON.";
+    return null;
+  }
+}
+
+function loadFoodJsonIntoForm() {
+  const payload = parseFoodJsonPayload();
+  if (!payload) return;
+
+  const { nutrients, ...foodPayload } = payload;
+  newFood.value = {
+    ...defaultFood(),
+    ...foodPayload,
+  };
+  newNutrients.value = nutrients ? extractEditableNutrients(nutrients as Nutrient) : {};
+  showNutrients.value = Object.keys(newNutrients.value).length > 0;
+  showJsonImport.value = false;
+}
+
+async function submitJsonCreate() {
+  const payload = parseFoodJsonPayload();
+  if (!payload) return;
+
+  createError.value = "";
+  saving.value = true;
+  const result = await createFood(payload);
+  saving.value = false;
+
+  if (result) {
+    foods.value.unshift(result);
+    myFoods.value.unshift(result);
+    newFood.value = defaultFood();
+    newNutrients.value = {};
+    foodJsonInput.value = "";
+    showCreateForm.value = false;
+    showJsonImport.value = false;
+    showNutrients.value = false;
+  } else {
+    jsonImportError.value = "Could not create food.";
+  }
 }
 
 function onSearchInput() {
@@ -506,6 +681,7 @@ async function submitCreate() {
     newFood.value = defaultFood();
     newNutrients.value = {};
     showCreateForm.value = false;
+    showJsonImport.value = false;
     showNutrients.value = false;
   }
 }
@@ -786,10 +962,84 @@ h1 {
   margin-top: 12px;
 }
 
+.create-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
 .create-form h3 {
-  margin: 0 0 16px;
+  margin: 0;
   color: var(--text-main);
   font-size: 1.05rem;
+}
+
+.json-import-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 10px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.json-import-toggle:hover {
+  border-color: var(--primary);
+  color: var(--text-main);
+}
+
+.json-import {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.json-import-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.json-import-header label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.json-import-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.json-import-input {
+  width: 100%;
+  min-height: 160px;
+  resize: vertical;
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text-main);
+  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", monospace;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.json-import-input:focus {
+  border-color: var(--primary);
 }
 
 /* Form Layout */
