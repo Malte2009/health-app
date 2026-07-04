@@ -22,7 +22,7 @@
 import { onMounted, ref } from "vue";
 import ProgressionService from "@/services/workout/progression.service.ts";
 import { useExerciseStore } from "@/stores/exerciseStore.ts";
-import ExerciseService from "@/services/workout/exercise.service.ts";
+import ExerciseService from "@/services/exercise/exercise.service.ts";
 import type { Exercise } from "@/types/exerciseType.ts";
 import type { WorkoutExercise } from "@/types/workout/workoutExercise.type.ts";
 import { Chart, TimeScale, LinearScale, PointElement, LineElement, LineController, Title, Tooltip, Legend } from "chart.js";
@@ -149,11 +149,7 @@ async function copyProgressToClipboard() {
   copyProgressMessage.value = "";
 
   try {
-    const exercise = await ExerciseService.getExerciseById(exerciseId.value, true) as ExerciseWithProgress | void;
-    if (!exercise) {
-      copyProgressMessage.value = "Could not load exercise progress.";
-      return;
-    }
+    const exercise = await ExerciseService.getExerciseById(exerciseId.value, true) as ExerciseWithProgress;
 
     const text = getProgressExportText(exercise);
     if (!text) {
@@ -175,7 +171,7 @@ async function copyProgressToClipboard() {
 }
 
 onMounted(async () => {
-  exerciseStore.setExercises(await ExerciseService.getAllExercises());
+  await exerciseStore.loadExercises();
 
   if (exerciseStore.getExercises.length > 0) {
     exerciseId.value = exerciseStore.getExercises[0].id;

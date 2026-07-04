@@ -1,3 +1,5 @@
+import type { HrvRecording } from "@/types/hrvType.ts";
+
 export type SleepLog = {
   id: string;
   userId: string;
@@ -21,7 +23,7 @@ export type SleepLog = {
   turningSpikeMaxHr?: number;
   sleepType?: string;
   notes?: string;
-  hrvRecording?: any;
+  hrvRecording?: HrvRecording;
   hoursSinceLastCaffeine?: number;
   lastCaffeineAmountMg?: number;
 };

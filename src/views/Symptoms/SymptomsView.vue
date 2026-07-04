@@ -166,9 +166,9 @@ import { onMounted, ref } from "vue";
 import type { SymptomLog } from "@/types/symptoms/symptomType.ts";
 import type { SyncopeLog } from "@/types/symptoms/syncopeType.ts";
 import AddSymptomLog from "@/components/Symptoms/AddSymptomLog.vue";
-import SymptomService from "@/services/symptomService.ts";
+import SymptomService from "@/services/symptoms/symptom.service.ts";
 import { formatDateTime } from "@/utility/date.ts";
-import SyncopeService from "@/services/syncopeService.ts";
+import SyncopeService from "@/services/symptoms/syncope.service.ts";
 
 const showAddModal = ref(false);
 const showEditModal = ref(false);

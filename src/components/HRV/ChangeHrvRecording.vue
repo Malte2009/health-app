@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { updateHrvRecording, getHrvRecording } from "@/services/hrvService";
+import HrvService from "@/services/hrv/hrv.service.ts";
 import { toLocalDateTimeString } from "@/utility/date";
 import { AxiosError } from "axios";
 
@@ -76,7 +76,7 @@ function toDateTimeLocal(d: string | Date | undefined) {
 
 onMounted(async () => {
   try {
-    const r = await getHrvRecording(props.id);
+    const r = await HrvService.getHrvRecording(props.id);
     if (r) {
       name.value = r.name || "";
       date.value = r.date ? new Date(r.date).toISOString().split('T')[0] : "";
@@ -105,8 +105,7 @@ async function submit() {
   };
 
   try {
-    await updateHrvRecording(props.id, rrdata.value || undefined, queryParams);
-    console.log("Successfully submitted");
+    await HrvService.updateHrvRecording(props.id, rrdata.value || undefined, queryParams);
     emit("reload");
     emit("close");
   } catch (error: unknown) {

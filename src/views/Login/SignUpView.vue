@@ -22,7 +22,7 @@
 
 import {useRouter} from "vue-router";
 
-import { register } from "@/services/authService.ts";
+import AuthService from "@/services/auth/auth.service.ts";
 
 const router = useRouter();
 
@@ -49,7 +49,7 @@ async function submit() {
     gender
   };
 
-  await register(data);
+  await AuthService.register(data);
 
   await router.push({name: "login"});
 }

@@ -71,7 +71,7 @@
               </tr>
               <tr>
                 <td colspan="100%">
-                  <button class="add-Exercise-Button" @click="addExerciseToWorkout(workoutId)">Add Exercise</button>
+                  <button class="add-Exercise-Button" @click="addExerciseToWorkout">Add Exercise</button>
                 </td>
               </tr>
             </table>
@@ -357,12 +357,10 @@ function getHeadingNames(workout: Workout): string[] {
 function addSetToExercise(exerciseId: string) {
   addWorkoutSet.value = true;
   selectedWorkoutExerciseId.value = exerciseId;
-  console.log(`Add set to exercise with ID: ${exerciseId}`);
 }
 
-function addExerciseToWorkout(workoutId: string) {
+function addExerciseToWorkout() {
   addWorkoutExercise.value = true;
-  console.log(`Add new exercise to workout with ID: ${workoutId}`);
 }
 
 function exerciseContextMenu(event: MouseEvent, exerciseId: string) {
@@ -469,7 +467,7 @@ async function loadWorkoutDetails() {
 }
 
 onBeforeMount(async () => {
-  typeStore.checkTypes();
+  await typeStore.checkTypes();
   await loadWorkoutDetails();
   if (workout.value) {
     await workoutStore.sortWorkoutExercises(workout.value.id);

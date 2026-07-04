@@ -141,7 +141,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from "vue";
-import { getHrvRecordings, deleteHrvRecording } from "@/services/hrvService.ts";
+import HrvService from "@/services/hrv/hrv.service.ts";
 import { useRouter } from "vue-router";
 import { roundTo } from "@/utility/math.ts";
 import { getDateString } from "@/utility/date.ts";
@@ -238,7 +238,6 @@ function loadRecordings() {
         !metric.movingAverageFilteringApplied &&
         !metric.rangeFilteringApplied
       ) {
-        console.log(newRecording);
         newRecording.metric = metric;
       }
       if (
@@ -301,7 +300,7 @@ function editRecording(id: string) {
 }
 
 async function handleReload() {
-  recordings.value = await getHrvRecordings();
+  recordings.value = await HrvService.getHrvRecordings();
   sortRecordings();
   loadRecordings();
   calculateAverageValues();
@@ -317,8 +316,8 @@ function sortRecordings() {
 
 async function deleteRecording(id: string) {
   if (confirm("Are you sure you want to delete this HRV recording?")) {
-    await deleteHrvRecording(id);
-    recordings.value = await getHrvRecordings();
+    await HrvService.deleteHrvRecording(id);
+    recordings.value = await HrvService.getHrvRecordings();
     sortRecordings();
     loadRecordings();
     calculateAverageValues();
@@ -327,7 +326,7 @@ async function deleteRecording(id: string) {
 
 onMounted(async () => {
   try {
-    recordings.value = await getHrvRecordings();
+    recordings.value = await HrvService.getHrvRecordings();
 
     sortRecordings();
 

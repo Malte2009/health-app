@@ -151,15 +151,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { isAuthenticated } from "@/services/authService.ts";
-import { getMealRecipes, createMealRecipe, deleteMealRecipe, addIngredient, deleteIngredient, logMealRecipe } from "@/services/mealRecipeService.ts";
-import { getMealLogs } from "@/services/mealLogService.ts";
-import { searchFoods } from "@/services/foodService.ts";
+import MealRecipeService from "@/services/food/mealRecipe.service.ts";
+import MealLogService from "@/services/food/mealLog.service.ts";
+import FoodService from "@/services/food/food.service.ts";
 import { toLocalIsoDate } from "@/utility/date.ts";
 import type { MealRecipe, MealLog, Food, MealType, PortionUnit } from "@/types/foodType.ts";
-
-const router = useRouter();
 
 const recipes = ref<MealRecipe[]>([]);
 const todayMeals = ref<MealLog[]>([]);
@@ -196,7 +192,7 @@ function formatMealType(type: MealType): string {
 async function doCreate() {
   if (!newName.value.trim()) return;
   saving.value = true;
-  const result = await createMealRecipe({ name: newName.value.trim(), servingSize: newServingSize.value || 1 });
+  const result = await MealRecipeService.createMealRecipe({ name: newName.value.trim(), servingSize: newServingSize.value || 1 });
   saving.value = false;
   if (result) {
     recipes.value.unshift(result);
@@ -228,7 +224,7 @@ function onIngredientSearch() {
     return;
   }
   debounceTimer = setTimeout(async () => {
-    ingredientResults.value = await searchFoods(ingredientSearch.value);
+    ingredientResults.value = await FoodService.searchFoods(ingredientSearch.value);
   }, 350);
 }
 
@@ -259,7 +255,7 @@ const ingredientEffectiveWeight = computed(() => {
 async function doAddIngredient(recipeId: string) {
   if (!selectedIngFood.value || ingredientEffectiveWeight.value <= 0) return;
   saving.value = true;
-  await addIngredient(recipeId, { foodId: selectedIngFood.value.id, weight_g: ingredientEffectiveWeight.value });
+  await MealRecipeService.addIngredient(recipeId, { foodId: selectedIngFood.value.id, weight_g: ingredientEffectiveWeight.value });
   saving.value = false;
   // Reload recipes to get updated ingredient list
   await loadRecipes();
@@ -267,7 +263,7 @@ async function doAddIngredient(recipeId: string) {
 }
 
 async function doDeleteIngredient(recipeId: string, ingredientId: string) {
-  await deleteIngredient(recipeId, ingredientId);
+  await MealRecipeService.deleteIngredient(recipeId, ingredientId);
   await loadRecipes();
 }
 
@@ -277,7 +273,7 @@ function confirmDelete(id: string) {
 
 async function doDeleteRecipe() {
   if (!deleteId.value) return;
-  await deleteMealRecipe(deleteId.value);
+  await MealRecipeService.deleteMealRecipe(deleteId.value);
   recipes.value = recipes.value.filter((r) => r.id !== deleteId.value);
   deleteId.value = null;
 }
@@ -292,7 +288,7 @@ async function openLogModal(recipe: MealRecipe) {
 async function doLog() {
   if (!logRecipe.value || !logMealId.value) return;
   saving.value = true;
-  await logMealRecipe(logRecipe.value.id, {
+  await MealRecipeService.logMealRecipe(logRecipe.value.id, {
     mealLogId: logMealId.value,
     scaleFactor: logScale.value,
   });
@@ -301,19 +297,15 @@ async function doLog() {
 }
 
 async function loadRecipes() {
-  recipes.value = await getMealRecipes();
+  recipes.value = await MealRecipeService.getMealRecipes();
 }
 
 async function loadTodayMeals() {
   const today = toLocalIsoDate();
-  todayMeals.value = await getMealLogs(today);
+  todayMeals.value = await MealLogService.getMealLogs(today);
 }
 
 onMounted(async () => {
-  if (!(await isAuthenticated())) {
-    await router.push({ name: "login" });
-    return;
-  }
   loading.value = true;
   await Promise.all([loadRecipes(), loadTodayMeals()]);
   loading.value = false;

@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { createHrvRecording } from "@/services/hrvService.ts";
+import HrvService from "@/services/hrv/hrv.service.ts";
 import { toLocalDateTimeString, toLocalIsoDate } from "@/utility/date";
 import { AxiosError } from "axios";
 
@@ -81,7 +81,7 @@ async function submit() {
   };
 
   try {
-    await createHrvRecording(rrdata.value, queryParams);
+    await HrvService.createHrvRecording(rrdata.value, queryParams);
     emit("reload");
     emit("close");
   } catch (error: unknown) {

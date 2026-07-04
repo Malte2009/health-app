@@ -291,15 +291,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
-import { useRouter } from "vue-router";
-import { isAuthenticated } from "@/services/authService.ts";
-import { getNutritionOverTime, getTopFoods } from "@/services/foodDashboardService.ts";
-import { getNrvProgress } from "@/services/nrvService.ts";
+import FoodDashboardService from "@/services/food/dashboard.service.ts";
+import NrvService from "@/services/food/nrv.service.ts";
 import { toLocalIsoDate } from "@/utility/date.ts";
 import type { NutritionOverTimeDay, Nutrient, NrvProgressItem, UserGoals, TopFood } from "@/types/foodType.ts";
-import { getGoals } from "@/services/goalService.ts";
-
-const router = useRouter();
+import GoalService from "@/services/food/goal.service.ts";
 
 const viewMode = ref<"week" | "month">("week");
 const data = ref<NutritionOverTimeDay[]>([]);
@@ -608,7 +604,7 @@ async function loadData() {
     endDate = toLocalIsoDate(end);
   }
 
-  data.value = (await getNutritionOverTime(startDate, endDate))?.days ?? [];
+  data.value = (await FoodDashboardService.getNutritionOverTime(startDate, endDate))?.days ?? [];
   await loadNrvForAverages();
   loading.value = false;
 }
@@ -622,13 +618,13 @@ async function loadNrvForAverages() {
     nrvData.value = {};
     return;
   }
-  const result = await getNrvProgress(payload);
+  const result = await NrvService.getNrvProgress(payload);
   nrvData.value = result ?? {};
 }
 
 async function loadTopFoods() {
   topFoodsLoading.value = true;
-  const result = await getTopFoods(topFoodsDays.value);
+  const result = await FoodDashboardService.getTopFoods(topFoodsDays.value);
   if (result) {
     topFoods.value = result.topFoods || [];
     totalDaysTracked.value = result.totalDaysTracked || 0;
@@ -676,14 +672,10 @@ async function copyTopFoodsToClipboard() {
 watch([viewMode, weekOffset, monthOffset], loadData);
 
 onMounted(async () => {
-  if (!(await isAuthenticated())) {
-    await router.push({ name: "login" });
-    return;
-  }
   await loadData();
   await loadTopFoods();
 
-  const data = await getGoals();
+  const data = await GoalService.getGoals();
   if (data) goals.value = data;
 });
 </script>

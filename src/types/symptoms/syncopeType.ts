@@ -34,3 +34,6 @@ export type SyncopeLog = {
 
   notes?: string
 }
+
+export type CreateSyncopeRequest = SyncopeLog;
+export type UpdateSyncopeRequest = SyncopeLog;

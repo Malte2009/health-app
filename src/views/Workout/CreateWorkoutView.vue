@@ -58,7 +58,7 @@ import { useWorkoutStore } from "@/stores/workoutStore.ts";
 import { onMounted, ref } from "vue";
 import type { AxiosError } from "axios";
 import { useTypeStore } from "@/stores/type.ts";
-import { getUserAge, isAuthenticated } from "@/services/authService.ts";
+import AuthService from "@/services/auth/auth.service.ts";
 
 const workoutStore = useWorkoutStore();
 const typeStore = useTypeStore();
@@ -91,8 +91,6 @@ async function submit() {
     workoutName = (document.getElementById("workoutName") as HTMLInputElement).value;
   }
 
-  console.log(workoutName, workoutDuration, averageHeartRate, pauses, pauseLength);
-
   const workoutData: createWorkoutType = {
     name: workoutName,
     type: workoutType || undefined,
@@ -121,8 +119,6 @@ async function submit() {
 
 function handleError(error: AxiosError) {
   if (error?.response?.data) {
-    console.log(error.response.data);
-
     switch (error.response.data) {
       case "Workout type is required":
         let workoutTypeInput = document.getElementById("workoutTypeSelect") as HTMLInputElement;
@@ -174,11 +170,7 @@ function changeFocus(elementId: string) {
 }
 
 onMounted(async () => {
-  if (!(await isAuthenticated())) {
-    await router.push({ name: "login" });
-  }
-
-  const userAge = await getUserAge();
+  const userAge = await AuthService.getUserAge();
 
   if (userAge) HFmax.value = 220 - userAge;
 

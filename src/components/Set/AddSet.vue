@@ -77,8 +77,6 @@ function checkTypeInput() {
 function checkSetUnitInput() {
   const input = document.getElementById("repUnit-selection") as HTMLSelectElement;
 
-  console.log(input.value);
-
   customRepUnitInput.value = input.value === "Custom";
 }
 
@@ -124,8 +122,6 @@ async function submit() {
 
 function handleError(error: AxiosError) {
   if (error?.response?.data) {
-    console.log(error.response.data);
-
     switch (error.response.data) {
       case "Type must be a string":
       case "Type must be less than 50 characters":

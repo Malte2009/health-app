@@ -183,18 +183,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ref, computed, onMounted, reactive } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import {
-  getMicroOverMonth,
-  getSymptomsOverMonth,
-  getSyncopesOverMonth,
-  getBloodPressureOverMonth,
-  getSleepOverMonth,
-  getWorkoutsOverMonth,
-  getDailyLogsOverMonth,
-  getIntakeLogsOverMonth,
-  getFoodOverMonth,
-} from "@/services/diagnosticService";
-import { getHrvRecordings } from "@/services/hrvService";
+import DiagnosticService from "@/services/diagnostics/diagnostic.service.ts";
+import HrvService from "@/services/hrv/hrv.service.ts";
 import { formatDateTime } from "@/utility/date.ts";
 
 const route = useRoute();
@@ -400,16 +390,16 @@ onMounted(async () => {
 
   try {
     const [microRes, symptomsRes, syncopesRes, bpRes, sleepRes, workoutsRes, dailyRes, intakeRes, foodRes, hrvRes] = await Promise.all([
-      getMicroOverMonth(start, end),
-      getSymptomsOverMonth(start, end),
-      getSyncopesOverMonth(start, end),
-      getBloodPressureOverMonth(start, end),
-      getSleepOverMonth(start, end),
-      getWorkoutsOverMonth(start, end),
-      getDailyLogsOverMonth(start, end),
-      getIntakeLogsOverMonth(start, end),
-      getFoodOverMonth(start, end),
-      getHrvRecordings(),
+      DiagnosticService.getMicroOverMonth(start, end),
+      DiagnosticService.getSymptomsOverMonth(start, end),
+      DiagnosticService.getSyncopesOverMonth(start, end),
+      DiagnosticService.getBloodPressureOverMonth(start, end),
+      DiagnosticService.getSleepOverMonth(start, end),
+      DiagnosticService.getWorkoutsOverMonth(start, end),
+      DiagnosticService.getDailyLogsOverMonth(start, end),
+      DiagnosticService.getIntakeLogsOverMonth(start, end),
+      DiagnosticService.getFoodOverMonth(start, end),
+      HrvService.getHrvRecordings(),
     ]);
 
     const microMap = buildMap(microRes as any[]);

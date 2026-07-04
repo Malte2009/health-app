@@ -56,7 +56,7 @@ import WorkoutService from "@/services/workout/workout.service";
 import { useWorkoutStore } from "@/stores/workoutStore.ts";
 import { onMounted, ref } from "vue";
 import { useTypeStore } from "@/stores/type.ts";
-import { getUserAge, isAuthenticated } from "@/services/authService.ts";
+import AuthService from "@/services/auth/auth.service.ts";
 import type { updateWorkoutType } from "@/types/workout/workout.type.ts";
 
 const workoutStore = useWorkoutStore();
@@ -89,8 +89,6 @@ function loadValues() {
     } else {
       workoutNameSelect.value = workout.type || "";
     }
-
-    console.log("Workout:", workout);
 
     workoutNameSelect.value = workout.name;
     workoutType.value = workout.type || "";
@@ -193,17 +191,13 @@ function changeFocus(elementId: string) {
 }
 
 onMounted(async () => {
-  if (!(await isAuthenticated())) {
-    await router.push({ name: "login" });
-  }
-
   try {
     workoutNames.value = typeStore.getWorkoutNames;
   } catch (error) {
     console.error("Failed to fetch workout types:", error);
   }
 
-  const userAge = await getUserAge();
+  const userAge = await AuthService.getUserAge();
 
   if (userAge) HFmax.value = 220 - userAge;
 

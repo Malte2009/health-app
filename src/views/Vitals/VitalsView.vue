@@ -142,8 +142,8 @@
 import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue';
 import { Chart, registerables } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { getBloodPressureLogs, createBloodPressureLog, updateBloodPressureLog, deleteBloodPressureLog } from '@/services/bloodPressureService';
-import type { BloodPressureLog } from '@/types/bloodPressureType';
+import BloodPressureService from "@/services/blood-pressure/bloodPressure.service.ts";
+import type { BloodPressureLog, CreateBloodPressureLog } from '@/types/bloodPressureType';
 import { roundTo } from '@/utility/math';
 import { toLocalDateTimeString, formatDateTime, getDateString } from "@/utility/date";
 
@@ -152,16 +152,7 @@ Chart.defaults.color = '#e0e0e0';
 Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
 
 const CHART_VISIBILITY_STORAGE_KEY = 'bloodPressureChartVisibility';
-const CHART_SERIES_KEYS = [
-  'Systolic',
-  'Smoothed Systolic',
-  'Diastolic',
-  'Smoothed Diastolic',
-  'Pulse',
-  'Smoothed Pulse',
-] as const;
-
-const bpForm = ref({
+const bpForm = ref<CreateBloodPressureLog>({
   timestamp: toLocalDateTimeString(),
   minutesAfterPositionChange: 0,
   systolic: 120,
@@ -189,6 +180,7 @@ const chartToggles = ref({
   smoothedDiastolic: true,
   smoothedPulse: true,
 });
+type BloodPressureChartPoint = Pick<BloodPressureLog, "timestamp" | "systolic" | "diastolic" | "pulse">;
 
 const averageBp = computed(() => {
   if (bpLogs.value.length === 0) return { systolic: 0, diastolic: 0, pulse: 0 };
@@ -261,7 +253,7 @@ const setSeriesVisible = (label: string, visible: boolean) => {
 };
 
 const loadBpLogs = async () => {
-  bpLogs.value = await getBloodPressureLogs();
+  bpLogs.value = await BloodPressureService.getBloodPressureLogs();
   if (showChart.value) {
     createChart();
   }
@@ -292,16 +284,16 @@ const createChart = () => {
     bpChart.destroy();
   }
 
-  let logs = [...bpLogs.value].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  let logs: BloodPressureChartPoint[] = [...bpLogs.value].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   if (averageByDay.value) {
-    const dailyMap = new Map();
+    const dailyMap = new Map<string, { count: number; systolic: number; diastolic: number; pulse: number; time: string }>();
     for (const log of logs) {
       const date = new Date(log.timestamp).toISOString().split('T')[0];
       if (!dailyMap.has(date)) {
         dailyMap.set(date, { count: 0, systolic: 0, diastolic: 0, pulse: 0, time: date });
       }
-      const dayData = dailyMap.get(date);
+      const dayData = dailyMap.get(date)!;
       dayData.count++;
       dayData.systolic += log.systolic;
       dayData.diastolic += log.diastolic;
@@ -309,12 +301,11 @@ const createChart = () => {
     }
 
     logs = Array.from(dailyMap.values()).map(d => ({
-      ...d,
       timestamp: new Date(d.time).toISOString(),
       systolic: d.systolic / d.count,
       diastolic: d.diastolic / d.count,
       pulse: d.pulse / d.count,
-    })) as BloodPressureLog[];
+    }));
   }
 
   const labels = logs.map(l => averageByDay.value ? getDateString(new Date(l.timestamp)) : formatDateTime(l.timestamp));
@@ -403,22 +394,32 @@ const openBpAddModal = () => {
 const openBpEditModal = (log: BloodPressureLog) => {
   bpEditId.value = log.id;
   bpForm.value = {
-    ...log,
-    timestamp: toLocalDateTimeString(new Date(log.timestamp))
-  } as any;
+    timestamp: toLocalDateTimeString(new Date(log.timestamp)),
+    minutesAfterPositionChange: log.minutesAfterPositionChange,
+    systolic: log.systolic,
+    diastolic: log.diastolic,
+    pulse: log.pulse,
+    position: log.position,
+    context: log.context,
+    arm: log.arm,
+    symptoms: log.symptoms,
+    hoursSinceLastCaffeine: log.hoursSinceLastCaffeine,
+    lastCaffeineAmountMg: log.lastCaffeineAmountMg,
+    trainingId: log.trainingId,
+  };
   showBpModal.value = true;
 };
 
 const submitBpForm = async () => {
   try {
-    const data = {
+    const data: CreateBloodPressureLog = {
       ...bpForm.value,
       timestamp: new Date(bpForm.value.timestamp).toISOString()
     };
     if (bpEditId.value) {
-      await updateBloodPressureLog(bpEditId.value, data as any);
+      await BloodPressureService.updateBloodPressureLog(bpEditId.value, data);
     } else {
-      await createBloodPressureLog(data as any);
+      await BloodPressureService.createBloodPressureLog(data);
     }
     showBpModal.value = false;
     await loadBpLogs();
@@ -429,7 +430,7 @@ const submitBpForm = async () => {
 
 const deleteBp = async (id: string) => {
   if (confirm("Delete this blood pressure log?")) {
-    await deleteBloodPressureLog(id);
+    await BloodPressureService.deleteBloodPressureLog(id);
     await loadBpLogs();
   }
 };

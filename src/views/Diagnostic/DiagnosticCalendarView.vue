@@ -147,17 +147,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
-import {
-  getMicroOverMonth,
-  getSymptomsOverMonth,
-  getSyncopesOverMonth,
-  getBloodPressureOverMonth,
-  getSleepOverMonth,
-  getWorkoutsOverMonth,
-  getDailyLogsOverMonth,
-  getIntakeLogsOverMonth,
-  getFoodOverMonth,
-} from "@/services/diagnosticService";
+import DiagnosticService from "@/services/diagnostics/diagnostic.service.ts";
 
 const router = useRouter();
 
@@ -464,15 +454,15 @@ const fetchData = async () => {
 
   try {
     const [microRes, symptomsRes, syncopesRes, bpRes, sleepRes, workoutsRes, dailyRes, intakeRes, foodRes] = await Promise.all([
-      getMicroOverMonth(startStr, endStr),
-      getSymptomsOverMonth(startStr, endStr),
-      getSyncopesOverMonth(startStr, endStr),
-      getBloodPressureOverMonth(startStr, endStr),
-      getSleepOverMonth(startStr, endStr),
-      getWorkoutsOverMonth(startStr, endStr),
-      getDailyLogsOverMonth(startStr, endStr),
-      getIntakeLogsOverMonth(startStr, endStr),
-      getFoodOverMonth(startStr, endStr),
+      DiagnosticService.getMicroOverMonth(startStr, endStr),
+      DiagnosticService.getSymptomsOverMonth(startStr, endStr),
+      DiagnosticService.getSyncopesOverMonth(startStr, endStr),
+      DiagnosticService.getBloodPressureOverMonth(startStr, endStr),
+      DiagnosticService.getSleepOverMonth(startStr, endStr),
+      DiagnosticService.getWorkoutsOverMonth(startStr, endStr),
+      DiagnosticService.getDailyLogsOverMonth(startStr, endStr),
+      DiagnosticService.getIntakeLogsOverMonth(startStr, endStr),
+      DiagnosticService.getFoodOverMonth(startStr, endStr),
     ]);
 
     data.micro = microRes;

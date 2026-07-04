@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import type { bodyLog, createBodyLogType } from "@/types/bodyType.ts";
-import { createBodyLog } from "@/services/bodyService.ts";
+import BodyService from "@/services/body/body.service.ts";
 import { useBodyStore } from "@/stores/bodyStore.ts";
 import router from "@/router";
 
@@ -79,7 +79,7 @@ async function submit() {
   let bodyLog: bodyLog | void;
 
   try {
-    bodyLog = await createBodyLog(data);
+    bodyLog = await BodyService.createBodyLog(data);
   } catch (error) {
     console.error("Error creating body log:", error);
     return;

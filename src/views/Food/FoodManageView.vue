@@ -344,26 +344,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { isAuthenticated } from "@/services/authService.ts";
-import {
-  getFoods,
-  getMyFoods,
-  searchFoods,
-  createFood,
-  updateFood,
-  deleteFood,
-  getFoodNutrients,
-  createFoodNutrients,
-  updateFoodNutrients,
-  deleteFoodNutrients,
-} from "@/services/foodService.ts";
+import FoodService from "@/services/food/food.service.ts";
 import type { Food, CreateFoodRequest, Nutrient, PortionUnit } from "@/types/foodType.ts";
 
 type NutrientValueKey = Exclude<keyof Nutrient, "id" | "foodId">;
 type NutrientField = { key: NutrientValueKey; label: string; unit: string };
-
-const router = useRouter();
 
 const foods = ref<Food[]>([]);
 const myFoods = ref<Food[]>([]);
@@ -593,7 +578,7 @@ async function submitJsonCreate() {
 
   createError.value = "";
   saving.value = true;
-  const result = await createFood(payload);
+  const result = await FoodService.createFood(payload);
   saving.value = false;
 
   if (result) {
@@ -617,7 +602,7 @@ function onSearchInput() {
     return;
   }
   debounceTimer = setTimeout(async () => {
-    searchResults.value = await searchFoods(searchQuery.value);
+    searchResults.value = await FoodService.searchFoods(searchQuery.value);
   }, 350);
 }
 
@@ -642,7 +627,7 @@ async function startEdit(food: Food) {
     g_per_portion: food.g_per_portion,
   };
 
-  const nutrients = food.nutrients ?? (await getFoodNutrients(food.id));
+  const nutrients = food.nutrients ?? (await FoodService.getFoodNutrients(food.id));
   editNutrients.value = extractEditableNutrients(nutrients);
 }
 
@@ -673,7 +658,7 @@ async function submitCreate() {
     return;
   }
 
-  const result = await createFood(payload);
+  const result = await FoodService.createFood(payload);
   saving.value = false;
   if (result) {
     foods.value.unshift(result);
@@ -703,7 +688,7 @@ async function submitEdit(id: string) {
     return;
   }
 
-  const result = await updateFood(id, foodPayload);
+  const result = await FoodService.updateFood(id, foodPayload);
 
   let nextNutrients: Nutrient | undefined;
   const nutrientPayload = sanitizeNutrients(editNutrients.value);
@@ -712,15 +697,15 @@ async function submitEdit(id: string) {
   const hadNutrients = !!currentFood?.nutrients;
 
   if (hasNutrientValues) {
-    nextNutrients = (await updateFoodNutrients(id, nutrientPayload)) || undefined;
+    nextNutrients = (await FoodService.updateFoodNutrients(id, nutrientPayload)) || undefined;
     if (!nextNutrients) {
-      nextNutrients = (await createFoodNutrients(id, nutrientPayload)) || undefined;
+      nextNutrients = (await FoodService.createFoodNutrients(id, nutrientPayload)) || undefined;
     }
     if (!nextNutrients) {
       nextNutrients = nutrientPayload as Nutrient;
     }
   } else if (hadNutrients) {
-    await deleteFoodNutrients(id);
+    await FoodService.deleteFoodNutrients(id);
   }
 
   saving.value = false;
@@ -788,7 +773,7 @@ function cancelEdit() {
 
 async function doDelete() {
   if (!deleteId.value) return;
-  await deleteFood(deleteId.value);
+  await FoodService.deleteFood(deleteId.value);
   const id = deleteId.value;
   foods.value = foods.value.filter((f) => f.id !== id);
   myFoods.value = myFoods.value.filter((f) => f.id !== id);
@@ -812,12 +797,8 @@ function topNutrients(food: Food): { label: string; value: number; unit: string 
 }
 
 onMounted(async () => {
-  if (!(await isAuthenticated())) {
-    await router.push({ name: "login" });
-    return;
-  }
   loadingFoods.value = true;
-  [foods.value, myFoods.value] = await Promise.all([getFoods(), getMyFoods()]);
+  [foods.value, myFoods.value] = await Promise.all([FoodService.getFoods(), FoodService.getMyFoods()]);
   loadingFoods.value = false;
 });
 

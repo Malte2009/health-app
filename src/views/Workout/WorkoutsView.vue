@@ -64,7 +64,6 @@ import type { Workout } from "@/types/workout/workout.type.ts";
 import WorkoutService from "@/services/workout/workout.service";
 import { useWorkoutStore } from "@/stores/workoutStore.ts";
 import { getDateString } from "@/utility/date.ts";
-import { isAuthenticated } from "@/services/authService.ts";
 
 const isMobile = window.innerWidth <= 768;
 const showConfirmDelete = ref(false);
@@ -91,12 +90,8 @@ function cancelDelete() {
 }
 
 onMounted(async () => {
-  if (await isAuthenticated()) {
-    workouts.value = await WorkoutService.getWorkouts(false, false);
-    workoutsStore.setWorkouts(workouts.value);
-  } else {
-    await router.push({ name: "login" });
-  }
+  workouts.value = await WorkoutService.getWorkouts(false, false);
+  workoutsStore.setWorkouts(workouts.value);
 });
 </script>
 

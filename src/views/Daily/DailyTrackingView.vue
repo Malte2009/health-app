@@ -121,9 +121,7 @@ const form = ref({
   presyncopeCount: 0
 });
 
-const submitForm = () => {
-  console.log('Submit Daily Tracking', form.value);
-};
+const submitForm = () => {};
 </script>
 
 <style scoped>

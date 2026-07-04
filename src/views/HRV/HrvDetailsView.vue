@@ -214,13 +214,14 @@
 
 <script setup lang="ts">
 import { onMounted, ref, reactive } from "vue";
-import { getHrvData, getHrvRecording, getHrvMetrics } from "@/services/hrvService.ts";
-import { toLocalTimeString, formatTime } from '@/utility/date';
+import HrvService from "@/services/hrv/hrv.service.ts";
+import { formatTime } from '@/utility/date';
 import { useRoute } from "vue-router";
 import { roundTo } from "@/utility/math.ts";
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
 import type { SleepLog } from "@/types/sleepType.ts";
+import type { HrvMetric, HrvRecording } from "@/types/hrvType.ts";
 
 Chart.defaults.color = '#e0e0e0';
 Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
@@ -228,12 +229,9 @@ Chart.register(zoomPlugin);
 
 const route = useRoute();
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const hrvRecording = ref<any>({});
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const loadedMetrics = ref<any>({});
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const rrdata = ref<any>([]);
+const hrvRecording = ref<HrvRecording | null>(null);
+const loadedMetrics = ref<HrvMetric>({});
+const rrdata = ref<number[]>([]);
 const rrTimes = ref<number[]>([]);
 
 const relatedSleepLog = ref<SleepLog | null>(null);
@@ -343,7 +341,7 @@ const loadData = async (filterString: string) => {
   isLoading.value = true;
   loadedMetrics.value = {};
   try {
-    const rawRrStr = await getHrvData(recordingId, filterString !== 'none' ? filterString : undefined);
+    const rawRrStr = await HrvService.getHrvData(recordingId, filterString !== 'none' ? filterString : undefined);
     const rawRr = rawRrStr.split("\n").filter((x: string) => x).map((x: string) => Number(x));
     rrdata.value = rawRr;
 
@@ -379,10 +377,10 @@ const loadData = async (filterString: string) => {
     hrvChartInst = createChart('hrv-graph-canvas', 'HRV - Successive Diff (ms)', hrvData, smoothedHrv, 'rgba(255, 159, 64, 0.5)', '#c2410c', hrvChartInst, times);
 
     if (filterString !== 'none') {
-       loadedMetrics.value = await getHrvMetrics(recordingId, filterString);
+       loadedMetrics.value = await HrvService.getHrvMetrics(recordingId, filterString);
     } else {
        // fallback for no filters if already loaded in recording
-       for (const metric of hrvRecording.value.metrics || []) {
+       for (const metric of hrvRecording.value?.metrics || []) {
         if (
           !metric.adaptiveFilteringApplied &&
           !metric.rangeFilteringApplied &&
@@ -441,7 +439,7 @@ const copyVisibleRR = async () => {
 
 onMounted(async () => {
   try {
-    hrvRecording.value = await getHrvRecording(recordingId);
+    hrvRecording.value = await HrvService.getHrvRecording(recordingId);
     relatedSleepLog.value = hrvRecording.value?.sleepLog || null;
   } catch (e) {
     console.error(e);

@@ -101,10 +101,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from "vue";
 import { toLocalDateTimeString } from "@/utility/date.ts";
-import { syncopeService } from "@/services/syncopeService.ts";
+import SyncopeService from "@/services/symptoms/syncope.service.ts";
 import type { SyncopeLog } from "@/types/symptoms/syncopeType.ts";
 import type { SymptomLog } from "@/types/symptoms/symptomType.ts";
-import SymptomService from "@/services/symptomService.ts";
+import SymptomService from "@/services/symptoms/symptom.service.ts";
 
 type SymptomName = NonNullable<SymptomLog["name"]>;
 type SyncopeName = NonNullable<SyncopeLog["name"]>;
@@ -195,9 +195,9 @@ async function submit() {
 
     if (isEdit && props.initialData?.id) {
       data.id = props.initialData.id;
-      await syncopeService.updateSyncope(data);
+      await SyncopeService.updateSyncope(data);
     } else {
-      await syncopeService.createSyncope(data);
+      await SyncopeService.createSyncope(data);
     }
   } else if (type.value === "SYMPTOM") {
     const data: SymptomLog = {

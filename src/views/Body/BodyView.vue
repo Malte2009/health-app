@@ -67,7 +67,7 @@ import type { bodyLog } from "@/types/bodyType.ts";
 import router from "@/router";
 import { roundTo } from "@/utility/math.ts";
 import { getDateString } from "@/utility/date.ts";
-import { deleteBodyLog } from "@/services/bodyService.ts";
+import BodyService from "@/services/body/body.service.ts";
 
 const bodyStore = useBodyStore();
 
@@ -78,7 +78,7 @@ const deleteBodyLogId = ref<string>("");
 
 async function confirmDelete(id: string) {
   try {
-    await deleteBodyLog(id);
+    await BodyService.deleteBodyLog(id);
     bodyStore.deleteBodyLog(id);
     bodyLogs.value = bodyStore.getBodyLogs();
   } catch (error) {

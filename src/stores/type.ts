@@ -1,14 +1,25 @@
 import { defineStore } from "pinia";
 import WorkoutService from "@/services/workout/workout.service.ts";
 import WorkoutSetService from "@/services/workout/workoutSet.service.ts";
-import ExerciseService from "@/services/workout/exercise.service.ts";
+import ExerciseService from "@/services/exercise/exercise.service.ts";
+
+type TypeState = {
+  workoutNames: string[];
+  setTypes: string[];
+  exerciseTypes: string[];
+  setRepUnitTypes: string[];
+  loaded: boolean;
+  loadingPromise: Promise<void> | null;
+};
 
 export const useTypeStore = defineStore("typeStore", {
-  state: () => ({
-    workoutNames: [] as string[],
-    setTypes: [] as string[],
-    exerciseTypes: [] as string[],
-    setRepUnitTypes: [] as string[],
+  state: (): TypeState => ({
+    workoutNames: [],
+    setTypes: [],
+    exerciseTypes: [],
+    setRepUnitTypes: [],
+    loaded: false,
+    loadingPromise: null,
   }),
   getters: {
     getWorkoutNames: (state) => state.workoutNames,
@@ -52,16 +63,36 @@ export const useTypeStore = defineStore("typeStore", {
     clearTypes() {
       this.workoutNames = [];
       this.setTypes = [];
+      this.exerciseTypes = [];
+      this.setRepUnitTypes = [];
+      this.loaded = false;
     },
-    async loadTypes() {
-      this.workoutNames = await WorkoutService.getWorkoutNames();
-      this.setTypes = await WorkoutSetService.getSetTypes();
-      this.exerciseTypes = await ExerciseService.getExerciseNames() || [];
-      this.setRepUnitTypes = await WorkoutSetService.getSetUnits();
+    async loadTypes(force = false) {
+      if (!force && this.loaded) return;
+      if (!force && this.loadingPromise) return this.loadingPromise;
+
+      this.loadingPromise = Promise.all([
+        WorkoutService.getWorkoutNames(),
+        WorkoutSetService.getSetTypes(),
+        ExerciseService.getExerciseNames(),
+        WorkoutSetService.getSetUnits(),
+      ])
+        .then(([workoutNames, setTypes, exerciseTypes, setRepUnitTypes]) => {
+          this.workoutNames = workoutNames;
+          this.setTypes = setTypes;
+          this.exerciseTypes = exerciseTypes;
+          this.setRepUnitTypes = setRepUnitTypes;
+          this.loaded = true;
+        })
+        .finally(() => {
+          this.loadingPromise = null;
+        });
+
+      return this.loadingPromise;
     },
-    checkTypes() {
+    async checkTypes() {
       if (this.workoutNames.length === 0 || this.setTypes.length === 0 || this.exerciseTypes.length === 0 || this.setRepUnitTypes.length === 0) {
-        this.loadTypes();
+        await this.loadTypes();
       }
     },
   },

@@ -45,24 +45,27 @@
 
 <script setup lang="ts">
 import router from "@/router";
-import { onMounted, ref } from "vue";
-import type { Exercise } from "@/types/exerciseType.ts";
-import ExerciseService from "@/services/workout/exercise.service.ts";
+import { computed, onMounted, ref } from "vue";
+import ExerciseService from "@/services/exercise/exercise.service.ts";
 import { useExerciseStore } from "@/stores/exerciseStore.ts";
 
 const exerciseStore = useExerciseStore();
 
-const exercises = ref([] as Exercise[]);
+const exercises = computed(() => exerciseStore.getExercises);
 
 const showConfirmDelete = ref(false);
 const deleteExerciseId = ref<string>("");
 
 async function confirmDelete(id: string) {
-  await ExerciseService.deleteExercise(id);
-  exercises.value = exercises.value.filter((exercise) => exercise.id !== id);
-  exerciseStore.setExercises(exercises.value);
-  showConfirmDelete.value = false;
-  deleteExerciseId.value = "";
+  try {
+    await ExerciseService.deleteExercise(id);
+    exerciseStore.removeExercise(id);
+    showConfirmDelete.value = false;
+    deleteExerciseId.value = "";
+  } catch (error) {
+    console.error("Failed to delete exercise:", error);
+    alert("Exercise could not be deleted.");
+  }
 }
 
 function cancelDelete() {
@@ -71,12 +74,7 @@ function cancelDelete() {
 }
 
 onMounted(async () => {
-  const exerciseData = await ExerciseService.getAllExercises();
-
-  if (exerciseData) {
-    exercises.value = exerciseData;
-    exerciseStore.setExercises(exerciseData);
-  }
+  await exerciseStore.loadExercises();
 });
 </script>
 

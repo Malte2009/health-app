@@ -44,3 +44,6 @@ export type SymptomPicture = {
 
   symptom?: SymptomLog
 }
+
+export type CreateSymptomRequest = SymptomLog;
+export type UpdateSymptomRequest = SymptomLog;

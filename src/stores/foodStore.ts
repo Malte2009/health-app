@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import type { DailyDashboard, Food } from "@/types/foodType.ts";
-import { getDailyDashboard } from "@/services/foodDashboardService.ts";
+import FoodDashboardService from "@/services/food/dashboard.service.ts";
 
 export const useFoodStore = defineStore("foodStore", {
   state: () => ({
@@ -15,7 +15,7 @@ export const useFoodStore = defineStore("foodStore", {
   actions: {
     async loadDailyDashboard(date?: string) {
       const d = date ?? this.selectedDate;
-      const data = await getDailyDashboard(d);
+      const data = await FoodDashboardService.getDailyDashboard(d);
       if (data) {
         this.dailyDashboard = data;
       }

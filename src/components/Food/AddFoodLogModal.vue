@@ -132,9 +132,9 @@
 <script setup lang="ts">
 import { ref, computed } from "vue";
 import type { Food, MealRecipe, PortionUnit } from "@/types/foodType.ts";
-import { searchFoods } from "@/services/foodService.ts";
-import { createFoodLog } from "@/services/mealLogService.ts";
-import { getMealRecipes, logMealRecipe } from "@/services/mealRecipeService.ts";
+import FoodService from "@/services/food/food.service.ts";
+import MealLogService from "@/services/food/mealLog.service.ts";
+import MealRecipeService from "@/services/food/mealRecipe.service.ts";
 
 const props = defineProps<{
   mealLogId: string;
@@ -171,7 +171,7 @@ function onSearchInput() {
   if (searchQuery.value.length < 1) { searchResults.value = []; return; }
   debounceTimer = setTimeout(async () => {
     loading.value = true;
-    searchResults.value = await searchFoods(searchQuery.value);
+    searchResults.value = await FoodService.searchFoods(searchQuery.value);
     loading.value = false;
   }, 350);
 }
@@ -210,7 +210,7 @@ async function logFood() {
   if (!selectedFood.value || amount.value <= 0) return;
   saving.value = true;
   const combinedDate = `${props.date}T${time.value}:00`;
-  const result = await createFoodLog(props.mealLogId, {
+  const result = await MealLogService.createFoodLog(props.mealLogId, {
     foodId: selectedFood.value.id,
     amount: amount.value,
     unit: unit.value,
@@ -225,7 +225,7 @@ async function logFood() {
 async function loadRecipes() {
   if (recipesLoaded.value) return;
   recipesLoading.value = true;
-  recipes.value = await getMealRecipes();
+  recipes.value = await MealRecipeService.getMealRecipes();
   recipesLoading.value = false;
   recipesLoaded.value = true;
 }
@@ -239,7 +239,7 @@ async function logRecipe() {
   if (!selectedRecipe.value) return;
   saving.value = true;
   const combinedDate = `${props.date}T${time.value}:00`;
-  const result = await logMealRecipe(selectedRecipe.value.id, {
+  const result = await MealRecipeService.logMealRecipe(selectedRecipe.value.id, {
     mealLogId: props.mealLogId,
     scaleFactor: recipeScale.value,
     date: combinedDate,

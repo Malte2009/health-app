@@ -1,6 +1,6 @@
 import { defineStore } from "pinia";
 import type { bodyLog } from "@/types/bodyType.ts";
-import { getBodyLogs } from "@/services/bodyService.ts";
+import BodyService from "@/services/body/body.service.ts";
 
 export const useBodyStore = defineStore("body", {
   state: () => ({
@@ -34,7 +34,7 @@ export const useBodyStore = defineStore("body", {
     },
 
     async loadBodyLogs() {
-      this.bodyLogs = await getBodyLogs();
+      this.bodyLogs = await BodyService.getBodyLogs();
       return this.bodyLogs;
     }
   }

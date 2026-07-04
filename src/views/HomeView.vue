@@ -58,7 +58,6 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router";
 import { onMounted } from "vue";
-import { isAuthenticated } from "@/services/authService.ts";
 
 const router = useRouter();
 
@@ -68,11 +67,6 @@ function goToSection(section: string) {
 }
 
 onMounted(async () => {
-  if (!(await isAuthenticated())) {
-    await router.push({ name: "login" });
-    return;
-  }
-  // Redirect to last visited section
   const lastRoute = localStorage.getItem("lastRoute");
   if (lastRoute) {
     router.push({ name: lastRoute }).catch(() => {});

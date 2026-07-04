@@ -229,3 +229,35 @@ export interface CreateFoodLogRequest {
   unit?: PortionUnit;
   date?: string;
 }
+
+export type UpdateFoodLogRequest = Partial<Omit<CreateFoodLogRequest, "foodId">>;
+
+export type CreateMealRecipeRequest = {
+  name: string;
+  servingSize?: number;
+  ingredients?: { foodId: string; weight_g: number }[];
+};
+
+export type UpdateMealRecipeRequest = {
+  name?: string;
+  servingSize?: number;
+};
+
+export type AddIngredientRequest = {
+  foodId: string;
+  weight_g: number;
+};
+
+export type UpdateIngredientRequest = {
+  weight_g: number;
+};
+
+export type LogMealRecipeRequest = {
+  mealLogId: string;
+  scaleFactor?: number;
+  date?: string;
+};
+
+export type NrvProgressRequest = {
+  nutrientTotals: Record<string, number>;
+};

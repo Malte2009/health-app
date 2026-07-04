@@ -127,12 +127,8 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { isAuthenticated } from "@/services/authService.ts";
-import { getGoals, createGoals, updateGoals, deleteGoals } from "@/services/goalService.ts";
+import GoalService from "@/services/food/goal.service.ts";
 import type { UserGoals } from "@/types/foodType.ts";
-
-const router = useRouter();
 
 const loading = ref(false);
 const saving = ref(false);
@@ -189,9 +185,9 @@ async function saveGoals() {
 
   let result;
   if (hasGoals.value) {
-    result = await updateGoals(payload);
+    result = await GoalService.updateGoals(payload);
   } else {
-    result = await createGoals(payload);
+    result = await GoalService.createGoals(payload);
   }
   saving.value = false;
 
@@ -202,18 +198,14 @@ async function saveGoals() {
 }
 
 async function doDelete() {
-  await deleteGoals();
+  await GoalService.deleteGoals();
   goals.value = {};
   showDeleteConfirm.value = false;
 }
 
 onMounted(async () => {
-  if (!(await isAuthenticated())) {
-    await router.push({ name: "login" });
-    return;
-  }
   loading.value = true;
-  const data = await getGoals();
+  const data = await GoalService.getGoals();
   if (data) goals.value = data;
   loading.value = false;
 });

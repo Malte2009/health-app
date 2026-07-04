@@ -14,10 +14,12 @@
 import { useRoute, useRouter } from "vue-router";
 import { onMounted } from "vue";
 
-import { isAuthenticated, login } from "@/services/authService.ts";
+import AuthService from "@/services/auth/auth.service.ts";
 import { useTypeStore } from "@/stores/type.ts";
+import { useAuthStore } from "@/stores/authStore.ts";
 
 const typeStore = useTypeStore();
+const authStore = useAuthStore();
 
 const router = useRouter();
 const currentRoute = useRoute();
@@ -37,7 +39,7 @@ async function submit() {
   const email = (document.getElementById("email") as HTMLInputElement).value;
   const password = (document.getElementById("password") as HTMLInputElement).value;
 
-  const token = await login(email, password);
+  const token = await AuthService.login({ email, password });
 
   if (!token) {
     const emailInput = document.getElementById("email") as HTMLInputElement;
@@ -58,27 +60,24 @@ async function submit() {
     return
   }
 
+  authStore.markAuthenticated();
   await typeStore.loadTypes();
-
-  await handleAuthenticatedRoute();
+  emit("loginSuccess");
+  await goToAuthenticatedRoute();
 }
 
-async function handleAuthenticatedRoute() {
-  if (await isAuthenticated()) {
+async function goToAuthenticatedRoute() {
+  const redirect = typeof currentRoute.query.redirect === "string" && currentRoute.query.redirect.startsWith("/")
+    ? currentRoute.query.redirect
+    : undefined;
+
+  await router.push(redirect || { name: "home" });
+}
+
+onMounted(async () => {
+  if (await authStore.checkAuthenticated()) {
     emit("loginSuccess");
-    const redirect = typeof currentRoute.query.redirect === "string" && currentRoute.query.redirect.startsWith("/")
-      ? currentRoute.query.redirect
-      : undefined;
-
-    await router.push(redirect || { name: "home" });
-  }
-}
-
-onMounted(() => {
-  try {
-    handleAuthenticatedRoute();
-  } catch (e) {
-    return e;
+    await goToAuthenticatedRoute();
   }
 });
 </script>

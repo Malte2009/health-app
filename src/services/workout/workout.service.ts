@@ -5,7 +5,7 @@ class WorkoutService {
   async getWorkouts(includeExercises: boolean = false, includeSets: boolean = false): Promise<Workout[]> {
     try {
       return (await api.get(`/workouts?includeExercises=${includeExercises}&includeSets=${includeSets}`)).data;
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -13,7 +13,7 @@ class WorkoutService {
   async getWorkoutById(workoutId: string, includeExercises: boolean = true, includeSets: boolean = true): Promise<Workout | void> {
     try {
       return (await api.get(`/workouts/${workoutId}?includeExercises=${includeExercises}&includeSets=${includeSets}`)).data;
-    } catch (error) {
+    } catch {
       return;
     }
   }
@@ -21,7 +21,7 @@ class WorkoutService {
   async getWorkoutNames(): Promise<string[]> {
     try {
       return (await api.get("/workouts/names")).data;
-    } catch (error) {
+    } catch {
       return [];
     }
   }
@@ -29,7 +29,7 @@ class WorkoutService {
   async createWorkout(workout: createWorkoutType): Promise<Workout | void> {
     try {
       return (await api.post("/workouts", workout)).data;
-    } catch (error) {
+    } catch {
       return;
     }
   }
@@ -37,7 +37,7 @@ class WorkoutService {
   async updateWorkout(workoutId: string, workout: updateWorkoutType): Promise<Workout | void> {
     try {
       return (await api.patch(`/workouts/${workoutId}`, workout)).data;
-    } catch (error) {
+    } catch {
       return;
     }
   }
@@ -45,7 +45,7 @@ class WorkoutService {
   async deleteWorkout(workoutId: string): Promise<void> {
     try {
       await api.delete(`/workouts/${workoutId}`);
-    } catch (error) {
+    } catch {
       return;
     }
   }

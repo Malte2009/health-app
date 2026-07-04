@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "@/services/api.ts";
 import type { DailyDashboard, MealLog, FoodLog, MealType, NutritionOverTimeResponse, NutritionOverTimeDay } from "@/types/foodType.ts";
 
 type Obj = Record<string, unknown>;
@@ -64,31 +64,50 @@ function normalizeDailyDashboardResponse(payload: unknown): DailyDashboard | voi
   };
 }
 
-export const getDailyDashboard = async (date?: string): Promise<DailyDashboard | void> => {
-  try {
-    const query = date ? `?date=${date}` : "";
-    return normalizeDailyDashboardResponse((await api.get(`/dashboard/daily${query}`)).data);
-  } catch (error) {
-    console.error(error);
+class FoodDashboardService {
+  async getDailyDashboard(date?: string): Promise<DailyDashboard | void> {
+    try {
+      const query = date ? `?date=${date}` : "";
+      return normalizeDailyDashboardResponse((await api.get(`/dashboard/daily${query}`)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const getWeeklyDashboard = async (startDate?: string): Promise<DailyDashboard[] | void> => {
-  try {
-    const query = startDate ? `?startDate=${startDate}` : "";
-    return (await api.get(`/dashboard/weekly${query}`)).data;
-  } catch (error) {
-    console.error(error);
+  async getWeeklyDashboard(startDate?: string): Promise<DailyDashboard[] | void> {
+    try {
+      const query = startDate ? `?startDate=${startDate}` : "";
+      return (await api.get(`/dashboard/weekly${query}`)).data;
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const getMonthlyDashboard = async (month: string): Promise<DailyDashboard[] | void> => {
-  try {
-    return (await api.get(`/dashboard/monthly?month=${month}`)).data;
-  } catch (error) {
-    console.error(error);
+  async getMonthlyDashboard(month: string): Promise<DailyDashboard[] | void> {
+    try {
+      return (await api.get(`/dashboard/monthly?month=${month}`)).data;
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
+
+  async getNutritionOverTime(startDate: string, endDate: string): Promise<NutritionOverTimeResponse | void> {
+    try {
+      const params = new URLSearchParams({ startDate, endDate });
+      return normalizeNutritionOverTimeResponse((await api.get(`/dashboard/nutrition-over-time?${params.toString()}`)).data);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  async getTopFoods(days: number = 7): Promise<import("@/types/foodType").TopFoodsResponse | void> {
+    try {
+      return (await api.get(`/dashboard/top-foods?days=${days}`)).data;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+}
 
 function normalizeNutritionOverTimeResponse(payload: unknown): NutritionOverTimeResponse | void {
   if (!payload || typeof payload !== "object") return;
@@ -113,19 +132,4 @@ function normalizeNutritionOverTimeResponse(payload: unknown): NutritionOverTime
   };
 }
 
-export const getNutritionOverTime = async (startDate: string, endDate: string): Promise<NutritionOverTimeResponse | void> => {
-  try {
-    const params = new URLSearchParams({ startDate, endDate });
-    return normalizeNutritionOverTimeResponse((await api.get(`/dashboard/nutrition-over-time?${params.toString()}`)).data);
-  } catch (error) {
-    console.error(error);
-  }
-};
-
-export const getTopFoods = async (days: number = 7): Promise<import("@/types/foodType").TopFoodsResponse | void> => {
-  try {
-    return (await api.get(`/dashboard/top-foods?days=${days}`)).data;
-  } catch (error) {
-    console.error(error);
-  }
-};
+export default new FoodDashboardService();

@@ -1,4 +1,4 @@
-import api from "./api";
+import api from "@/services/api.ts";
 import type { Food, CreateFoodRequest, Nutrient } from "@/types/foodType.ts";
 
 function normalizeFood(item: unknown): Food {
@@ -71,94 +71,97 @@ function normalizeNutrientResponse(payload: unknown): Nutrient | void {
   };
 }
 
-export const getFoods = async (): Promise<Food[]> => {
-  try {
-    return normalizeFoodsResponse((await api.get("/foods")).data);
-  } catch (error) {
-    console.error(error);
-    return [];
+class FoodService {
+  async getFoods(): Promise<Food[]> {
+    try {
+      return normalizeFoodsResponse((await api.get("/foods")).data);
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
-};
 
-export const searchFoods = async (query: string): Promise<Food[]> => {
-  try {
-    return normalizeFoodsResponse((await api.get(`/foods/search?q=${encodeURIComponent(query)}`)).data);
-  } catch (error) {
-    console.error(error);
-    return [];
+  async searchFoods(query: string): Promise<Food[]> {
+    try {
+      return normalizeFoodsResponse((await api.get(`/foods/search?q=${encodeURIComponent(query)}`)).data);
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
-};
 
-export const getMyFoods = async (): Promise<Food[]> => {
-  try {
-    return normalizeFoodsResponse((await api.get("/foods/my-foods")).data);
-  } catch (error) {
-    console.error(error);
-    return [];
+  async getMyFoods(): Promise<Food[]> {
+    try {
+      return normalizeFoodsResponse((await api.get("/foods/my-foods")).data);
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
   }
-};
 
-export const getFoodById = async (id: string): Promise<Food | void> => {
-  try {
-    return normalizeFood((await api.get(`/foods/${id}`)).data);
-  } catch (error) {
-    console.error(error);
+  async getFoodById(id: string): Promise<Food | void> {
+    try {
+      return normalizeFood((await api.get(`/foods/${id}`)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const createFood = async (food: CreateFoodRequest): Promise<Food | void> => {
-  try {
-    return normalizeFood((await api.post("/foods", food)).data);
-  } catch (error) {
-    console.error(error);
+  async createFood(food: CreateFoodRequest): Promise<Food | void> {
+    try {
+      return normalizeFood((await api.post("/foods", food)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const updateFood = async (id: string, food: Partial<CreateFoodRequest>): Promise<Food | void> => {
-  try {
-    return normalizeFood((await api.patch(`/foods/${id}`, food)).data);
-  } catch (error) {
-    console.error(error);
+  async updateFood(id: string, food: Partial<CreateFoodRequest>): Promise<Food | void> {
+    try {
+      return normalizeFood((await api.patch(`/foods/${id}`, food)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const deleteFood = async (id: string): Promise<void> => {
-  try {
-    await api.delete(`/foods/${id}`);
-  } catch (error) {
-    console.error(error);
+  async deleteFood(id: string): Promise<void> {
+    try {
+      await api.delete(`/foods/${id}`);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const getFoodNutrients = async (foodId: string): Promise<Nutrient | void> => {
-  try {
-    return normalizeNutrientResponse((await api.get(`/foods/${foodId}/nutrients`)).data);
-  } catch (error) {
-    console.error(error);
+  async getFoodNutrients(foodId: string): Promise<Nutrient | void> {
+    try {
+      return normalizeNutrientResponse((await api.get(`/foods/${foodId}/nutrients`)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const createFoodNutrients = async (foodId: string, nutrients: Partial<Nutrient>): Promise<Nutrient | void> => {
-  try {
-    return normalizeNutrientResponse((await api.post(`/foods/${foodId}/nutrients`, nutrients)).data);
-  } catch (error) {
-    console.error(error);
+  async createFoodNutrients(foodId: string, nutrients: Partial<Nutrient>): Promise<Nutrient | void> {
+    try {
+      return normalizeNutrientResponse((await api.post(`/foods/${foodId}/nutrients`, nutrients)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const updateFoodNutrients = async (foodId: string, nutrients: Partial<Nutrient>): Promise<Nutrient | void> => {
-  try {
-    return normalizeNutrientResponse((await api.patch(`/foods/${foodId}/nutrients`, nutrients)).data);
-  } catch (error) {
-    console.error(error);
+  async updateFoodNutrients(foodId: string, nutrients: Partial<Nutrient>): Promise<Nutrient | void> {
+    try {
+      return normalizeNutrientResponse((await api.patch(`/foods/${foodId}/nutrients`, nutrients)).data);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
 
-export const deleteFoodNutrients = async (foodId: string): Promise<void> => {
-  try {
-    await api.delete(`/foods/${foodId}/nutrients`);
-  } catch (error) {
-    console.error(error);
+  async deleteFoodNutrients(foodId: string): Promise<void> {
+    try {
+      await api.delete(`/foods/${foodId}/nutrients`);
+    } catch (error) {
+      console.error(error);
+    }
   }
-};
+}
 
+export default new FoodService();

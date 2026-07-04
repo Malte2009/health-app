@@ -37,7 +37,7 @@
 
 <script setup lang="ts">
 import type { bodyLog, createBodyLogType } from "@/types/bodyType.ts";
-import { updateBodyLog } from "@/services/bodyService.ts";
+import BodyService from "@/services/body/body.service.ts";
 import { useBodyStore } from "@/stores/bodyStore.ts";
 import { useRoute } from "vue-router";
 import router from "@/router";
@@ -125,7 +125,7 @@ async function submit() {
   let bodyLog: bodyLog | void;
 
   try {
-    bodyLog = await updateBodyLog(bodyLogId, data);
+    bodyLog = await BodyService.updateBodyLog(bodyLogId, data);
   } catch (error) {
     console.error("Error creating body log:", error);
     return;

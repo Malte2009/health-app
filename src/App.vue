@@ -7,14 +7,14 @@
 import { RouterView, useRouter } from "vue-router";
 
 import { onMounted, ref } from "vue";
-import { isAuthenticated } from "@/services/authService.ts";
 import NavBar from "@/components/General/NavBar.vue";
 import { useTypeStore } from "@/stores/type.ts";
-import ExerciseService from "@/services/workout/exercise.service.ts";
 import { useExerciseStore } from "@/stores/exerciseStore.ts";
+import { useAuthStore } from "@/stores/authStore.ts";
 
 const typeStore = useTypeStore();
 const exerciseStore = useExerciseStore();
+const authStore = useAuthStore();
 const router = useRouter();
 
 const EXCLUDED_ROUTES = new Set(["login", "signup", "home"]);
@@ -38,10 +38,9 @@ function setViewport(scale: number) {
 
 onMounted(async () => {
   setViewport(window.innerWidth <= 768 ? 0.59 : 1);
-  if (await isAuthenticated()) {
+  if (await authStore.checkAuthenticated()) {
     await typeStore.loadTypes();
-
-    exerciseStore.setExercises(await ExerciseService.getAllExercises());
+    await exerciseStore.loadExercises();
     showNavBar.value = true;
   }
 });

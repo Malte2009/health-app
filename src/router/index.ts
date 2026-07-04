@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from "vue-router";
 import HomeView from "../views/HomeView.vue";
-import { isAuthenticated } from "@/services/authService.ts";
+import { useAuthStore } from "@/stores/authStore.ts";
 
 import bodyRoutes from "@/router/body.routes.ts";
 import workoutRoutes from "@/router/workout.routes.ts";
@@ -34,7 +34,8 @@ const PUBLIC_ROUTE_NAMES = new Set(["login", "signup"]);
 
 router.beforeEach(async (to) => {
   const isPublicRoute = to.name ? PUBLIC_ROUTE_NAMES.has(String(to.name)) : false;
-  const authenticated = Boolean(await isAuthenticated());
+  const authStore = useAuthStore();
+  const authenticated = await authStore.checkAuthenticated();
 
   if (!isPublicRoute && !authenticated) {
     return {

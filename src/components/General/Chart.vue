@@ -20,7 +20,7 @@
 import { onBeforeMount, onBeforeUpdate, onMounted, onUpdated, ref } from "vue";
 import { roundTo } from "@/utility/math.ts";
 import { useRoute } from "vue-router";
-import { getExerciseScoresByName } from "@/services/exerciseScoreService.ts";
+import ExerciseScoreService from "@/services/exercise-score/exerciseScore.service.ts";
 
 defineOptions({
   name: "ExerciseChart",
@@ -52,7 +52,7 @@ const props = defineProps<{
 
 async function getChartData() {
   if (exerciseName) {
-    const data = await getExerciseScoresByName(exerciseName);
+    const data = await ExerciseScoreService.getExerciseScoresByName(exerciseName);
 
     if (!data) {
       chartData.value.xData = [];
@@ -185,8 +185,6 @@ async function beforeHook() {
   if (xScaledData.value.length !== yScaledData.value.length) {
     console.error("xData and yData must have the same length.");
   }
-
-  console.log("Original Y data:", yScaledData.value);
 
   //xScaledData.value = scaleData(xScaledData.value, props.width);
   yScaledData.value = scaleData(yScaledData.value, props.height - legendOffset, 0);

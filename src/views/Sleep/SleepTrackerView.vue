@@ -183,7 +183,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { getSleepLogs, createSleepLog, updateSleepLog, deleteSleepLog } from '@/services/sleepService';
+import SleepService from "@/services/sleep/sleep.service.ts";
 import { useRouter } from 'vue-router';
 import type { SleepLog } from '@/types/sleepType';
 import type { CreateSleepLog, UpdateSleepLog } from '@/types/sleepType';
@@ -324,7 +324,7 @@ const sortSleepLogs = (logs: SleepLog[]) => {
 
 const loadData = async () => {
   try {
-    const sl = await getSleepLogs();
+    const sl = await SleepService.getSleepLogs();
     sortSleepLogs(sl);
     sleepLogs.value = sl;
   } catch (err) {
@@ -417,9 +417,9 @@ const submitForm = async () => {
     restedScore: form.value.restedScore
   };
   if (editId.value) {
-    await updateSleepLog(editId.value, data as UpdateSleepLog);
+    await SleepService.updateSleepLog(editId.value, data as UpdateSleepLog);
   } else {
-    await createSleepLog(data);
+    await SleepService.createSleepLog(data);
   }
   showModal.value = false;
   await loadData();
@@ -427,7 +427,7 @@ const submitForm = async () => {
 
 const deleteSleep = async (id: string) => {
   if (confirm("Delete this sleep log?")) {
-    await deleteSleepLog(id);
+    await SleepService.deleteSleepLog(id);
     await loadData();
   }
 };

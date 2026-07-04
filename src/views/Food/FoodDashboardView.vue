@@ -69,7 +69,18 @@
 
       <!-- Meal Cards -->
       <div class="meals-section" id="meals-section">
-        <div v-for="meal in meals" :key="meal.id" class="meal-card" draggable="true" :order="meal.order" :id="meal.id">
+        <div
+          v-for="meal in meals"
+          :key="meal.id"
+          class="meal-card"
+          :class="{ 'drag-over': dragOverMealId === meal.id, dragging: draggedMealId === meal.id }"
+          :draggable="!reorderingMeals"
+          @dragstart="onMealDragStart(meal.id, $event)"
+          @dragover.prevent="onMealDragOver(meal.id)"
+          @dragleave="onMealDragLeave(meal.id)"
+          @drop.prevent="onMealDrop(meal.id)"
+          @dragend="onMealDragEnd"
+        >
           <div class="meal-header">
             <div class="meal-title">
               <span class="meal-icon">{{ mealIcon(meal.type) }}</span>
@@ -172,10 +183,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { isAuthenticated } from "@/services/authService.ts";
-import { getDailyDashboard } from "@/services/foodDashboardService.ts";
-import { getNrvProgress } from "@/services/nrvService.ts";
-import { createMealLog, updateMealLog, deleteMealLog, deleteFoodLog } from "@/services/mealLogService.ts";
+import FoodDashboardService from "@/services/food/dashboard.service.ts";
+import NrvService from "@/services/food/nrv.service.ts";
+import MealLogService from "@/services/food/mealLog.service.ts";
 import { toLocalIsoDate } from "@/utility/date.ts";
 import type { DailyDashboard, MealLog, FoodLog, MealType, Nutrient, GoalProgress, NrvProgressItem, MacroTotals, PortionUnit } from "@/types/foodType.ts";
 import AddFoodLogModal from "@/components/Food/AddFoodLogModal.vue";
@@ -204,6 +214,9 @@ const showMicros = ref(false);
 const addFoodMealId = ref<string | null>(null);
 const deleteMealId = ref<string | null>(null);
 const creatingMeal = ref(false);
+const draggedMealId = ref<string | null>(null);
+const dragOverMealId = ref<string | null>(null);
+const reorderingMeals = ref(false);
 
 const ALL_MEAL_TYPES: MealType[] = ["SUPPLEMENTS", "BREAKFAST", "LUNCH", "DINNER", "SNACK", "OTHER"];
 type MacroKey = keyof Pick<
@@ -545,20 +558,20 @@ function confirmDeleteMeal(id: string) {
 
 async function doDeleteMeal() {
   if (!deleteMealId.value) return;
-  await deleteMealLog(deleteMealId.value);
+  await MealLogService.deleteMealLog(deleteMealId.value);
   deleteMealId.value = null;
   await loadDashboard();
 }
 
 async function deleteFoodLogItem(mealLogId: string, foodLogId: string) {
-  await deleteFoodLog(mealLogId, foodLogId);
+  await MealLogService.deleteFoodLog(mealLogId, foodLogId);
   await loadDashboard();
 }
 
 async function addMeal(type: MealType) {
   creatingMeal.value = true;
   try {
-    await createMealLog({ type, date: selectedDate.value, order: meals.value.length });
+    await MealLogService.createMealLog({ type, date: selectedDate.value, order: meals.value.length });
   } finally {
     creatingMeal.value = false;
   }
@@ -584,13 +597,13 @@ async function loadNrv() {
     if (typeof v === "number" && v > 0) cleaned[k] = v;
   }
   if (Object.keys(cleaned).length === 0) return;
-  const result = await getNrvProgress(cleaned);
+  const result = await NrvService.getNrvProgress(cleaned);
   if (result) nrvData.value = result;
 }
 
 async function loadDashboard() {
   loading.value = true;
-  const data = await getDailyDashboard(selectedDate.value);
+  const data = await FoodDashboardService.getDailyDashboard(selectedDate.value);
   dashboard.value = data ?? null;
   nrvData.value = {};
   loading.value = false;
@@ -600,110 +613,63 @@ watch(selectedDate, () => {
   void loadDashboard();
 });
 
-watch(meals, starDragListeners)
+function onMealDragStart(mealId: string, event: DragEvent) {
+  draggedMealId.value = mealId;
+  event.dataTransfer?.setData("text/plain", mealId);
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = "move";
+}
 
-const draggedElement = ref<HTMLElement | null>(null);
-
-async function starDragListeners() {
-
-  await sleep(10);
-
-  const meals = document.getElementsByClassName("meal-card");
-
-  for (const meal of meals) {
-    meal.addEventListener("dragstart", () => {
-      draggedElement.value = meal as HTMLElement;
-      (meal as HTMLElement).style.display = "none";
-
-      (meal as HTMLElement).addEventListener("dragend", async () => {
-        draggedElement.value = null;
-        (meal as HTMLElement).style.display = "block";
-      }, { once: true });
-    });
-
-    meal.addEventListener("drop", (event) => {
-      event.preventDefault();
-      const target = event.target;
-
-      const element = findMealCard(target as HTMLElement);
-
-      element?.classList.remove("drag-over");
-
-      if (!element) return;
-
-      if (draggedElement.value) {
-
-        console.log("Target: ", element);
-        console.log("Dragged element: ", draggedElement.value);
-
-        const elementOrder = element.getAttribute("order") as unknown as number;
-        const draggedOrder = draggedElement.value.getAttribute("order") as unknown as number;
-
-        if (elementOrder > draggedOrder) {
-          element.insertAdjacentElement("afterend", draggedElement.value);
-        } else {
-          element.insertAdjacentElement("beforebegin", draggedElement.value);
-        }
-
-        draggedElement.value.setAttribute("order", String(Array.from(draggedElement.value.parentElement!.children).indexOf(draggedElement.value)));
-        element.setAttribute("order", String(Array.from(element.parentElement!.children).indexOf(element)));
-
-        updateMealLog(draggedElement.value.id, {order: Array.from(draggedElement.value!.parentElement!.children).indexOf(draggedElement.value!) });
-        updateMealLog(element.id, {order: Array.from(element!.parentElement!.children).indexOf(element!) });
-
-        draggedElement.value = null;
-      }
-    });
-
-    meal.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      const target = event.target;
-
-      if (target == null) return;
-
-      const element = findMealCard(target as HTMLElement);
-
-      element?.classList.add("drag-over");
-    });
-
-    meal.addEventListener("dragleave", (event) => {
-      event.preventDefault();
-      const target = event.target;
-
-      if (target == null) return;
-
-      const element = findMealCard(target as HTMLElement);
-
-      element?.classList.remove("drag-over");
-    });
+function onMealDragOver(mealId: string) {
+  if (draggedMealId.value && draggedMealId.value !== mealId) {
+    dragOverMealId.value = mealId;
   }
 }
 
-function findMealCard(element: HTMLElement): HTMLElement | null {
-  while (element && element.parentElement && !element.classList.contains("meal-card")) {
-    element = element.parentElement;
+function onMealDragLeave(mealId: string) {
+  if (dragOverMealId.value === mealId) {
+    dragOverMealId.value = null;
   }
+}
 
-  if (element && element.classList.contains("meal-card")) {
-    return element;
+function onMealDragEnd() {
+  draggedMealId.value = null;
+  dragOverMealId.value = null;
+}
+
+async function onMealDrop(targetMealId: string) {
+  const sourceMealId = draggedMealId.value;
+  onMealDragEnd();
+  if (!sourceMealId || sourceMealId === targetMealId || !dashboard.value) return;
+
+  const previousMeals = [...meals.value];
+  const nextMeals = [...meals.value];
+  const sourceIndex = nextMeals.findIndex((meal) => meal.id === sourceMealId);
+  const targetIndex = nextMeals.findIndex((meal) => meal.id === targetMealId);
+  if (sourceIndex === -1 || targetIndex === -1) return;
+
+  const [movedMeal] = nextMeals.splice(sourceIndex, 1);
+  nextMeals.splice(targetIndex, 0, movedMeal);
+  nextMeals.forEach((meal, index) => {
+    meal.order = index;
+  });
+  dashboard.value.meals = nextMeals;
+
+  reorderingMeals.value = true;
+  try {
+    await Promise.all(nextMeals.map((meal) => MealLogService.updateMealLog(meal.id, { order: meal.order })));
+  } catch (error) {
+    console.error("Failed to reorder meals:", error);
+    dashboard.value.meals = previousMeals;
+    await loadDashboard();
+  } finally {
+    reorderingMeals.value = false;
   }
-
-  return null;
 }
 
 onMounted(async () => {
-  if (!(await isAuthenticated())) {
-    await router.push({ name: "login" });
-    return;
-  }
   await syncSelectedDateInUrl(selectedDate.value);
   await loadDashboard();
-  starDragListeners();
 });
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 // Nutrient definitions grouped
 type NutrientDef = { key: NutrientValueKey; label: string; unit: string; children?: NutrientDef[] };
@@ -1058,6 +1024,10 @@ const nutrientGroups: { title: string; items: NutrientDef[] }[] = [
   border: 1px solid var(--border);
   border-radius: 12px;
   overflow: hidden;
+}
+
+.meal-card.dragging {
+  opacity: 0.45;
 }
 
 .meal-card.drag-over {
