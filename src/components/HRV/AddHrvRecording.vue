@@ -41,14 +41,16 @@
 import { ref } from "vue";
 import HrvService from "@/services/hrv/hrv.service.ts";
 import { toLocalDateTimeString, toLocalIsoDate } from "@/utility/date";
-import { AxiosError } from "axios";
+import axios from "axios";
+import type { HrvRecordingQueryParams } from "@/types/hrvType.ts";
+import { hasEnoughRrIntervals, isEndAfterStart, MIN_HRV_RR_INTERVALS } from "@/utility/hrv.ts";
 
 const emit = defineEmits(["close", "reload"]);
 
 const name = ref("");
 const date = ref(toLocalIsoDate());
 const startTime = ref(toLocalDateTimeString());
-const endTime = ref(toLocalDateTimeString());
+const endTime = ref("");
 const device = ref("");
 const context = ref("");
 const workoutId = ref("");
@@ -56,7 +58,8 @@ const sleepLogId = ref("");
 const rrdata = ref("");
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof AxiosError) {
+  if (axios.isAxiosError(error)) {
+    if (error.response?.status === 409) return "This workout or sleep log already has an HRV recording.";
     return error.response?.data?.message || error.response?.data || error.message;
   }
 
@@ -64,15 +67,35 @@ function getErrorMessage(error: unknown): string {
 }
 
 async function submit() {
+  if (!startTime.value) {
+    alert("Start Time is required");
+    return;
+  }
+
+  if (endTime.value && !isEndAfterStart(startTime.value, endTime.value)) {
+    alert("End Time must be after Start Time");
+    return;
+  }
+
+  if (workoutId.value && sleepLogId.value) {
+    alert("Link the HRV recording to either a workout or a sleep log, not both.");
+    return;
+  }
+
   if (!rrdata.value.trim()) {
     alert("RR Data is required");
     return;
   }
 
-  const queryParams = {
+  if (!hasEnoughRrIntervals(rrdata.value)) {
+    alert(`RR Data must contain at least ${MIN_HRV_RR_INTERVALS} valid intervals.`);
+    return;
+  }
+
+  const queryParams: HrvRecordingQueryParams = {
     name: name.value || undefined,
     date: date.value || undefined,
-    startTime: startTime.value ? new Date(startTime.value).toISOString() : undefined,
+    startTime: new Date(startTime.value).toISOString(),
     endTime: endTime.value ? new Date(endTime.value).toISOString() : undefined,
     device: device.value || undefined,
     context: context.value || undefined,

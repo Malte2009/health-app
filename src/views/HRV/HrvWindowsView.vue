@@ -276,6 +276,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import HrvService from "@/services/hrv/hrv.service.ts";
 import type { HrvMetricVariant, HrvWindowMetrics, HrvWindowsResponse, HrvWindowSummary } from "@/types/hrv/hrvWindow.type.ts";
+import { parseRrIntervals } from "@/utility/hrv.ts";
 
 Chart.register(zoomPlugin);
 
@@ -689,13 +690,6 @@ function ensureSelectedWindow(): void {
   }
 }
 
-function parseRrIntervals(rawRrData: string): number[] {
-  return rawRrData
-    .split(/\r?\n/)
-    .map((value) => Number(value.trim()))
-    .filter((value) => Number.isFinite(value) && value > 0);
-}
-
 function getWindowOffsetBounds(hrvWindow: HrvWindowSummary): { start: number; end: number } | null {
   if (recordingStartTime.value === null) return null;
 
@@ -1077,9 +1071,20 @@ async function loadWindows(background = false): Promise<void> {
   if (!windowData.value) loadError.value = "";
 
   try {
-    windowData.value = await HrvService.getHrvWindows(recordingId);
+    const previousStatus = windowData.value?.generationStatus;
+    const previousGeneratedAt = windowData.value?.generatedAt ?? null;
+    const nextWindowData = await HrvService.getHrvWindows(recordingId);
+    const generationReset = previousStatus === "ready" && (nextWindowData.generationStatus === "pending" || nextWindowData.generationStatus === "processing");
+    const generationChanged = previousGeneratedAt !== null && previousGeneratedAt !== nextWindowData.generatedAt;
+
+    if (generationReset || generationChanged) {
+      rrIntervals.value = [];
+      rrDataError.value = "";
+    }
+
+    windowData.value = nextWindowData;
     ensureSelectedWindow();
-    if (windowData.value.windows.length > 0 && rrIntervals.value.length === 0 && !rrDataError.value) {
+    if (windowData.value.generationStatus === "ready" && windowData.value.windows.length > 0 && rrIntervals.value.length === 0 && !rrDataError.value) {
       void loadRecordingRrData();
     }
   } catch (error) {

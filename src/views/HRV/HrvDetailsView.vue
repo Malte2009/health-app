@@ -1,9 +1,8 @@
 <template>
   <div class="hrv-details-view">
+    <div v-if="loadError" class="error-state" role="alert">{{ loadError }}</div>
     <div class="control-panel">
       <div class="filter-panel">
-        <input id="adaptive-filter" type="checkbox" v-model="filters.adaptive" />
-        <label for="adaptive-filter">Adaptive Filter</label>
         <input id="range-filter" type="checkbox" v-model="filters.range" />
         <label for="range-filter">Range Filter</label>
         <input id="moving-average-filter" type="checkbox" v-model="filters.movingAverage" />
@@ -161,43 +160,43 @@
               </tr>
               <tr>
                 <td>100 - 200ms</td>
-                <td>{{ loadedMetrics.jump_count_100ms_200ms }}</td>
+                <td>{{ formatMetricValue(loadedMetrics.jump_count_100ms_200ms) }}</td>
               </tr>
               <tr>
                 <td>200 - 300ms</td>
-                <td>{{ loadedMetrics.jump_count_200ms_300ms }}</td>
+                <td>{{ formatMetricValue(loadedMetrics.jump_count_200ms_300ms) }}</td>
               </tr>
               <tr>
                 <td>300 - 400ms</td>
-                <td>{{ loadedMetrics.jump_count_300ms_400ms }}</td>
+                <td>{{ formatMetricValue(loadedMetrics.jump_count_300ms_400ms) }}</td>
               </tr>
               <tr>
                 <td>400 - 500ms</td>
-                <td>{{ loadedMetrics.jump_count_400ms_500ms }}</td>
+                <td>{{ formatMetricValue(loadedMetrics.jump_count_400ms_500ms) }}</td>
               </tr>
               <tr>
                 <td>500 - 600ms</td>
-                <td>{{ loadedMetrics.jump_count_500ms_600ms }}</td>
+                <td>{{ formatMetricValue(loadedMetrics.jump_count_500ms_600ms) }}</td>
               </tr>
               <tr>
                 <td>600 - 700ms</td>
-                <td>{{ loadedMetrics.jump_count_600ms_700ms }}</td>
+                <td>{{ formatMetricValue(loadedMetrics.jump_count_600ms_700ms) }}</td>
               </tr>
               <tr>
                 <td>700 - 800ms</td>
-                <td>{{ loadedMetrics.jump_count_700ms_800ms }}</td>
+                <td>{{ formatMetricValue(loadedMetrics.jump_count_700ms_800ms) }}</td>
               </tr>
               <tr>
                 <td>800 - 900ms</td>
-                <td>{{ loadedMetrics.jump_count_800ms_900ms }}</td>
+                <td>{{ formatMetricValue(loadedMetrics.jump_count_800ms_900ms) }}</td>
               </tr>
               <tr>
                 <td>900 - 1000ms</td>
-                <td>{{ loadedMetrics.jump_count_900ms_1000ms }}</td>
+                <td>{{ formatMetricValue(loadedMetrics.jump_count_900ms_1000ms) }}</td>
               </tr>
               <tr>
                 <td>1000ms+</td>
-                <td>{{ loadedMetrics.jump_count_1000ms }}</td>
+                <td>{{ formatMetricValue(loadedMetrics.jump_count_1000ms) }}</td>
               </tr>
             </table>
           </div>
@@ -269,11 +268,13 @@ import { onMounted, ref, reactive } from "vue";
 import HrvService from "@/services/hrv/hrv.service.ts";
 import { formatTime } from "@/utility/date";
 import { useRoute } from "vue-router";
-import { roundTo } from "@/utility/math.ts";
+import { roundTo as roundMetric } from "@/utility/math.ts";
 import Chart from "chart.js/auto";
 import zoomPlugin from "chartjs-plugin-zoom";
+import axios from "axios";
 import type { SleepLog } from "@/types/sleepType.ts";
 import type { HrvMetric, HrvRecording } from "@/types/hrvType.ts";
+import { buildHrvFilterParam, parseRrIntervals, type HrvFilterToken } from "@/utility/hrv.ts";
 
 Chart.defaults.color = "#e0e0e0";
 Chart.defaults.borderColor = "rgba(255, 255, 255, 0.1)";
@@ -291,13 +292,24 @@ const relatedSleepLog = ref<SleepLog | null>(null);
 const recordingId = route.params.id as string;
 
 const isLoading = ref(false);
+const loadError = ref("");
 
 const filters = reactive({
-  adaptive: false,
   range: true,
   movingAverage: true,
   artifact: true,
 });
+
+function roundTo(value: HrvMetric[keyof HrvMetric], digits = 2): string {
+  return typeof value === "number" && Number.isFinite(value) ? String(roundMetric(value, digits)) : "—";
+}
+
+function formatMetricValue(value: HrvMetric[keyof HrvMetric]): string {
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  if (typeof value === "string" && value.trim()) return value;
+  return "—";
+}
 
 let rrChartInst: Chart | null = null;
 let hrChartInst: Chart | null = null;
@@ -425,10 +437,7 @@ const loadData = async (filterString: string) => {
   loadedMetrics.value = {};
   try {
     const rawRrStr = await HrvService.getHrvData(recordingId, filterString !== "none" ? filterString : undefined);
-    const rawRr = rawRrStr
-      .split("\n")
-      .filter((x: string) => x)
-      .map((x: string) => Number(x));
+    const rawRr = parseRrIntervals(rawRrStr);
     rrdata.value = rawRr;
 
     const times: number[] = [];
@@ -488,6 +497,9 @@ const loadData = async (filterString: string) => {
       }
     }
   } catch (e) {
+    loadError.value = axios.isAxiosError(e) && e.response?.status === 404
+      ? "This HRV recording no longer exists."
+      : "HRV recording data could not be loaded.";
     console.error(e);
   } finally {
     isLoading.value = false;
@@ -495,13 +507,12 @@ const loadData = async (filterString: string) => {
 };
 
 const applyFilters = async () => {
-  const activeFilters = [];
-  if (filters.adaptive) activeFilters.push("adaptive");
+  const activeFilters: HrvFilterToken[] = [];
   if (filters.range) activeFilters.push("range");
   if (filters.movingAverage) activeFilters.push("movingAverage");
   if (filters.artifact) activeFilters.push("artifact");
 
-  const filterString = activeFilters.length > 0 ? activeFilters.join(",") : "none";
+  const filterString = activeFilters.length === 3 ? "standard" : buildHrvFilterParam(activeFilters);
   await loadData(filterString);
 };
 
@@ -537,7 +548,11 @@ onMounted(async () => {
     hrvRecording.value = await HrvService.getHrvRecording(recordingId);
     relatedSleepLog.value = hrvRecording.value?.sleepLog || null;
   } catch (e) {
+    loadError.value = axios.isAxiosError(e) && e.response?.status === 404
+      ? "This HRV recording no longer exists."
+      : "HRV recording details could not be loaded.";
     console.error(e);
+    return;
   }
   await applyFilters();
 });

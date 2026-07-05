@@ -41,7 +41,9 @@
 import { onMounted, ref } from "vue";
 import HrvService from "@/services/hrv/hrv.service.ts";
 import { toLocalDateTimeString } from "@/utility/date";
-import { AxiosError } from "axios";
+import axios from "axios";
+import type { HrvRecordingQueryParams } from "@/types/hrvType.ts";
+import { hasEnoughRrIntervals, isEndAfterStart, MIN_HRV_RR_INTERVALS } from "@/utility/hrv.ts";
 
 const props = defineProps<{
   id: string;
@@ -60,7 +62,9 @@ const sleepLogId = ref("");
 const rrdata = ref("");
 
 function getErrorMessage(error: unknown): string {
-  if (error instanceof AxiosError) {
+  if (axios.isAxiosError(error)) {
+    if (error.response?.status === 404) return "This HRV recording no longer exists.";
+    if (error.response?.status === 409) return "This workout or sleep log already has an HRV recording.";
     return error.response?.data?.message || error.response?.data || error.message;
   }
 
@@ -93,7 +97,22 @@ onMounted(async () => {
 });
 
 async function submit() {
-  const queryParams = {
+  if (startTime.value && endTime.value && !isEndAfterStart(startTime.value, endTime.value)) {
+    alert("End Time must be after Start Time");
+    return;
+  }
+
+  if (workoutId.value && sleepLogId.value) {
+    alert("Link the HRV recording to either a workout or a sleep log, not both.");
+    return;
+  }
+
+  if (rrdata.value.trim() && !hasEnoughRrIntervals(rrdata.value)) {
+    alert(`RR Data must contain at least ${MIN_HRV_RR_INTERVALS} valid intervals.`);
+    return;
+  }
+
+  const queryParams: HrvRecordingQueryParams = {
     name: name.value || undefined,
     date: date.value || undefined,
     startTime: startTime.value ? new Date(startTime.value).toISOString() : undefined,
@@ -105,7 +124,7 @@ async function submit() {
   };
 
   try {
-    await HrvService.updateHrvRecording(props.id, rrdata.value || undefined, queryParams);
+    await HrvService.updateHrvRecording(props.id, rrdata.value.trim() || undefined, queryParams);
     emit("reload");
     emit("close");
   } catch (error: unknown) {

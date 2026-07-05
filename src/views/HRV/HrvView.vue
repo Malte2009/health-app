@@ -14,7 +14,7 @@
       <select name="filter" id="filter-select" @change="changeFilters" class="filter-select">
         <option value="no">No Filtering</option>
         <option selected value="standard">Standard Filtering</option>
-        <option value="full">Full Filtering</option>
+        <option value="full">All Filters</option>
       </select>
       <label for="context-filter-select" class="control-label">Context:</label>
       <select name="context-filter" id="context-filter-select" v-model="selectedContext" @change="changeFilters" class="filter-select">
@@ -143,23 +143,22 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import HrvService from "@/services/hrv/hrv.service.ts";
 import { useRouter } from "vue-router";
-import { roundTo } from "@/utility/math.ts";
+import { roundTo as roundMetric } from "@/utility/math.ts";
 import { getDateString } from "@/utility/date.ts";
 import AddHrvRecording from "@/components/HRV/AddHrvRecording.vue";
 import ChangeHrvRecording from "@/components/HRV/ChangeHrvRecording.vue";
+import type { HrvMetric, HrvRecording } from "@/types/hrvType.ts";
 
 const router = useRouter();
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const loadedRecordings = ref<any[]>([]);
+const loadedRecordings = ref<HrvRecording[]>([]);
 
 const showMore = ref(true);
 const showAddModal = ref(false);
 const showEditModal = ref(false);
 const recordingToEditId = ref("");
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const recordings = ref<any[]>([]);
+const recordings = ref<HrvRecording[]>([]);
 
 const selectedContext = ref("");
 const availableContexts = computed(() => {
@@ -172,7 +171,7 @@ const availableContexts = computed(() => {
   return Array.from(contexts).sort();
 });
 
-const averageValues = ref({
+const initialAverageValues = {
   mean_rr_ms: 0,
   mean_hr_bpm: 0,
   min_hr_bpm: 0,
@@ -198,7 +197,11 @@ const averageValues = ref({
   preserved_vagal_burst: 0,
   preserved_pvc: 0,
   artifact_percent: 0,
-});
+};
+
+type AverageMetricKey = keyof typeof initialAverageValues;
+
+const averageValues = ref<Record<AverageMetricKey, number | null>>({ ...initialAverageValues });
 
 const filters = reactive({
   no: false,
@@ -230,10 +233,10 @@ function loadRecordings() {
 
     const newRecording = recording;
     newRecording.metric = undefined;
-    for (let i = 0; i < recording.metrics.length; i++) {
-      const metric = recording.metrics[i];
+    for (const metric of recording.metrics ?? []) {
       if (
-        (filters.no && !metric.adaptiveFilteringApplied) &&
+        filters.no &&
+        !metric.adaptiveFilteringApplied &&
         !metric.artifactFilteringApplied &&
         !metric.movingAverageFilteringApplied &&
         !metric.rangeFilteringApplied
@@ -251,7 +254,6 @@ function loadRecordings() {
       }
       if (
         filters.full &&
-        metric.adaptiveFilteringApplied &&
         metric.movingAverageFilteringApplied &&
         metric.rangeFilteringApplied &&
         metric.artifactFilteringApplied
@@ -265,29 +267,34 @@ function loadRecordings() {
 }
 
 function calculateAverageValues() {
+  const counts = {} as Record<AverageMetricKey, number>;
 
   for (const key of Object.keys(averageValues.value)) {
-    averageValues.value[key as keyof typeof averageValues.value] = 0;
+    averageValues.value[key as AverageMetricKey] = 0;
+    counts[key as AverageMetricKey] = 0;
   }
-
-  let count = 0;
 
   for (const recording of loadedRecordings.value) {
     const metric = recording.metric;
     if (!metric) continue;
 
-
     for (const [key] of Object.entries(averageValues.value)) {
-      averageValues.value[key as keyof typeof averageValues.value] += metric[key as keyof typeof averageValues.value];
+      const metricKey = key as AverageMetricKey;
+      const value = metric[metricKey];
+      if (typeof value !== "number" || !Number.isFinite(value)) continue;
+      averageValues.value[metricKey] = (averageValues.value[metricKey] ?? 0) + value;
+      counts[metricKey]++;
     }
-    count++;
   }
-
-  if (count === 0) return;
 
   for (const [key] of Object.entries(averageValues.value)) {
-    averageValues.value[key as keyof typeof averageValues.value] /= count;
+    const metricKey = key as AverageMetricKey;
+    averageValues.value[metricKey] = counts[metricKey] > 0 ? (averageValues.value[metricKey] ?? 0) / counts[metricKey] : null;
   }
+}
+
+function roundTo(value: HrvMetric[keyof HrvMetric] | null | undefined, digits = 2): string {
+  return typeof value === "number" && Number.isFinite(value) ? String(roundMetric(value, digits)) : "—";
 }
 
 async function viewRecording(id: string) {
@@ -308,8 +315,8 @@ async function handleReload() {
 
 function sortRecordings() {
   recordings.value.sort((a, b) => {
-    const da = new Date(a.date).getTime();
-    const db = new Date(b.date).getTime();
+    const da = a.date ? new Date(a.date).getTime() : 0;
+    const db = b.date ? new Date(b.date).getTime() : 0;
     if (da !== db) return db - da; // Descending by day
 
     const ta = a.startDateTime ? new Date(a.startDateTime).getTime() : 0;
