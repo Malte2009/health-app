@@ -319,18 +319,9 @@ const syncZoom = ({ chart }: { chart: Chart }) => {
   });
 };
 
-const formatElapsedTime = (seconds: number): string => {
-  if (!Number.isFinite(seconds)) return "—";
-  const totalSeconds = Math.max(0, Math.round(seconds));
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const remainingSeconds = totalSeconds % 60;
-  return [hours, minutes, remainingSeconds].map((value) => String(value).padStart(2, "0")).join(":");
-};
-
 const formatChartTime = (seconds: number): string => {
   const startDateTime = hrvRecording.value?.startDateTime;
-  if (!startDateTime || !Number.isFinite(seconds)) return formatElapsedTime(seconds);
+  if (!startDateTime || !Number.isFinite(seconds)) return "";
 
   const absoluteTime = new Date(new Date(startDateTime).getTime() + seconds * 1000);
   return new Intl.DateTimeFormat("de-DE", {
@@ -338,14 +329,6 @@ const formatChartTime = (seconds: number): string => {
     minute: "2-digit",
     second: "2-digit",
   }).format(absoluteTime);
-};
-
-const formatChartTooltipTime = (seconds: number): string => {
-  const elapsed = formatElapsedTime(seconds);
-  const startDateTime = hrvRecording.value?.startDateTime;
-  if (!startDateTime || !Number.isFinite(seconds)) return `Elapsed ${elapsed}`;
-
-  return `${formatChartTime(seconds)} · +${elapsed}`;
 };
 
 const createChart = (
@@ -392,7 +375,7 @@ const createChart = (
       scales: {
         x: {
           type: "linear",
-          title: { display: true, text: hrvRecording.value?.startDateTime ? "Clock time (+ elapsed from start in tooltip)" : "Elapsed time" },
+          title: { display: true, text: "Clock time" },
           max: times.length > 0 ? times[times.length - 1] : 0,
           ticks: {
             includeBounds: false,
@@ -404,8 +387,9 @@ const createChart = (
         tooltip: {
           callbacks: {
             title: (items) => {
-              const seconds = Number(items[0]?.label ?? items[0]?.parsed.x);
-              return formatChartTooltipTime(seconds);
+              const seconds = Number(items[0]?.parsed.x ?? items[0]?.label);
+              const clockTime = formatChartTime(seconds);
+              return clockTime ? `Clock time: ${clockTime}` : "Clock time unavailable";
             },
           },
         },

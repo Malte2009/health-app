@@ -105,6 +105,56 @@
         </div>
       </section>
 
+      <section v-if="windowData.windows.length > 0" class="rr-card">
+        <div class="rr-toolbar">
+          <div>
+            <h2>Beat signals</h2>
+            <p>{{ selectedWindowSummary }}</p>
+          </div>
+          <div class="rr-actions">
+            <div class="signal-selector" role="group" aria-label="Beat signal selection">
+              <button
+                v-for="signal in beatSignalOptions"
+                :key="signal.key"
+                type="button"
+                :class="{ active: selectedBeatSignalKeys.includes(signal.key) }"
+                :aria-pressed="selectedBeatSignalKeys.includes(signal.key)"
+                @click="toggleBeatSignal(signal.key)"
+              >
+                {{ signal.label }}
+              </button>
+            </div>
+            <div class="context-selector" role="group" aria-label="RR chart context">
+              <button
+                v-for="option in rrContextOptions"
+                :key="option.seconds"
+                type="button"
+                :class="{ active: selectedRrContextSeconds === option.seconds }"
+                :aria-pressed="selectedRrContextSeconds === option.seconds"
+                @click="selectedRrContextSeconds = option.seconds"
+              >
+                {{ option.label }}
+              </button>
+            </div>
+            <button class="secondary-button" type="button" @click="resetRrZoom">Reset zoom</button>
+          </div>
+        </div>
+
+        <div v-if="rrDataLoading" class="rr-state" aria-live="polite">
+          <span class="spinner"></span>
+          <span>Loading RR values</span>
+        </div>
+        <div v-else-if="rrDataError" class="rr-state error-state" role="alert">
+          <span>{{ rrDataError }}</span>
+          <button class="secondary-button" type="button" @click="loadRecordingRrData">Try again</button>
+        </div>
+        <div v-else-if="!selectedWindow" class="rr-state">No window selected.</div>
+        <div v-else-if="!canAlignRrWindows" class="rr-state">RR chart needs a recording start time.</div>
+        <div v-else class="rr-chart-container">
+          <canvas ref="rrChartCanvas" aria-label="Beat signals for selected HRV window"></canvas>
+        </div>
+      </section>
+
       <section class="table-card">
         <div class="table-toolbar">
           <div>
@@ -172,7 +222,17 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(hrvWindow, index) in windowData.windows" :key="hrvWindow.id">
+                <tr
+                  v-for="(hrvWindow, index) in windowData.windows"
+                  :key="hrvWindow.id"
+                  class="window-row"
+                  :class="{ selected: selectedWindowId === hrvWindow.id }"
+                  tabindex="0"
+                  :aria-current="selectedWindowId === hrvWindow.id ? 'true' : undefined"
+                  @click="selectWindow(hrvWindow.id)"
+                  @keydown.enter="selectWindow(hrvWindow.id)"
+                  @keydown.space.prevent="selectWindow(hrvWindow.id)"
+                >
                   <td>
                     <span class="window-number">{{ String(index + 1).padStart(2, "0") }}</span>
                     <span v-if="hrvWindow.eventTag" class="event-tag">{{ hrvWindow.eventTag }}</span>
@@ -210,10 +270,14 @@
 
 <script setup lang="ts">
 import Chart from "chart.js/auto";
+import zoomPlugin from "chartjs-plugin-zoom";
+import type { ActiveElement, ChartEvent } from "chart.js";
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import HrvService from "@/services/hrv/hrv.service.ts";
 import type { HrvMetricVariant, HrvWindowMetrics, HrvWindowsResponse, HrvWindowSummary } from "@/types/hrv/hrvWindow.type.ts";
+
+Chart.register(zoomPlugin);
 
 type MetricItem = {
   key: keyof HrvWindowMetrics;
@@ -228,6 +292,20 @@ type MetricGroup = {
 };
 
 type ChartAxisId = "bpm" | "ms" | "percent" | "power" | "count" | "other";
+type BeatSignalKey = "rr" | "bpm" | "hrv";
+
+type RrChartPoint = {
+  x: number;
+  y: number;
+};
+
+type BeatSignalOption = {
+  key: BeatSignalKey;
+  label: string;
+  unit: string;
+  color: string;
+  axisId: string;
+};
 
 const route = useRoute();
 const recordingId = route.params.id as string;
@@ -241,8 +319,16 @@ const showAllMetrics = ref(false);
 const chartMetricPickerOpen = ref(false);
 const selectedChartMetricKeys = ref<Array<keyof HrvWindowMetrics>>(["mean_hr_bpm", "rmssd_ms"]);
 const metricChartCanvas = ref<HTMLCanvasElement | null>(null);
+const rrChartCanvas = ref<HTMLCanvasElement | null>(null);
+const selectedWindowId = ref<string | null>(null);
+const selectedRrContextSeconds = ref(60);
+const selectedBeatSignalKeys = ref<BeatSignalKey[]>(["rr", "bpm", "hrv"]);
+const rrIntervals = ref<number[]>([]);
+const rrDataLoading = ref(false);
+const rrDataError = ref("");
 let refreshTimer: number | undefined;
 let metricChart: Chart | null = null;
+let rrChart: Chart | null = null;
 
 const variantOptions: Array<{ value: HrvMetricVariant; label: string }> = [
   { value: "none", label: "Unfiltered" },
@@ -329,6 +415,21 @@ const metricGroups: MetricGroup[] = [
 const allMetricColumns = metricGroups.flatMap((group) => group.items);
 const chartMetricItems = allMetricColumns.filter((item) => item.key !== "merged_with_previous");
 const chartColors = ["#00bfae", "#ff9f40", "#36a2eb", "#ff6384", "#9966ff", "#4bc0c0", "#ffcd56", "#7dd3fc", "#a3e635", "#f472b6"];
+
+const rrContextOptions = [
+  { seconds: 0, label: "Window" },
+  { seconds: 30, label: "30 s" },
+  { seconds: 60, label: "1 min" },
+  { seconds: 120, label: "2 min" },
+  { seconds: 300, label: "5 min" },
+];
+const maxRrContextSeconds = Math.max(...rrContextOptions.map((option) => option.seconds));
+
+const beatSignalOptions: BeatSignalOption[] = [
+  { key: "rr", label: "RR intervals", unit: "ms", color: "#00bfae", axisId: "rr" },
+  { key: "bpm", label: "BPM", unit: "bpm", color: "#ff6384", axisId: "bpm" },
+  { key: "hrv", label: "HRV", unit: "ms", color: "#ff9f40", axisId: "hrv" },
+];
 
 const chartAxisLabels: Record<ChartAxisId, string> = {
   bpm: "bpm",
@@ -424,6 +525,62 @@ const generatedAtLabel = computed(() => {
 
 const selectedChartMetricItems = computed(() => chartMetricItems.filter((item) => selectedChartMetricKeys.value.includes(item.key)));
 
+const selectedWindow = computed(() => windowData.value?.windows.find((hrvWindow) => hrvWindow.id === selectedWindowId.value) ?? null);
+
+const selectedWindowIndex = computed(() => {
+  if (!windowData.value || !selectedWindow.value) return -1;
+  return windowData.value.windows.findIndex((hrvWindow) => hrvWindow.id === selectedWindow.value?.id);
+});
+
+const recordingStartTime = computed(() => {
+  const startDateTime = windowData.value?.recording.startDateTime;
+  if (!startDateTime) return null;
+  const timestamp = new Date(startDateTime).getTime();
+  return Number.isFinite(timestamp) ? timestamp : null;
+});
+
+const canAlignRrWindows = computed(() => recordingStartTime.value !== null);
+
+const rrChartPoints = computed<RrChartPoint[]>(() => {
+  let currentTime = 0;
+  return rrIntervals.value.map((rr) => {
+    currentTime += rr / 1000;
+    return {
+      x: currentTime,
+      y: rr,
+    };
+  });
+});
+
+const beatSignalPoints = computed<Record<BeatSignalKey, RrChartPoint[]>>(() => {
+  const points: Record<BeatSignalKey, RrChartPoint[]> = {
+    rr: [],
+    bpm: [],
+    hrv: [],
+  };
+  let currentTime = 0;
+  let previousRr: number | null = null;
+
+  for (const rr of rrIntervals.value) {
+    currentTime += rr / 1000;
+    points.rr.push({ x: currentTime, y: rr });
+    points.bpm.push({ x: currentTime, y: 60000 / rr });
+
+    if (previousRr !== null) {
+      points.hrv.push({ x: currentTime, y: Math.abs(rr - previousRr) });
+    }
+    previousRr = rr;
+  }
+
+  return points;
+});
+
+const selectedWindowSummary = computed(() => {
+  if (!selectedWindow.value) return "No window selected";
+  const index = selectedWindowIndex.value >= 0 ? String(selectedWindowIndex.value + 1).padStart(2, "0") : "—";
+  return `Window ${index} · ${formatWindowRange(selectedWindow.value)}`;
+});
+
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat("de-DE", { dateStyle: "medium" }).format(new Date(value));
 }
@@ -478,6 +635,16 @@ function toggleChartMetric(key: keyof HrvWindowMetrics): void {
     : [...selectedChartMetricKeys.value, key];
 }
 
+function toggleBeatSignal(key: BeatSignalKey): void {
+  if (selectedBeatSignalKeys.value.includes(key)) {
+    if (selectedBeatSignalKeys.value.length === 1) return;
+    selectedBeatSignalKeys.value = selectedBeatSignalKeys.value.filter((selectedKey) => selectedKey !== key);
+    return;
+  }
+
+  selectedBeatSignalKeys.value = [...selectedBeatSignalKeys.value, key];
+}
+
 function chartAxisForMetric(item: MetricItem): ChartAxisId {
   if (item.unit === "bpm" || item.unit === "breaths/min") return "bpm";
   if (item.unit === "ms") return "ms";
@@ -499,6 +666,84 @@ function formatChartWindowLabel(hrvWindow: HrvWindowSummary, index: number): str
     hour: "2-digit",
     minute: "2-digit",
   }).format(start)}`;
+}
+
+function selectWindow(windowId: string): void {
+  selectedWindowId.value = windowId;
+}
+
+function selectWindowByIndex(index: number): void {
+  const hrvWindow = windowData.value?.windows[index];
+  if (hrvWindow) selectWindow(hrvWindow.id);
+}
+
+function ensureSelectedWindow(): void {
+  const windows = windowData.value?.windows ?? [];
+  if (windows.length === 0) {
+    selectedWindowId.value = null;
+    return;
+  }
+
+  if (!selectedWindowId.value || !windows.some((hrvWindow) => hrvWindow.id === selectedWindowId.value)) {
+    selectedWindowId.value = windows[0].id;
+  }
+}
+
+function parseRrIntervals(rawRrData: string): number[] {
+  return rawRrData
+    .split(/\r?\n/)
+    .map((value) => Number(value.trim()))
+    .filter((value) => Number.isFinite(value) && value > 0);
+}
+
+function getWindowOffsetBounds(hrvWindow: HrvWindowSummary): { start: number; end: number } | null {
+  if (recordingStartTime.value === null) return null;
+
+  const windowStart = new Date(hrvWindow.windowStart).getTime();
+  if (!Number.isFinite(windowStart)) return null;
+
+  const start = (windowStart - recordingStartTime.value) / 1000;
+  const end = start + hrvWindow.durationSeconds;
+  return Number.isFinite(start) && Number.isFinite(end) ? { start, end } : null;
+}
+
+function formatRecordingClockTime(seconds: number): string {
+  if (recordingStartTime.value === null || !Number.isFinite(seconds)) return "—";
+  return new Intl.DateTimeFormat("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date(recordingStartTime.value + seconds * 1000));
+}
+
+function withAlpha(hexColor: string, alpha: number): string {
+  const normalized = hexColor.replace("#", "");
+  if (normalized.length !== 6) return hexColor;
+
+  const red = Number.parseInt(normalized.slice(0, 2), 16);
+  const green = Number.parseInt(normalized.slice(2, 4), 16);
+  const blue = Number.parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+function formatBeatSignalValue(signal: BeatSignalOption, value: number): string {
+  const digits = signal.key === "bpm" ? 1 : 0;
+  return `${formatNumber(value, digits)} ${signal.unit}`;
+}
+
+function getRrChartRange(hrvWindow: HrvWindowSummary): { min: number; max: number; windowStart: number; windowEnd: number } | null {
+  const bounds = getWindowOffsetBounds(hrvWindow);
+  if (!bounds) return null;
+
+  const lastPoint = rrChartPoints.value[rrChartPoints.value.length - 1];
+  const recordingEnd = lastPoint?.x ?? bounds.end;
+  const min = Math.max(0, bounds.start - selectedRrContextSeconds.value);
+  const max = Math.min(recordingEnd, bounds.end + selectedRrContextSeconds.value);
+  return { min, max, windowStart: bounds.start, windowEnd: bounds.end };
+}
+
+function resetRrZoom(): void {
+  rrChart?.resetZoom();
 }
 
 function buildChartScales() {
@@ -557,7 +802,7 @@ async function renderMetricChart(): Promise<void> {
       borderColor: color,
       backgroundColor: color,
       borderWidth: 2,
-      pointRadius: 2.5,
+      pointRadius: windows.map((hrvWindow) => (hrvWindow.id === selectedWindowId.value ? 5 : 2.5)),
       pointHoverRadius: 5,
       spanGaps: true,
       tension: 0.24,
@@ -578,6 +823,10 @@ async function renderMetricChart(): Promise<void> {
       interaction: {
         mode: "index",
         intersect: false,
+      },
+      onClick: (_event: ChartEvent, elements: ActiveElement[]) => {
+        const index = elements[0]?.index;
+        if (index !== undefined) selectWindowByIndex(index);
       },
       plugins: {
         legend: {
@@ -609,6 +858,210 @@ async function renderMetricChart(): Promise<void> {
   });
 }
 
+async function loadRecordingRrData(): Promise<void> {
+  if (rrDataLoading.value) return;
+
+  rrDataLoading.value = true;
+  rrDataError.value = "";
+
+  try {
+    const rawRrData = await HrvService.getHrvData(recordingId);
+    const parsedIntervals = parseRrIntervals(rawRrData);
+    if (parsedIntervals.length === 0) {
+      rrIntervals.value = [];
+      rrDataError.value = "No RR values were returned for this recording.";
+      return;
+    }
+    rrIntervals.value = parsedIntervals;
+  } catch (error) {
+    console.error(error);
+    rrDataError.value = "RR values could not be loaded for this recording.";
+  } finally {
+    rrDataLoading.value = false;
+  }
+}
+
+async function renderRrChart(): Promise<void> {
+  await nextTick();
+
+  if (!rrChartCanvas.value || !selectedWindow.value || !canAlignRrWindows.value || rrDataLoading.value || rrDataError.value) {
+    rrChart?.destroy();
+    rrChart = null;
+    return;
+  }
+
+  const range = getRrChartRange(selectedWindow.value);
+  if (!range) {
+    rrChart?.destroy();
+    rrChart = null;
+    return;
+  }
+
+  const dataMin = Math.max(0, range.windowStart - maxRrContextSeconds);
+  const dataMax = Math.min(rrChartPoints.value[rrChartPoints.value.length - 1]?.x ?? range.max, range.windowEnd + maxRrContextSeconds);
+  const selectedSignalOptions = beatSignalOptions.filter((signal) => selectedBeatSignalKeys.value.includes(signal.key));
+  const datasets = selectedSignalOptions.flatMap((signal) => {
+    const signalPoints = beatSignalPoints.value[signal.key];
+    const contextPoints = signalPoints.filter((point) => point.x >= dataMin && point.x <= dataMax);
+    const selectedPoints = contextPoints.filter((point) => point.x >= range.windowStart && point.x <= range.windowEnd);
+
+    return [
+      {
+        label: `${signal.label} context`,
+        data: contextPoints,
+        borderColor: withAlpha(signal.color, 0.34),
+        backgroundColor: withAlpha(signal.color, 0.12),
+        borderWidth: 1,
+        pointRadius: 0,
+        tension: 0.08,
+        yAxisID: signal.axisId,
+      },
+      {
+        label: signal.label,
+        data: selectedPoints,
+        borderColor: signal.color,
+        backgroundColor: signal.color,
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.08,
+        yAxisID: signal.axisId,
+      },
+    ];
+  });
+
+  if (datasets.every((dataset) => dataset.data.length === 0)) {
+    rrChart?.destroy();
+    rrChart = null;
+    return;
+  }
+
+  rrChart?.destroy();
+  rrChart = new Chart(rrChartCanvas.value, {
+    type: "line",
+    data: {
+      datasets,
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      parsing: false,
+      interaction: {
+        mode: "nearest",
+        intersect: false,
+      },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            color: "rgba(226, 232, 240, 0.82)",
+            usePointStyle: true,
+            boxWidth: 8,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const seconds = Number(items[0]?.parsed.x);
+              return `Clock time: ${formatRecordingClockTime(seconds)}`;
+            },
+            label: (item) => {
+              const signal = beatSignalOptions.find((option) => option.axisId === item.dataset.yAxisID);
+              const value = Number(item.parsed.y);
+              if (!signal || !Number.isFinite(value)) return "";
+              return `${item.dataset.label}: ${formatBeatSignalValue(signal, value)}`;
+            },
+          },
+        },
+        zoom: {
+          limits: {
+            x: {
+              min: dataMin,
+              max: dataMax,
+            },
+          },
+          zoom: {
+            wheel: {
+              enabled: true,
+            },
+            pinch: {
+              enabled: true,
+            },
+            mode: "x",
+          },
+          pan: {
+            enabled: true,
+            mode: "x",
+            modifierKey: "alt",
+          },
+        },
+      },
+      scales: {
+        x: {
+          type: "linear",
+          min: range.min,
+          max: range.max,
+          title: {
+            display: true,
+            text: "Clock time",
+          },
+          grid: {
+            color: "rgba(148, 163, 184, 0.12)",
+          },
+          ticks: {
+            color: "rgba(226, 232, 240, 0.72)",
+            callback: (value) => formatRecordingClockTime(Number(value)),
+          },
+        },
+        rr: {
+          display: selectedBeatSignalKeys.value.includes("rr"),
+          type: "linear",
+          position: "left",
+          title: {
+            display: true,
+            text: "RR (ms)",
+          },
+          grid: {
+            color: "rgba(148, 163, 184, 0.16)",
+          },
+          ticks: {
+            color: "rgba(226, 232, 240, 0.72)",
+          },
+        },
+        bpm: {
+          display: selectedBeatSignalKeys.value.includes("bpm"),
+          type: "linear",
+          position: "right",
+          title: {
+            display: true,
+            text: "BPM",
+          },
+          grid: {
+            drawOnChartArea: false,
+          },
+          ticks: {
+            color: "rgba(226, 232, 240, 0.72)",
+          },
+        },
+        hrv: {
+          display: selectedBeatSignalKeys.value.includes("hrv"),
+          type: "linear",
+          position: "right",
+          title: {
+            display: true,
+            text: "HRV diff (ms)",
+          },
+          grid: {
+            drawOnChartArea: false,
+          },
+          ticks: {
+            color: "rgba(226, 232, 240, 0.72)",
+          },
+        },
+      },
+    },
+  });
+}
+
 function scheduleRefresh(): void {
   window.clearTimeout(refreshTimer);
   const status = windowData.value?.generationStatus;
@@ -625,6 +1078,10 @@ async function loadWindows(background = false): Promise<void> {
 
   try {
     windowData.value = await HrvService.getHrvWindows(recordingId);
+    ensureSelectedWindow();
+    if (windowData.value.windows.length > 0 && rrIntervals.value.length === 0 && !rrDataError.value) {
+      void loadRecordingRrData();
+    }
   } catch (error) {
     console.error(error);
     if (!windowData.value) {
@@ -637,12 +1094,20 @@ async function loadWindows(background = false): Promise<void> {
   }
 }
 
-watch([windowData, selectedVariant, selectedChartMetricKeys], () => void renderMetricChart(), { deep: true });
+watch([windowData, selectedVariant, selectedChartMetricKeys, selectedWindowId], () => void renderMetricChart(), { deep: true });
+watch(
+  [selectedWindow, selectedRrContextSeconds, selectedBeatSignalKeys, rrIntervals, rrDataLoading, rrDataError, recordingStartTime],
+  () => void renderRrChart(),
+  {
+    deep: true,
+  },
+);
 
 onMounted(() => void loadWindows());
 onUnmounted(() => {
   window.clearTimeout(refreshTimer);
   metricChart?.destroy();
+  rrChart?.destroy();
 });
 </script>
 
@@ -856,6 +1321,15 @@ h1 {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
+.rr-card {
+  margin-bottom: 18px;
+  padding: 18px 20px 20px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+}
+
 .chart-toolbar {
   display: flex;
   align-items: flex-start;
@@ -951,6 +1425,80 @@ h1 {
 
 .metric-chart-container.empty {
   opacity: 0.35;
+}
+
+.rr-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+
+.rr-toolbar h2 {
+  margin-bottom: 5px;
+  font-size: 1.1rem;
+}
+
+.rr-toolbar p {
+  margin-bottom: 0;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+}
+
+.rr-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.signal-selector,
+.context-selector {
+  display: flex;
+  flex-shrink: 0;
+  gap: 3px;
+  padding: 3px;
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+
+.signal-selector button,
+.context-selector button {
+  padding: 7px 9px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.78rem;
+}
+
+.signal-selector button.active,
+.context-selector button.active {
+  color: var(--text-main);
+  background: var(--bg-surface);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.18);
+}
+
+.rr-chart-container {
+  height: 330px;
+  min-height: 260px;
+}
+
+.rr-state {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 96px;
+  padding: 14px;
+  color: var(--text-secondary);
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 10px;
 }
 
 .table-toolbar {
@@ -1124,6 +1672,24 @@ tbody tr:hover {
   background: rgba(0, 191, 174, 0.055);
 }
 
+.window-row {
+  cursor: pointer;
+}
+
+.window-row:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+.window-row.selected {
+  background: rgba(0, 191, 174, 0.11);
+}
+
+.window-row.selected .window-number {
+  color: var(--bg-main);
+  background: var(--primary);
+}
+
 .window-number {
   display: inline-flex;
   align-items: center;
@@ -1176,6 +1742,7 @@ tbody tr:hover {
 
   .page-header,
   .chart-toolbar,
+  .rr-toolbar,
   .table-toolbar,
   .generation-banner,
   .error-state {
@@ -1204,6 +1771,11 @@ tbody tr:hover {
   }
 
   .toolbar-actions {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .rr-actions {
     align-items: flex-start;
     flex-direction: column;
   }
