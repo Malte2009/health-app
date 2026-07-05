@@ -82,7 +82,8 @@ npm run format
 
 Create a `.env` file in the root directory to configure environment variables. Example:
 ```
-VITE_API_URL=localhost
+VITE_API_HOST=localhost
+VITE_API_PORT=3000
 ```
 
 ### TypeScript Configuration

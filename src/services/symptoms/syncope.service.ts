@@ -3,44 +3,23 @@ import type { CreateSyncopeRequest, SyncopeLog, UpdateSyncopeRequest } from "@/t
 
 class SyncopeService {
   async getSyncopes(): Promise<SyncopeLog[]> {
-     try {
-       return (await api.get("/syncopes/")).data;
-     } catch (error) {
-       console.error(error);
-       return [];
-     }
+     return (await api.get("/syncopes/")).data;
    }
 
-  async getSyncopeById(id: string): Promise<SyncopeLog | undefined> {
-    try {
-      return (await api.get(`/syncopes/${id}`)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async getSyncopeById(id: string): Promise<SyncopeLog> {
+    return (await api.get(`/syncopes/${id}`)).data;
   }
 
-  async createSyncope(syncopeData: CreateSyncopeRequest): Promise<SyncopeLog | undefined> {
-    try {
-      return (await api.post("/syncopes", syncopeData)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async createSyncope(syncopeData: CreateSyncopeRequest): Promise<SyncopeLog> {
+    return (await api.post("/syncopes", syncopeData)).data;
   }
 
-  async updateSyncope(syncopeData: UpdateSyncopeRequest): Promise<SyncopeLog | undefined> {
-    try {
-      return (await api.patch(`/syncopes/${syncopeData.id}`, syncopeData)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async updateSyncope(syncopeData: UpdateSyncopeRequest): Promise<SyncopeLog> {
+    return (await api.patch(`/syncopes/${syncopeData.id}`, syncopeData)).data;
   }
 
   async deleteSyncope(id: string): Promise<void> {
-    try {
-      await api.delete(`/syncopes/${id}`);
-    } catch (error) {
-      console.error(error);
-    }
+    await api.delete(`/syncopes/${id}`);
   }
 }
 

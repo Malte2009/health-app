@@ -3,51 +3,27 @@ import type { createWorkoutType, updateWorkoutType, Workout } from "@/types/work
 
 class WorkoutService {
   async getWorkouts(includeExercises: boolean = false, includeSets: boolean = false): Promise<Workout[]> {
-    try {
-      return (await api.get(`/workouts?includeExercises=${includeExercises}&includeSets=${includeSets}`)).data;
-    } catch {
-      return [];
-    }
+    return (await api.get(`/workouts?includeExercises=${includeExercises}&includeSets=${includeSets}`)).data;
   }
 
-  async getWorkoutById(workoutId: string, includeExercises: boolean = true, includeSets: boolean = true): Promise<Workout | void> {
-    try {
-      return (await api.get(`/workouts/${workoutId}?includeExercises=${includeExercises}&includeSets=${includeSets}`)).data;
-    } catch {
-      return;
-    }
+  async getWorkoutById(workoutId: string, includeExercises: boolean = true, includeSets: boolean = true): Promise<Workout> {
+    return (await api.get(`/workouts/${workoutId}?includeExercises=${includeExercises}&includeSets=${includeSets}`)).data;
   }
 
   async getWorkoutNames(): Promise<string[]> {
-    try {
-      return (await api.get("/workouts/names")).data;
-    } catch {
-      return [];
-    }
+    return (await api.get("/workouts/names")).data;
   }
 
-  async createWorkout(workout: createWorkoutType): Promise<Workout | void> {
-    try {
-      return (await api.post("/workouts", workout)).data;
-    } catch {
-      return;
-    }
+  async createWorkout(workout: createWorkoutType): Promise<Workout> {
+    return (await api.post("/workouts", workout)).data;
   }
 
-  async updateWorkout(workoutId: string, workout: updateWorkoutType): Promise<Workout | void> {
-    try {
-      return (await api.patch(`/workouts/${workoutId}`, workout)).data;
-    } catch {
-      return;
-    }
+  async updateWorkout(workoutId: string, workout: updateWorkoutType): Promise<Workout> {
+    return (await api.patch(`/workouts/${workoutId}`, workout)).data;
   }
 
   async deleteWorkout(workoutId: string): Promise<void> {
-    try {
-      await api.delete(`/workouts/${workoutId}`);
-    } catch {
-      return;
-    }
+    await api.delete(`/workouts/${workoutId}`);
   }
 }
 

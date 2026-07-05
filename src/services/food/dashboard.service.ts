@@ -66,46 +66,26 @@ function normalizeDailyDashboardResponse(payload: unknown): DailyDashboard | voi
 
 class FoodDashboardService {
   async getDailyDashboard(date?: string): Promise<DailyDashboard | void> {
-    try {
-      const query = date ? `?date=${date}` : "";
-      return normalizeDailyDashboardResponse((await api.get(`/dashboard/daily${query}`)).data);
-    } catch (error) {
-      console.error(error);
-    }
+    const query = date ? `?date=${date}` : "";
+    return normalizeDailyDashboardResponse((await api.get(`/dashboard/daily${query}`)).data);
   }
 
-  async getWeeklyDashboard(startDate?: string): Promise<DailyDashboard[] | void> {
-    try {
-      const query = startDate ? `?startDate=${startDate}` : "";
-      return (await api.get(`/dashboard/weekly${query}`)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async getWeeklyDashboard(startDate?: string): Promise<DailyDashboard[]> {
+    const query = startDate ? `?startDate=${startDate}` : "";
+    return (await api.get(`/dashboard/weekly${query}`)).data;
   }
 
-  async getMonthlyDashboard(month: string): Promise<DailyDashboard[] | void> {
-    try {
-      return (await api.get(`/dashboard/monthly?month=${month}`)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async getMonthlyDashboard(month: string): Promise<DailyDashboard[]> {
+    return (await api.get(`/dashboard/monthly?month=${month}`)).data;
   }
 
   async getNutritionOverTime(startDate: string, endDate: string): Promise<NutritionOverTimeResponse | void> {
-    try {
-      const params = new URLSearchParams({ startDate, endDate });
-      return normalizeNutritionOverTimeResponse((await api.get(`/dashboard/nutrition-over-time?${params.toString()}`)).data);
-    } catch (error) {
-      console.error(error);
-    }
+    const params = new URLSearchParams({ startDate, endDate });
+    return normalizeNutritionOverTimeResponse((await api.get(`/dashboard/nutrition-over-time?${params.toString()}`)).data);
   }
 
-  async getTopFoods(days: number = 7): Promise<import("@/types/foodType").TopFoodsResponse | void> {
-    try {
-      return (await api.get(`/dashboard/top-foods?days=${days}`)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async getTopFoods(days: number = 7): Promise<import("@/types/foodType").TopFoodsResponse> {
+    return (await api.get(`/dashboard/top-foods?days=${days}`)).data;
   }
 }
 

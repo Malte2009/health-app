@@ -11,76 +11,39 @@ import type {
 
 class MealRecipeService {
   async getMealRecipes(): Promise<MealRecipe[]> {
-    try {
-      return (await api.get("/meal-recipes")).data;
-    } catch (error) {
-      console.error(error);
-      return [];
-    }
+    return (await api.get("/meal-recipes")).data;
   }
 
-  async getMealRecipeById(id: string): Promise<MealRecipe | void> {
-    try {
-      return (await api.get(`/meal-recipes/${id}`)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async getMealRecipeById(id: string): Promise<MealRecipe> {
+    return (await api.get(`/meal-recipes/${id}`)).data;
   }
 
-  async createMealRecipe(data: CreateMealRecipeRequest): Promise<MealRecipe | void> {
-    try {
-      return (await api.post("/meal-recipes", data)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async createMealRecipe(data: CreateMealRecipeRequest): Promise<MealRecipe> {
+    return (await api.post("/meal-recipes", data)).data;
   }
 
-  async updateMealRecipe(id: string, data: UpdateMealRecipeRequest): Promise<MealRecipe | void> {
-    try {
-      return (await api.patch(`/meal-recipes/${id}`, data)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async updateMealRecipe(id: string, data: UpdateMealRecipeRequest): Promise<MealRecipe> {
+    return (await api.patch(`/meal-recipes/${id}`, data)).data;
   }
 
   async deleteMealRecipe(id: string): Promise<void> {
-    try {
-      await api.delete(`/meal-recipes/${id}`);
-    } catch (error) {
-      console.error(error);
-    }
+    await api.delete(`/meal-recipes/${id}`);
   }
 
   async addIngredient(recipeId: string, data: AddIngredientRequest): Promise<void> {
-    try {
-      await api.post(`/meal-recipes/${recipeId}/ingredients`, data);
-    } catch (error) {
-      console.error(error);
-    }
+    await api.post(`/meal-recipes/${recipeId}/ingredients`, data);
   }
 
   async updateIngredient(recipeId: string, ingredientId: string, data: UpdateIngredientRequest): Promise<void> {
-    try {
-      await api.patch(`/meal-recipes/${recipeId}/ingredients/${ingredientId}`, data);
-    } catch (error) {
-      console.error(error);
-    }
+    await api.patch(`/meal-recipes/${recipeId}/ingredients/${ingredientId}`, data);
   }
 
   async deleteIngredient(recipeId: string, ingredientId: string): Promise<void> {
-    try {
-      await api.delete(`/meal-recipes/${recipeId}/ingredients/${ingredientId}`);
-    } catch (error) {
-      console.error(error);
-    }
+    await api.delete(`/meal-recipes/${recipeId}/ingredients/${ingredientId}`);
   }
 
-  async logMealRecipe(recipeId: string, data: LogMealRecipeRequest): Promise<FoodLog[] | void> {
-    try {
-      return (await api.post(`/meal-recipes/${recipeId}/log`, data)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async logMealRecipe(recipeId: string, data: LogMealRecipeRequest): Promise<FoodLog[]> {
+    return (await api.post(`/meal-recipes/${recipeId}/log`, data)).data;
   }
 }
 

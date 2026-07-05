@@ -3,44 +3,23 @@ import type { CreateSymptomRequest, SymptomLog, UpdateSymptomRequest } from "@/t
 
 class SymptomService {
   async getSymptoms(): Promise<SymptomLog[]> {
-    try {
-      return (await api.get("/symptoms/")).data;
-    } catch (error) {
-      console.error(error);
-      return [];
-    }
+    return (await api.get("/symptoms/")).data;
   }
 
-  async getSymptomById(id: string): Promise<SymptomLog | void> {
-    try {
-      return (await api.get(`/symptoms/${id}`)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async getSymptomById(id: string): Promise<SymptomLog> {
+    return (await api.get(`/symptoms/${id}`)).data;
   }
 
-  async createSymptom(symptomData: CreateSymptomRequest): Promise<SymptomLog | void> {
-    try {
-      return (await api.post("/symptoms", symptomData)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async createSymptom(symptomData: CreateSymptomRequest): Promise<SymptomLog> {
+    return (await api.post("/symptoms", symptomData)).data;
   }
 
-  async updateSymptom(symptomData: UpdateSymptomRequest): Promise<SymptomLog | void> {
-    try {
-      return (await api.patch(`/symptoms/${symptomData.id}`, symptomData)).data;
-    } catch (error) {
-      console.error(error);
-    }
+  async updateSymptom(symptomData: UpdateSymptomRequest): Promise<SymptomLog> {
+    return (await api.patch(`/symptoms/${symptomData.id}`, symptomData)).data;
   }
 
   async deleteSymptom(id: string): Promise<unknown> {
-    try {
-      return (await api.delete(`/symptoms/${id}`)).data;
-    } catch (error) {
-      console.error(error);
-    }
+    return (await api.delete(`/symptoms/${id}`)).data;
   }
 }
 

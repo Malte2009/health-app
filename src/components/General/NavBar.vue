@@ -45,7 +45,6 @@
 
         <template v-if="currentSection === 'health'">
           <button :class="{ 'active-health': route.name === 'daily-tracking' }" @click="router.push({ name: 'daily-tracking' })">Daily</button>
-          <button :class="{ 'active-health': route.name === 'intake-log' }" @click="router.push({ name: 'intake-log' })">Intake</button>
           <button :class="{ 'active-health': route.name === 'diagnostic-calendar' }" @click="router.push({ name: 'diagnostic-calendar' })">
             Calendar
           </button>
@@ -59,7 +58,6 @@
             HRV
           </button>
           <button :class="{ 'active-health': route.name === 'symptoms' }" @click="router.push({ name: 'symptoms' })">Symptoms</button>
-          <button :class="{ 'active-health': route.name === 'mcas' }" @click="router.push({ name: 'mcas' })">MCAS</button>
         </template>
       </div>
     </div>
@@ -91,7 +89,6 @@ const FOOD_ROUTES = new Set(["food", "foodProgress", "foodManage", "foodRecipes"
 
 const HEALTH_ROUTES = new Set([
   "daily-tracking",
-  "intake-log",
   "diagnostic-calendar",
   "charts",
   "sleep-tracker",
@@ -100,7 +97,6 @@ const HEALTH_ROUTES = new Set([
   "hrvDetails",
   "hrvWindows",
   "symptoms",
-  "mcas",
 ]);
 
 function goHome() {

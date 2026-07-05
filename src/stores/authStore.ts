@@ -24,10 +24,6 @@ export const useAuthStore = defineStore("authStore", {
           this.authenticated = Boolean(token);
           return this.authenticated;
         })
-        .catch(() => {
-          this.authenticated = false;
-          return false;
-        })
         .finally(() => {
           this.loadingPromise = null;
         });
