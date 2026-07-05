@@ -1,107 +1,107 @@
 <template>
   <div class="symptoms-view">
-        <div v-if="showAddModal" class="modal-overlay">
-          <AddSymptomLog @close="showAddModal = false" @reload="handleReload" />
-        </div>
+    <div v-if="showAddModal" class="modal-overlay">
+      <AddSymptomLog @close="showAddModal = false" @reload="handleReload" />
+    </div>
 
-        <div v-if="showEditModal" class="modal-overlay">
-          <AddSymptomLog :initialData="selectedEditSymptom" @close="closeEditModal" @reload="handleReload" />
-        </div>
+    <div v-if="showEditModal" class="modal-overlay">
+      <AddSymptomLog :initialData="selectedEditSymptom" @close="closeEditModal" @reload="handleReload" />
+    </div>
 
-        <div v-if="showViewModal" class="modal-overlay">
-          <div class="modal-content">
-            <div class="close" @click="showViewModal = false">x</div>
-            <h3>Details</h3>
-            <div v-if="selectedViewSymptom">
-              <div v-if="selectedViewSymptom.type === 'SYMPTOM'">
-                <div class="details-grid">
-                  <p><strong>Id:</strong> {{ selectedViewSymptom.id || '-' }}</p>
-                  <p><strong>User Id:</strong> {{ selectedViewSymptom.userId || '-' }}</p>
-                  <p><strong>Created At:</strong> {{ formatDate(selectedViewSymptom.createdAt) }}</p>
-                  <p><strong>Changed At:</strong> {{ formatDate(selectedViewSymptom.changedAt) }}</p>
-                  <p><strong>Timestamp:</strong> {{ formatDateTime(selectedViewSymptom.timestamp) }}</p>
-                  <p><strong>Type:</strong> {{ selectedViewSymptom.type || '-' }}</p>
-                  <p><strong>Name:</strong> {{ selectedViewSymptom.name || '-' }}</p>
-                  <p><strong>Severity:</strong> {{ formatValue(selectedViewSymptom.severity) }}</p>
-                  <p><strong>Position:</strong> {{ selectedViewSymptom.position || '-' }}</p>
-                  <p><strong>Trigger:</strong> {{ selectedViewSymptom.trigger || '-' }}</p>
-                  <p><strong>Worse on bending forward:</strong> {{ formatBoolean(selectedViewSymptom.worseOnBendingForward) }}</p>
-                  <p><strong>Worse on lying down:</strong> {{ formatBoolean(selectedViewSymptom.worseOnLyingDown) }}</p>
-                  <p><strong>Better on lying down:</strong> {{ formatBoolean(selectedViewSymptom.betterOnLyingDown) }}</p>
-                  <p><strong>Pulsatile:</strong> {{ formatBoolean(selectedViewSymptom.pulsatile) }}</p>
-                  <p><strong>Trigger Food Log Id:</strong> {{ selectedViewSymptom.triggerFoodLogId || '-' }}</p>
-                  <p><strong>Syncope Log Id:</strong> {{ selectedViewSymptom.syncopeLogId || '-' }}</p>
-                </div>
-
-                <div class="detail-block" v-if="selectedViewSymptom.triggerFoodLog">
-                  <h4>Trigger Food Log</h4>
-                  <pre>{{ formatObject(selectedViewSymptom.triggerFoodLog) }}</pre>
-                </div>
-
-                <div class="detail-block" v-if="selectedViewSymptom.syncopeLog">
-                  <h4>Linked Syncope</h4>
-                  <pre>{{ formatObject(selectedViewSymptom.syncopeLog) }}</pre>
-                </div>
-
-                <div class="detail-block" v-if="selectedViewSymptom.pictures && selectedViewSymptom.pictures.length > 0">
-                  <h4>Pictures</h4>
-                  <ul class="detail-list-inline">
-                    <li v-for="picture in selectedViewSymptom.pictures" :key="picture.id">
-                      {{ picture.fileName }} ({{ picture.mimeType }}, {{ picture.size }} bytes)
-                    </li>
-                  </ul>
-                </div>
-
-                <p><strong>Notes:</strong> {{ selectedViewSymptom.notes || '-' }}</p>
-              </div>
-              <div v-else-if="selectedViewSymptom.type === 'SYNCOPE'">
-                <div class="details-grid">
-                  <p><strong>Id:</strong> {{ selectedViewSymptom.id || '-' }}</p>
-                  <p><strong>User Id:</strong> {{ selectedViewSymptom.userId || '-' }}</p>
-                  <p><strong>Created At:</strong> {{ formatDate(selectedViewSymptom.createdAt) }}</p>
-                  <p><strong>Changed At:</strong> {{ formatDate(selectedViewSymptom.changedAt) }}</p>
-                  <p><strong>Timestamp:</strong> {{ formatDateTime(selectedViewSymptom.timestamp) }}</p>
-                  <p><strong>Type:</strong> {{ selectedViewSymptom.type || '-' }}</p>
-                  <p><strong>Name:</strong> {{ selectedViewSymptom.name || '-' }}</p>
-                  <p><strong>Outcome:</strong> {{ selectedViewSymptom.outcome || '-' }}</p>
-                  <p><strong>Severity:</strong> {{ formatValue(selectedViewSymptom.severity) }}</p>
-                  <p><strong>Trigger:</strong> {{ selectedViewSymptom.trigger || '-' }}</p>
-                  <p><strong>Position:</strong> {{ selectedViewSymptom.position || '-' }}</p>
-                  <p><strong>Amnesia:</strong> {{ formatBoolean(selectedViewSymptom.amnesia) }}</p>
-                  <p><strong>Amnesia Duration (min):</strong> {{ formatValue(selectedViewSymptom.amnesiaDurationMinutes) }}</p>
-                  <p><strong>Activity Before:</strong> {{ selectedViewSymptom.activityBefore || '-' }}</p>
-                  <p><strong>Hours Since Last Meal:</strong> {{ formatValue(selectedViewSymptom.hoursSinceLastMeal) }}</p>
-                  <p><strong>Hours Since Last Drink:</strong> {{ formatValue(selectedViewSymptom.hoursSinceLastDrink) }}</p>
-                  <p><strong>Salt Supplementation:</strong> {{ formatBoolean(selectedViewSymptom.saltSupplementation) }}</p>
-                  <p><strong>Injuries:</strong> {{ selectedViewSymptom.injuries || '-' }}</p>
-                  <p><strong>Workout ID:</strong> {{ selectedViewSymptom.workoutId || '-' }}</p>
-                </div>
-
-                <div class="detail-block" v-if="selectedViewSymptom.workout">
-                  <h4>Linked Workout</h4>
-                  <pre>{{ formatObject(selectedViewSymptom.workout) }}</pre>
-                </div>
-
-                <div class="detail-block" v-if="selectedViewSymptom.symptoms && selectedViewSymptom.symptoms.length > 0">
-                  <h4>Associated Symptoms</h4>
-                  <ul class="detail-list-inline">
-                    <li v-for="symptom in selectedViewSymptom.symptoms" :key="symptom.id || symptom.name">
-                      {{ symptom.name || symptom.type || 'Symptom' }}
-                      <span v-if="symptom.severity !== undefined">(Severity: {{ symptom.severity }})</span>
-                    </li>
-                  </ul>
-                </div>
-
-                <p><strong>Notes:</strong> {{ selectedViewSymptom.notes || '-' }}</p>
-              </div>
+    <div v-if="showViewModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="close" @click="showViewModal = false">x</div>
+        <h3>Details</h3>
+        <div v-if="selectedViewSymptom">
+          <div v-if="selectedViewSymptom.type === 'SYMPTOM'">
+            <div class="details-grid">
+              <p><strong>Id:</strong> {{ selectedViewSymptom.id || "-" }}</p>
+              <p><strong>User Id:</strong> {{ selectedViewSymptom.userId || "-" }}</p>
+              <p><strong>Created At:</strong> {{ formatDate(selectedViewSymptom.createdAt) }}</p>
+              <p><strong>Changed At:</strong> {{ formatDate(selectedViewSymptom.changedAt) }}</p>
+              <p><strong>Timestamp:</strong> {{ formatDateTime(selectedViewSymptom.timestamp) }}</p>
+              <p><strong>Type:</strong> {{ selectedViewSymptom.type || "-" }}</p>
+              <p><strong>Name:</strong> {{ selectedViewSymptom.name || "-" }}</p>
+              <p><strong>Severity:</strong> {{ formatValue(selectedViewSymptom.severity) }}</p>
+              <p><strong>Position:</strong> {{ selectedViewSymptom.position || "-" }}</p>
+              <p><strong>Trigger:</strong> {{ selectedViewSymptom.trigger || "-" }}</p>
+              <p><strong>Worse on bending forward:</strong> {{ formatBoolean(selectedViewSymptom.worseOnBendingForward) }}</p>
+              <p><strong>Worse on lying down:</strong> {{ formatBoolean(selectedViewSymptom.worseOnLyingDown) }}</p>
+              <p><strong>Better on lying down:</strong> {{ formatBoolean(selectedViewSymptom.betterOnLyingDown) }}</p>
+              <p><strong>Pulsatile:</strong> {{ formatBoolean(selectedViewSymptom.pulsatile) }}</p>
+              <p><strong>Trigger Food Log Id:</strong> {{ selectedViewSymptom.triggerFoodLogId || "-" }}</p>
+              <p><strong>Syncope Log Id:</strong> {{ selectedViewSymptom.syncopeLogId || "-" }}</p>
             </div>
-            <div style="display:flex; justify-content:flex-end; gap: 8px; margin-top: 12px;">
-              <button class="button edit-btn" @click="editSymptomLog(selectedViewSymptom?.id || '')">Edit</button>
-              <button class="button delete-btn" @click="deleteSymptomLog(selectedViewSymptom?.id || '')">Delete</button>
-              <button class="button" @click="showViewModal = false">Close</button>
+
+            <div class="detail-block" v-if="selectedViewSymptom.triggerFoodLog">
+              <h4>Trigger Food Log</h4>
+              <pre>{{ formatObject(selectedViewSymptom.triggerFoodLog) }}</pre>
             </div>
+
+            <div class="detail-block" v-if="selectedViewSymptom.syncopeLog">
+              <h4>Linked Syncope</h4>
+              <pre>{{ formatObject(selectedViewSymptom.syncopeLog) }}</pre>
+            </div>
+
+            <div class="detail-block" v-if="selectedViewSymptom.pictures && selectedViewSymptom.pictures.length > 0">
+              <h4>Pictures</h4>
+              <ul class="detail-list-inline">
+                <li v-for="picture in selectedViewSymptom.pictures" :key="picture.id">
+                  {{ picture.fileName }} ({{ picture.mimeType }}, {{ picture.size }} bytes)
+                </li>
+              </ul>
+            </div>
+
+            <p><strong>Notes:</strong> {{ selectedViewSymptom.notes || "-" }}</p>
+          </div>
+          <div v-else-if="selectedViewSymptom.type === 'SYNCOPE'">
+            <div class="details-grid">
+              <p><strong>Id:</strong> {{ selectedViewSymptom.id || "-" }}</p>
+              <p><strong>User Id:</strong> {{ selectedViewSymptom.userId || "-" }}</p>
+              <p><strong>Created At:</strong> {{ formatDate(selectedViewSymptom.createdAt) }}</p>
+              <p><strong>Changed At:</strong> {{ formatDate(selectedViewSymptom.changedAt) }}</p>
+              <p><strong>Timestamp:</strong> {{ formatDateTime(selectedViewSymptom.timestamp) }}</p>
+              <p><strong>Type:</strong> {{ selectedViewSymptom.type || "-" }}</p>
+              <p><strong>Name:</strong> {{ selectedViewSymptom.name || "-" }}</p>
+              <p><strong>Outcome:</strong> {{ selectedViewSymptom.outcome || "-" }}</p>
+              <p><strong>Severity:</strong> {{ formatValue(selectedViewSymptom.severity) }}</p>
+              <p><strong>Trigger:</strong> {{ selectedViewSymptom.trigger || "-" }}</p>
+              <p><strong>Position:</strong> {{ selectedViewSymptom.position || "-" }}</p>
+              <p><strong>Amnesia:</strong> {{ formatBoolean(selectedViewSymptom.amnesia) }}</p>
+              <p><strong>Amnesia Duration (min):</strong> {{ formatValue(selectedViewSymptom.amnesiaDurationMinutes) }}</p>
+              <p><strong>Activity Before:</strong> {{ selectedViewSymptom.activityBefore || "-" }}</p>
+              <p><strong>Hours Since Last Meal:</strong> {{ formatValue(selectedViewSymptom.hoursSinceLastMeal) }}</p>
+              <p><strong>Hours Since Last Drink:</strong> {{ formatValue(selectedViewSymptom.hoursSinceLastDrink) }}</p>
+              <p><strong>Salt Supplementation:</strong> {{ formatBoolean(selectedViewSymptom.saltSupplementation) }}</p>
+              <p><strong>Injuries:</strong> {{ selectedViewSymptom.injuries || "-" }}</p>
+              <p><strong>Workout ID:</strong> {{ selectedViewSymptom.workoutId || "-" }}</p>
+            </div>
+
+            <div class="detail-block" v-if="selectedViewSymptom.workout">
+              <h4>Linked Workout</h4>
+              <pre>{{ formatObject(selectedViewSymptom.workout) }}</pre>
+            </div>
+
+            <div class="detail-block" v-if="selectedViewSymptom.symptoms && selectedViewSymptom.symptoms.length > 0">
+              <h4>Associated Symptoms</h4>
+              <ul class="detail-list-inline">
+                <li v-for="symptom in selectedViewSymptom.symptoms" :key="symptom.id || symptom.name">
+                  {{ symptom.name || symptom.type || "Symptom" }}
+                  <span v-if="symptom.severity !== undefined">(Severity: {{ symptom.severity }})</span>
+                </li>
+              </ul>
+            </div>
+
+            <p><strong>Notes:</strong> {{ selectedViewSymptom.notes || "-" }}</p>
           </div>
         </div>
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px">
+          <button class="button edit-btn" @click="editSymptomLog(selectedViewSymptom?.id || '')">Edit</button>
+          <button class="button delete-btn" @click="deleteSymptomLog(selectedViewSymptom?.id || '')">Delete</button>
+          <button class="button" @click="showViewModal = false">Close</button>
+        </div>
+      </div>
+    </div>
 
     <h1>Symptoms</h1>
 
@@ -179,18 +179,18 @@ const selectedViewSymptom = ref<SymptomLog | SyncopeLog | null>(null);
 
 const loadedSymptoms = ref<(SymptomLog | SyncopeLog)[]>([]);
 
-const formatDate = (value?: Date) => {
-  if (!value) return '-';
+const formatDate = (value?: Date | string | null) => {
+  if (!value) return "-";
   return new Date(value).toLocaleString();
 };
 
 const formatBoolean = (value?: boolean) => {
-  if (value === undefined || value === null) return '-';
-  return value ? 'Yes' : 'No';
+  if (value === undefined || value === null) return "-";
+  return value ? "Yes" : "No";
 };
 
 const formatValue = (value: unknown) => {
-  if (value === undefined || value === null || value === '') return '-';
+  if (value === undefined || value === null || value === "") return "-";
   return String(value);
 };
 

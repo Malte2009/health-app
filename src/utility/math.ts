@@ -1,4 +1,4 @@
-export function roundTo(n: number | undefined, digits: number) {
+export function roundTo(n: number | null | undefined, digits: number) {
   if (!n) return null;
   let negative = false;
   if (digits === undefined) {
@@ -12,7 +12,7 @@ export function roundTo(n: number | undefined, digits: number) {
   n = parseFloat((n * multiplicator).toFixed(11));
   n = parseFloat((Math.round(n) / multiplicator).toFixed(digits));
   if (negative) {
-    n = parseFloat(((n * -1).toFixed(digits)));
+    n = parseFloat((n * -1).toFixed(digits));
   }
   return n;
 }

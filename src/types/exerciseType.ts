@@ -1,8 +1,2 @@
-export type Exercise = {
-  name: string;
-  id: string;
-  createdAt: Date;
-  changedAt?: Date;
-};
-
-export type exerciseType = Exercise;
+export type { CreateExerciseRequest, Exercise, UpdateExerciseRequest } from "@/types/workout/exercise.type.ts";
+export type { Exercise as exerciseType } from "@/types/workout/exercise.type.ts";

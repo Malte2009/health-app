@@ -1,31 +1,30 @@
+import type { WorkoutExercise } from "@/types/workout/workoutExercise.type.ts";
 
 export type WorkoutSet = {
   id: string;
   workoutExerciseId: string;
-  createdAt: Date;
-  changedAt?: Date;
-  type?: string;
-  reps: number;
-  weight: number;
-  setTime?: number;
+  userId: string;
+  type: string | null;
+  setTime: number | null;
+  createdAt: string;
+  changedAt: string | null;
   order: number;
+  reps: number;
   repUnit: string;
-}
+  weight: number;
+  workoutExercise?: WorkoutExercise;
+};
 
 export type createWorkoutSetType = {
-  type: string;
-  repUnit: string;
+  type?: string | null;
+  repUnit?: string;
   reps: number;
   weight: number;
-  setTime?: number;
+  setTime?: number | null;
   order?: number;
-}
+};
 
-export type updateWorkoutSetType = {
-  type?: string;
-  repUnit?: string;
-  reps?: number;
-  weight?: number;
-  setTime?: number;
-  order?: number;
-}
+export type updateWorkoutSetType = Partial<createWorkoutSetType>;
+
+export type CreateWorkoutSetRequest = createWorkoutSetType;
+export type UpdateWorkoutSetRequest = updateWorkoutSetType;

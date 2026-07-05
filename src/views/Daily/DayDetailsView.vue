@@ -7,6 +7,8 @@
 
     <div v-if="loading" class="loading">Loading data...</div>
 
+    <div v-else-if="loadError" class="loading error" role="alert">{{ loadError }}</div>
+
     <div v-else class="dashboard-grid">
       <!-- Workout -->
       <div class="card" v-if="data.workouts.length > 0" @click="goTo('/workouts')">
@@ -47,7 +49,7 @@
         <h3 class="card-title hrv-text">HRV Recordings</h3>
         <ul class="detail-list">
           <li v-for="h in data.hrv" :key="h.id" @click.stop="goTo('/hrv/' + h.id)" class="clickable-item">
-            <strong>{{ h.name || 'Unlocked Recording' }}</strong>
+            <strong>{{ h.name || "Unlocked Recording" }}</strong>
             <span v-if="h.context">({{ h.context }})</span>
             <div class="note" v-if="h.description">{{ h.description }}</div>
           </li>
@@ -111,7 +113,7 @@
             </div>
 
             <div class="mini-detail-flags">
-              <span class="detail-pill" v-if="s.amnesia">Amnesia{{ s.amnesiaDurationMinutes ? ` (${s.amnesiaDurationMinutes} min)` : '' }}</span>
+              <span class="detail-pill" v-if="s.amnesia">Amnesia{{ s.amnesiaDurationMinutes ? ` (${s.amnesiaDurationMinutes} min)` : "" }}</span>
               <span class="detail-pill" v-if="s.injuries">Injuries</span>
               <span class="detail-pill" v-if="s.saltSupplementation">Salt</span>
             </div>
@@ -138,8 +140,20 @@
         <h3 class="card-title daily-text">Daily Logs</h3>
         <ul class="detail-list">
           <li v-for="d in data.daily" :key="d.id">
-            Stress: {{ d.stressLevel }}, Energy: {{ d.energyLevel }}
+            {{ formatDailyLogDetails(d) }}
             <div class="note" v-if="d.notes">"{{ d.notes }}"</div>
+          </li>
+        </ul>
+        <div class="card-footer">Click to view daily tracking &rarr;</div>
+      </div>
+
+      <!-- Intake Logs -->
+      <div class="card" v-if="data.intake.length > 0" @click="goTo('/daily-tracking')">
+        <h3 class="card-title intake-text">Intake Logs</h3>
+        <ul class="detail-list">
+          <li v-for="entry in data.intake" :key="entry.id">
+            {{ formatIntakeDetails(entry) }}
+            <div class="note" v-if="entry.notes">"{{ entry.notes }}"</div>
           </li>
         </ul>
         <div class="card-footer">Click to view daily tracking &rarr;</div>
@@ -174,31 +188,31 @@
       <div class="card empty-state" v-if="isEmpty">
         <p>No logged data available for this date.</p>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ref, computed, onMounted, reactive } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import DiagnosticService from "@/services/diagnostics/diagnostic.service.ts";
-import HrvService from "@/services/hrv/hrv.service.ts";
+import { ref, computed, reactive, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import healthDayService from "@/services/daily/healthDay.service.ts";
 import { formatDateTime } from "@/utility/date.ts";
+import { calculateMicronutrientTotals, getHealthDayFoodLogs, HEALTH_DAY_SUMMARY_INCLUDES, summarizeFoodLogs } from "@/utility/healthDay.ts";
 
 const route = useRoute();
 const router = useRouter();
 
-const dateStr = computed(() => Array.isArray(route.params.date) ? route.params.date[0] : route.params.date);
-const formattedQueryDate = computed(() => dateStr.value || '');
+const dateStr = computed(() => (Array.isArray(route.params.date) ? route.params.date[0] : route.params.date));
+const formattedQueryDate = computed(() => dateStr.value || "");
 const formattedDate = computed(() => {
-  if (!dateStr.value) return '';
+  if (!dateStr.value) return "";
   const d = new Date(dateStr.value);
-  return d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  return d.toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 });
 
 const loading = ref(true);
+const loadError = ref("");
 
 const data = reactive<any>({
   micro: {},
@@ -237,23 +251,32 @@ const formatBloodPressureDetails = (bp: any): string => {
 };
 
 const formatSymptomName = (name?: string) => {
-  if (!name) return 'Symptom';
-  return name.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  if (!name) return "Symptom";
+  return name
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
 const formatSyncopeName = (name?: string) => {
-  if (!name) return 'Syncope';
-  return name.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  if (!name) return "Syncope";
+  return name
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
 const formatSymptomSeverity = (severity?: number) => {
-  if (severity === undefined || severity === null) return 'Severity -';
+  if (severity === undefined || severity === null) return "Severity -";
   return `Severity ${severity}`;
 };
 
 const formatSyncopeOutcome = (outcome?: string) => {
-  if (!outcome) return 'Outcome -';
-  return outcome.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  if (!outcome) return "Outcome -";
+  return outcome
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
 const formatWorkoutDetails = (workout: any): string => {
@@ -280,168 +303,86 @@ const formatWorkoutDetails = (workout: any): string => {
   return parts.join(" · ");
 };
 
-const activeFoods = computed(() => {
-  const foodsArr: { name: string; totalWeight_g: number }[] = [];
-  if (!data.food) return [];
-  const payload = Array.isArray(data.food) ? data.food : [data.food];
-  payload.forEach((entry: any) => {
-    let items: any[] = [];
-    if (Array.isArray(entry.items)) items = entry.items;
-    else if (Array.isArray(entry.data)) items = entry.data;
-    else if (Array.isArray(entry.foodLogs) || Array.isArray(entry.foods)) items = entry.foodLogs ?? entry.foods;
-    else if (entry.name || entry.food) items = [entry];
+const formatDailyLogDetails = (dailyLog: any): string => {
+  const parts: string[] = [];
+  if (dailyLog.overallScore != null) parts.push(`Overall: ${dailyLog.overallScore}/10`);
+  if (dailyLog.symptomBurdenScore != null) parts.push(`Symptoms: ${dailyLog.symptomBurdenScore}/10`);
 
-    items.forEach((it: any) => {
-      const name = it.name ?? it.food?.name ?? it.foodItem?.name;
-      const weight = it.totalWeight_g ?? it.weight_g ?? it.food?.weight_g;
-      if (name) foodsArr.push({ name, totalWeight_g: weight });
-    });
-  });
-  return foodsArr;
+  const energyValues = [dailyLog.energyMorning, dailyLog.energyNoon, dailyLog.energyAfternoon, dailyLog.energyEvening].filter(
+    (value): value is number => typeof value === "number",
+  );
+  if (energyValues.length > 0) {
+    const averageEnergy = energyValues.reduce((sum, value) => sum + value, 0) / energyValues.length;
+    parts.push(`Avg energy: ${Math.round(averageEnergy * 10) / 10}`);
+  }
+
+  if (dailyLog.workCapacity) parts.push(`Work: ${dailyLog.workCapacity}`);
+  return parts.join(" · ") || "Daily log";
+};
+
+const formatIntakeDetails = (intake: any): string => {
+  const parts: string[] = [];
+  const fluids = Number(intake.water_ml ?? 0) + Number(intake.otherFluid_ml ?? 0);
+  if (fluids > 0) parts.push(`${fluids} ml fluid`);
+  if (Number(intake.saltMg) > 0) parts.push(`${intake.saltMg} mg salt`);
+  if (Number(intake.caffeine_mg) > 0) parts.push(`${intake.caffeine_mg} mg caffeine`);
+  if (intake.beverageType) parts.push(intake.beverageType);
+  return parts.join(" · ") || formatDateTime(intake.timestamp);
+};
+
+const activeFoods = computed(() => {
+  return data.food ?? [];
 });
 
 const isEmpty = computed(() => {
-  return data.symptoms.length === 0 &&
-         data.syncopes.length === 0 &&
-         data.bp.length === 0 &&
-         data.sleep.length === 0 &&
-         data.workouts.length === 0 &&
-         data.daily.length === 0 &&
-         activeFoods.value.length === 0 &&
-         (!data.micro || Object.keys(data.micro).length === 0);
+  return (
+    data.symptoms.length === 0 &&
+    data.syncopes.length === 0 &&
+    data.bp.length === 0 &&
+    data.sleep.length === 0 &&
+    data.workouts.length === 0 &&
+    data.daily.length === 0 &&
+    data.intake.length === 0 &&
+    data.hrv.length === 0 &&
+    activeFoods.value.length === 0 &&
+    (!data.micro || Object.keys(data.micro).length === 0)
+  );
 });
 
-const buildMap = (arr: any[] = []) => {
-  const map: Record<string, any> = {};
-  if (!Array.isArray(arr)) return map;
-  for (const item of arr) {
-    if (!item) continue;
-    const date = item.date ?? item.day ?? item.dateStr ?? item.date_str;
-    if (!date) continue;
-    map[String(date)] = item.items !== undefined ? item.items : item;
-  }
-  return map;
-};
-
-const buildFoodMap = (payload: any): Record<string, any[]> => {
-  const map: Record<string, any[]> = {};
-  if (!payload) return map;
-
-  const push = (date: string | undefined, item: any) => {
-    if (!date) return;
-    if (!map[date]) map[date] = [];
-    if (Array.isArray(item)) map[date].push(...item);
-    else map[date].push(item);
-  };
-
-  if (Array.isArray(payload)) {
-    for (const entry of payload as any[]) {
-      const date = entry?.date ?? entry?.day ?? entry?.dateStr ?? entry?.date_str;
-      if (Array.isArray(entry.items)) push(String(date), entry.items);
-      else if (Array.isArray(entry.data)) push(String(date), entry.data);
-      else if (Array.isArray(entry.foodLogs) || Array.isArray(entry.food_logs) || Array.isArray(entry.foods)) {
-        const arr = entry.foodLogs ?? entry.food_logs ?? entry.foods;
-        if (Array.isArray(arr)) push(String(date), arr);
-      } else if (entry && (entry.name || entry.food)) {
-        push(String(date), entry);
-      }
-    }
-    return map;
+const loadDay = async (targetDate?: string) => {
+  if (!targetDate) {
+    loading.value = false;
+    loadError.value = "No date was selected.";
+    return;
   }
 
-  if (payload && typeof payload === "object") {
-    if (Array.isArray(payload.data)) return buildFoodMap(payload.data);
-    if (Array.isArray(payload.items)) return buildFoodMap(payload.items);
-
-    for (const [k, v] of Object.entries(payload as any)) {
-      if (k === "data" || k === "items") continue;
-      if (Array.isArray(v)) {
-        v.forEach((e: any) => {
-          if (Array.isArray(e.items)) push(String(e.date ?? k), e.items);
-          else if (e?.date) push(String(e.date), e);
-          else push(k, e);
-        });
-      } else if (v && typeof v === "object") {
-        if (Array.isArray((v as any).items)) push(k, (v as any).items);
-        else push(k, v);
-      }
-    }
-  }
-
-  return map;
-};
-
-const formatDate = (date: Date) => {
-  const yyyy = date.getFullYear();
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-};
-
-onMounted(async () => {
-  if (!dateStr.value) return;
-  const targetDate = dateStr.value;
-  const d = new Date(targetDate);
-  const startOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
-  const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 1);
-
-  const start = formatDate(startOfMonth);
-  const end = formatDate(endOfMonth);
-
+  loading.value = true;
+  loadError.value = "";
   try {
-    const [microRes, symptomsRes, syncopesRes, bpRes, sleepRes, workoutsRes, dailyRes, intakeRes, foodRes, hrvRes] = await Promise.all([
-      DiagnosticService.getMicroOverMonth(start, end),
-      DiagnosticService.getSymptomsOverMonth(start, end),
-      DiagnosticService.getSyncopesOverMonth(start, end),
-      DiagnosticService.getBloodPressureOverMonth(start, end),
-      DiagnosticService.getSleepOverMonth(start, end),
-      DiagnosticService.getWorkoutsOverMonth(start, end),
-      DiagnosticService.getDailyLogsOverMonth(start, end),
-      DiagnosticService.getIntakeLogsOverMonth(start, end),
-      DiagnosticService.getFoodOverMonth(start, end),
-      HrvService.getHrvRecordings(),
-    ]);
+    const healthDay = await healthDayService.getHealthDayByDate(targetDate, {
+      include: HEALTH_DAY_SUMMARY_INCLUDES,
+    });
+    const foodLogs = getHealthDayFoodLogs(healthDay);
 
-    const microMap = buildMap(microRes as any[]);
-    const symptomsMap = buildMap(symptomsRes as any[]);
-    const syncopesMap = buildMap(syncopesRes as any[]);
-    const bpMap = buildMap(bpRes as any[]);
-    const sleepMap = buildMap(sleepRes as any[]);
-    const workoutsMap = buildMap(workoutsRes as any[]);
-    const dailyMap = buildMap(dailyRes as any[]);
-    const intakeMap = buildMap(intakeRes as any[]);
-    const foodMap = buildFoodMap(foodRes);
-
-    const hrvList = Array.isArray(hrvRes) ? hrvRes.filter((r: any) => String(r.date).startsWith(targetDate)) : [];
-
-    data.micro = microMap[targetDate] || {};
-    data.symptoms = symptomsMap[targetDate] || [];
-    data.syncopes = syncopesMap[targetDate] || [];
-    data.bp = bpMap[targetDate] || [];
-    data.sleep = sleepMap[targetDate] || [];
-    data.workouts = workoutsMap[targetDate] || [];
-    data.daily = dailyMap[targetDate] || [];
-    data.intake = intakeMap[targetDate] || [];
-    data.food = foodMap[targetDate] || [];
-    data.hrv = hrvList;
-
-    // Ensure array wrapping if backend returned single items without items wrapper
-    if (!Array.isArray(data.symptoms)) data.symptoms = [data.symptoms];
-    if (!Array.isArray(data.syncopes)) data.syncopes = [data.syncopes];
-    if (!Array.isArray(data.bp)) data.bp = [data.bp];
-    if (!Array.isArray(data.sleep)) data.sleep = [data.sleep];
-    if (!Array.isArray(data.workouts)) data.workouts = [data.workouts];
-    if (!Array.isArray(data.daily)) data.daily = [data.daily];
-    if (!Array.isArray(data.intake)) data.intake = [data.intake];
-    if (!Array.isArray(data.food)) data.food = [data.food];
-    if (!Array.isArray(data.hrv)) data.hrv = [data.hrv];
-
+    data.micro = calculateMicronutrientTotals(foodLogs);
+    data.symptoms = healthDay.symptomLogs ?? [];
+    data.syncopes = healthDay.syncopeLogs ?? [];
+    data.bp = healthDay.bloodPressureLogs ?? [];
+    data.sleep = healthDay.sleepLogs ?? [];
+    data.workouts = healthDay.workouts ?? [];
+    data.daily = healthDay.dailyLog ? [healthDay.dailyLog] : [];
+    data.intake = healthDay.intakeLogs ?? [];
+    data.food = summarizeFoodLogs(foodLogs);
+    data.hrv = healthDay.hrvRecordings ?? [];
   } catch (err) {
-    console.error("Failed to load details", err);
+    loadError.value = "Health data could not be loaded for this date.";
+    console.error("Failed to load HealthDay details", err);
   } finally {
     loading.value = false;
   }
-});
+};
+
+watch(dateStr, (date) => loadDay(date), { immediate: true });
 </script>
 
 <style scoped>
@@ -486,14 +427,16 @@ onMounted(async () => {
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-color: var(--primary);
 }
 
@@ -504,15 +447,46 @@ onMounted(async () => {
   padding-bottom: 0.5rem;
 }
 
-.workout-text { border-bottom-color: #10b981; color: #10b981; }
-.sleep-text { border-bottom-color: #3b82f6; color: #3b82f6; }
-.hrv-text { border-bottom-color: #8b5cf6; color: #8b5cf6; }
-.symptom-text { border-bottom-color: #ef4444; color: #ef4444; }
-.syncope-text { border-bottom-color: #b91c1c; color: #b91c1c; }
-.bp-text { border-bottom-color: #f59e0b; color: #f59e0b; }
-.daily-text { border-bottom-color: #06b6d4; color: #06b6d4; }
-.food-text { border-bottom-color: #f59e0b; color: #f59e0b; }
-.micro-text { border-bottom-color: #6b7280; color: #6b7280; }
+.workout-text {
+  border-bottom-color: #10b981;
+  color: #10b981;
+}
+.sleep-text {
+  border-bottom-color: #3b82f6;
+  color: #3b82f6;
+}
+.hrv-text {
+  border-bottom-color: #8b5cf6;
+  color: #8b5cf6;
+}
+.symptom-text {
+  border-bottom-color: #ef4444;
+  color: #ef4444;
+}
+.syncope-text {
+  border-bottom-color: #b91c1c;
+  color: #b91c1c;
+}
+.bp-text {
+  border-bottom-color: #f59e0b;
+  color: #f59e0b;
+}
+.daily-text {
+  border-bottom-color: #06b6d4;
+  color: #06b6d4;
+}
+.intake-text {
+  border-bottom-color: #0ea5e9;
+  color: #0ea5e9;
+}
+.food-text {
+  border-bottom-color: #f59e0b;
+  color: #f59e0b;
+}
+.micro-text {
+  border-bottom-color: #6b7280;
+  color: #6b7280;
+}
 
 .detail-list {
   list-style: none;
@@ -543,7 +517,10 @@ onMounted(async () => {
   border-radius: 14px;
   padding: 0.95rem 1rem;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
 }
 
 .mini-detail-card:hover {
@@ -726,6 +703,10 @@ onMounted(async () => {
   text-align: center;
 }
 
+.loading.error {
+  color: var(--danger);
+}
+
 .empty-state {
   grid-column: 1 / -1;
   text-align: center;
@@ -740,5 +721,4 @@ onMounted(async () => {
   box-shadow: none;
   border-color: var(--border);
 }
-
 </style>

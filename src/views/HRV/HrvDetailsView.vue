@@ -11,14 +11,31 @@
         <input id="artifact-filter" type="checkbox" v-model="filters.artifact" />
         <label for="artifact-filter">Artifact Filter</label>
         <button @click="applyFilters" :disabled="isLoading" class="apply-btn">
-          {{ isLoading ? 'Loading...' : 'Apply Filters' }}
+          {{ isLoading ? "Loading..." : "Apply Filters" }}
         </button>
-        <button @click="resetZoom" class="apply-btn" style="background-color: var(--bg-surface-secondary); color: var(--text-main);">
+        <button @click="resetZoom" class="apply-btn" style="background-color: var(--bg-surface-secondary); color: var(--text-main)">
           Reset Zoom
         </button>
-        <button @click="copyVisibleRR" class="apply-btn" style="background-color: var(--bg-surface-secondary); color: var(--text-main);">
+        <button @click="copyVisibleRR" class="apply-btn" style="background-color: var(--bg-surface-secondary); color: var(--text-main)">
           Copy Visible RR
         </button>
+        <RouterLink
+          :to="{ name: 'hrvWindows', params: { id: recordingId } }"
+          class="windows-link"
+          title="Compare the recording's five-minute HRV windows"
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <rect x="3" y="4" width="7" height="7" rx="1" />
+            <rect x="14" y="4" width="7" height="7" rx="1" />
+            <rect x="3" y="15" width="7" height="5" rx="1" />
+            <rect x="14" y="15" width="7" height="5" rx="1" />
+          </svg>
+          <span>
+            <strong>Window analysis</strong>
+            <small>5-minute segments</small>
+          </span>
+          <span class="windows-link-arrow" aria-hidden="true">→</span>
+        </RouterLink>
       </div>
       <div v-if="isLoading" class="loading-spinner"></div>
     </div>
@@ -36,7 +53,7 @@
       </div>
 
       <div class="hrv-metrics-display">
-        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+        <div style="display: flex; gap: 20px; flex-wrap: wrap">
           <div class="hrv-metrics">
             <table class="hrv-metrics-table">
               <tr class="hrv-metrics-row">
@@ -186,20 +203,55 @@
           </div>
 
           <div class="sleep-metrics" v-if="relatedSleepLog">
-             <table class="hrv-metrics-table">
-               <tr><th colspan="2">Connected Sleep Data</th></tr>
-              <tr><td>Bed Time</td><td>{{ relatedSleepLog.bedTime ? formatTime(relatedSleepLog.bedTime) : '' }}</td></tr>
-              <tr><td>Wake Time</td><td>{{ relatedSleepLog.wakeTime ? formatTime(relatedSleepLog.wakeTime) : '' }}</td></tr>
-               <tr v-if="relatedSleepLog.sleepLatencyMinutes != null"><td>Sleep Latency</td><td>{{ relatedSleepLog.sleepLatencyMinutes }} m</td></tr>
-               <tr><td>Total Sleep (m)</td><td>{{ relatedSleepLog.totalSleepMinutes }}</td></tr>
-               <tr><td>Awake Minutes</td><td>{{ relatedSleepLog.awakeMinutes }}</td></tr>
-               <tr><td>Light Sleep</td><td>{{ relatedSleepLog.lightSleepMinutes }}</td></tr>
-               <tr><td>Deep Sleep</td><td>{{ relatedSleepLog.deepSleepMinutes }}</td></tr>
-               <tr><td>REM Sleep</td><td>{{ relatedSleepLog.remSleepMinutes }}</td></tr>
-               <tr><td>Rested Score</td><td>{{ relatedSleepLog.restedScore }}</td></tr>
-               <tr><td>Morning Headache</td><td>{{ relatedSleepLog.morningHeadache ? 'Yes' : 'No' }}</td></tr>
-               <tr><td>Morning Dizziness</td><td>{{ relatedSleepLog.morningDizziness ? 'Yes' : 'No' }}</td></tr>
-             </table>
+            <table class="hrv-metrics-table">
+              <tr>
+                <th colspan="2">Connected Sleep Data</th>
+              </tr>
+              <tr>
+                <td>Bed Time</td>
+                <td>{{ relatedSleepLog.bedTime ? formatTime(relatedSleepLog.bedTime) : "" }}</td>
+              </tr>
+              <tr>
+                <td>Wake Time</td>
+                <td>{{ relatedSleepLog.wakeTime ? formatTime(relatedSleepLog.wakeTime) : "" }}</td>
+              </tr>
+              <tr v-if="relatedSleepLog.sleepLatencyMinutes != null">
+                <td>Sleep Latency</td>
+                <td>{{ relatedSleepLog.sleepLatencyMinutes }} m</td>
+              </tr>
+              <tr>
+                <td>Total Sleep (m)</td>
+                <td>{{ relatedSleepLog.totalSleepMinutes }}</td>
+              </tr>
+              <tr>
+                <td>Awake Minutes</td>
+                <td>{{ relatedSleepLog.awakeMinutes }}</td>
+              </tr>
+              <tr>
+                <td>Light Sleep</td>
+                <td>{{ relatedSleepLog.lightSleepMinutes }}</td>
+              </tr>
+              <tr>
+                <td>Deep Sleep</td>
+                <td>{{ relatedSleepLog.deepSleepMinutes }}</td>
+              </tr>
+              <tr>
+                <td>REM Sleep</td>
+                <td>{{ relatedSleepLog.remSleepMinutes }}</td>
+              </tr>
+              <tr>
+                <td>Rested Score</td>
+                <td>{{ relatedSleepLog.restedScore }}</td>
+              </tr>
+              <tr>
+                <td>Morning Headache</td>
+                <td>{{ relatedSleepLog.morningHeadache ? "Yes" : "No" }}</td>
+              </tr>
+              <tr>
+                <td>Morning Dizziness</td>
+                <td>{{ relatedSleepLog.morningDizziness ? "Yes" : "No" }}</td>
+              </tr>
+            </table>
           </div>
         </div>
 
@@ -215,7 +267,7 @@
 <script setup lang="ts">
 import { onMounted, ref, reactive } from "vue";
 import HrvService from "@/services/hrv/hrv.service.ts";
-import { formatTime } from '@/utility/date';
+import { formatTime } from "@/utility/date";
 import { useRoute } from "vue-router";
 import { roundTo } from "@/utility/math.ts";
 import Chart from "chart.js/auto";
@@ -223,8 +275,8 @@ import zoomPlugin from "chartjs-plugin-zoom";
 import type { SleepLog } from "@/types/sleepType.ts";
 import type { HrvMetric, HrvRecording } from "@/types/hrvType.ts";
 
-Chart.defaults.color = '#e0e0e0';
-Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+Chart.defaults.color = "#e0e0e0";
+Chart.defaults.borderColor = "rgba(255, 255, 255, 0.1)";
 Chart.register(zoomPlugin);
 
 const route = useRoute();
@@ -256,60 +308,107 @@ const syncZoom = ({ chart }: { chart: Chart }) => {
   const max = chart.scales.x?.max;
 
   const charts = [rrChartInst, hrChartInst, hrvChartInst];
-  charts.forEach(c => {
+  charts.forEach((c) => {
     if (c && c !== chart) {
       if (c.options.scales && c.options.scales.x) {
         c.options.scales.x.min = min;
         c.options.scales.x.max = max;
-        c.update('none');
+        c.update("none");
       }
     }
   });
 };
 
-const createChart = (canvasId: string, label: string, dataInstant: number[], dataSmoothed: number[], instantColor: string, smoothedColor: string, existingChart: Chart | null, times: number[]) => {
+const formatElapsedTime = (seconds: number): string => {
+  if (!Number.isFinite(seconds)) return "—";
+  const totalSeconds = Math.max(0, Math.round(seconds));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const remainingSeconds = totalSeconds % 60;
+  return [hours, minutes, remainingSeconds].map((value) => String(value).padStart(2, "0")).join(":");
+};
+
+const formatChartTime = (seconds: number): string => {
+  const startDateTime = hrvRecording.value?.startDateTime;
+  if (!startDateTime || !Number.isFinite(seconds)) return formatElapsedTime(seconds);
+
+  const absoluteTime = new Date(new Date(startDateTime).getTime() + seconds * 1000);
+  return new Intl.DateTimeFormat("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(absoluteTime);
+};
+
+const formatChartTooltipTime = (seconds: number): string => {
+  const elapsed = formatElapsedTime(seconds);
+  const startDateTime = hrvRecording.value?.startDateTime;
+  if (!startDateTime || !Number.isFinite(seconds)) return `Elapsed ${elapsed}`;
+
+  return `${formatChartTime(seconds)} · +${elapsed}`;
+};
+
+const createChart = (
+  canvasId: string,
+  label: string,
+  dataInstant: number[],
+  dataSmoothed: number[],
+  instantColor: string,
+  smoothedColor: string,
+  existingChart: Chart | null,
+  times: number[],
+) => {
   if (existingChart) {
     existingChart.destroy();
   }
   return new Chart(document.getElementById(canvasId) as HTMLCanvasElement, {
-    type: 'line',
+    type: "line",
     data: {
       labels: times,
       datasets: [
         {
-          label: label + ' (Instant)',
+          label: label + " (Instant)",
           data: dataInstant,
           borderColor: instantColor,
           borderWidth: 1,
           pointRadius: 0,
           tension: 0.1,
-          order: 2
+          order: 2,
         },
         {
-          label: label + ' (Smoothed)',
+          label: label + " (Smoothed)",
           data: dataSmoothed,
           borderColor: smoothedColor,
           borderWidth: 2,
           pointRadius: 0,
           tension: 0.4,
-          order: 1
-        }
-      ]
+          order: 1,
+        },
+      ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       scales: {
         x: {
-          type: 'linear',
-          title: { display: true, text: 'Time (s)' },
+          type: "linear",
+          title: { display: true, text: hrvRecording.value?.startDateTime ? "Clock time (+ elapsed from start in tooltip)" : "Elapsed time" },
           max: times.length > 0 ? times[times.length - 1] : 0,
           ticks: {
-            includeBounds: false
-          }
-        }
+            includeBounds: false,
+            callback: (tickValue) => formatChartTime(Number(tickValue)),
+          },
+        },
       },
       plugins: {
+        tooltip: {
+          callbacks: {
+            title: (items) => {
+              const seconds = Number(items[0]?.label ?? items[0]?.parsed.x);
+              return formatChartTooltipTime(seconds);
+            },
+          },
+        },
         zoom: {
           zoom: {
             drag: {
@@ -319,21 +418,21 @@ const createChart = (canvasId: string, label: string, dataInstant: number[], dat
               enabled: true,
             },
             pinch: {
-              enabled: true
+              enabled: true,
             },
-            mode: 'x',
+            mode: "x",
             onZoom: syncZoom,
-            onZoomComplete: syncZoom
+            onZoomComplete: syncZoom,
           },
           pan: {
             enabled: true,
-            mode: 'x',
-            modifierKey: 'alt',
-          }
-        }
+            mode: "x",
+            modifierKey: "alt",
+          },
+        },
       },
-      animation: false
-    }
+      animation: false,
+    },
   });
 };
 
@@ -341,8 +440,11 @@ const loadData = async (filterString: string) => {
   isLoading.value = true;
   loadedMetrics.value = {};
   try {
-    const rawRrStr = await HrvService.getHrvData(recordingId, filterString !== 'none' ? filterString : undefined);
-    const rawRr = rawRrStr.split("\n").filter((x: string) => x).map((x: string) => Number(x));
+    const rawRrStr = await HrvService.getHrvData(recordingId, filterString !== "none" ? filterString : undefined);
+    const rawRr = rawRrStr
+      .split("\n")
+      .filter((x: string) => x)
+      .map((x: string) => Number(x));
     rrdata.value = rawRr;
 
     const times: number[] = [];
@@ -357,7 +459,7 @@ const loadData = async (filterString: string) => {
 
     const hrvData = [0];
     for (let i = 1; i < rawRr.length; i++) {
-      hrvData.push(Math.abs(rawRr[i] - rawRr[i-1]));
+      hrvData.push(Math.abs(rawRr[i] - rawRr[i - 1]));
     }
 
     const smooth = (data: number[], windowSize: number = 20) => {
@@ -372,15 +474,24 @@ const loadData = async (filterString: string) => {
     const smoothedBpm = smooth(bpmData);
     const smoothedHrv = smooth(hrvData);
 
-    rrChartInst = createChart('rr-graph-canvas', 'RR Interval (ms)', rawRr, smoothedRr, 'rgba(54, 162, 235, 0.5)', '#1d4ed8', rrChartInst, times);
-    hrChartInst = createChart('hr-graph-canvas', 'Heart Rate (bpm)', bpmData, smoothedBpm, 'rgba(255, 99, 132, 0.5)', '#b91c1c', hrChartInst, times);
-    hrvChartInst = createChart('hrv-graph-canvas', 'HRV - Successive Diff (ms)', hrvData, smoothedHrv, 'rgba(255, 159, 64, 0.5)', '#c2410c', hrvChartInst, times);
+    rrChartInst = createChart("rr-graph-canvas", "RR Interval (ms)", rawRr, smoothedRr, "rgba(54, 162, 235, 0.5)", "#1d4ed8", rrChartInst, times);
+    hrChartInst = createChart("hr-graph-canvas", "Heart Rate (bpm)", bpmData, smoothedBpm, "rgba(255, 99, 132, 0.5)", "#b91c1c", hrChartInst, times);
+    hrvChartInst = createChart(
+      "hrv-graph-canvas",
+      "HRV - Successive Diff (ms)",
+      hrvData,
+      smoothedHrv,
+      "rgba(255, 159, 64, 0.5)",
+      "#c2410c",
+      hrvChartInst,
+      times,
+    );
 
-    if (filterString !== 'none') {
-       loadedMetrics.value = await HrvService.getHrvMetrics(recordingId, filterString);
+    if (filterString !== "none") {
+      loadedMetrics.value = await HrvService.getHrvMetrics(recordingId, filterString);
     } else {
-       // fallback for no filters if already loaded in recording
-       for (const metric of hrvRecording.value?.metrics || []) {
+      // fallback for no filters if already loaded in recording
+      for (const metric of hrvRecording.value?.metrics || []) {
         if (
           !metric.adaptiveFilteringApplied &&
           !metric.rangeFilteringApplied &&
@@ -392,7 +503,7 @@ const loadData = async (filterString: string) => {
         }
       }
     }
-  } catch(e) {
+  } catch (e) {
     console.error(e);
   } finally {
     isLoading.value = false;
@@ -401,12 +512,12 @@ const loadData = async (filterString: string) => {
 
 const applyFilters = async () => {
   const activeFilters = [];
-  if (filters.adaptive) activeFilters.push('adaptive');
-  if (filters.range) activeFilters.push('range');
-  if (filters.movingAverage) activeFilters.push('movingAverage');
-  if (filters.artifact) activeFilters.push('artifact');
+  if (filters.adaptive) activeFilters.push("adaptive");
+  if (filters.range) activeFilters.push("range");
+  if (filters.movingAverage) activeFilters.push("movingAverage");
+  if (filters.artifact) activeFilters.push("artifact");
 
-  const filterString = activeFilters.length > 0 ? activeFilters.join(',') : 'none';
+  const filterString = activeFilters.length > 0 ? activeFilters.join(",") : "none";
   await loadData(filterString);
 };
 
@@ -430,10 +541,10 @@ const copyVisibleRR = async () => {
   }
 
   try {
-    await navigator.clipboard.writeText(visibleRRs.join('\n'));
+    await navigator.clipboard.writeText(visibleRRs.join("\n"));
     alert(`Copied ${visibleRRs.length} RR intervals to clipboard!`);
   } catch (err) {
-    console.error('Failed to copy visible RR intervals: ', err);
+    console.error("Failed to copy visible RR intervals: ", err);
   }
 };
 
@@ -469,13 +580,15 @@ onMounted(async () => {
   margin-left: 15px;
   width: 20px;
   height: 20px;
-  border: 3px solid rgba(0,0,0,0.1);
+  border: 3px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
   border-top-color: var(--primary);
   animation: spin 1s ease-in-out infinite;
 }
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 table {
@@ -503,6 +616,61 @@ td {
   flex-wrap: wrap;
   align-items: center;
   gap: 10px;
+}
+
+.windows-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-left: auto;
+  padding: 7px 10px;
+  color: var(--text-main);
+  text-decoration: none;
+  background: var(--bg-surface-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition:
+    border-color 0.18s,
+    background-color 0.18s;
+}
+
+.windows-link:hover {
+  background: var(--bg-main);
+  border-color: var(--primary);
+}
+
+.windows-link svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--primary);
+  stroke-width: 1.6;
+}
+
+.windows-link span:not(.windows-link-arrow) {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+
+.windows-link strong {
+  font-size: 0.82rem;
+}
+
+.windows-link small {
+  margin-top: 3px;
+  color: var(--text-secondary);
+  font-size: 0.68rem;
+}
+
+.windows-link-arrow {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 900px) {
+  .windows-link {
+    margin-left: 0;
+  }
 }
 
 .control-panel {

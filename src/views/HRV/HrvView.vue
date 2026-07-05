@@ -310,7 +310,11 @@ function sortRecordings() {
   recordings.value.sort((a, b) => {
     const da = new Date(a.date).getTime();
     const db = new Date(b.date).getTime();
-    return db - da; // Descending by date/time
+    if (da !== db) return db - da; // Descending by day
+
+    const ta = a.startDateTime ? new Date(a.startDateTime).getTime() : 0;
+    const tb = b.startDateTime ? new Date(b.startDateTime).getTime() : 0;
+    return tb - ta; // Descending by start time within the day
   });
 }
 

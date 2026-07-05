@@ -2,7 +2,7 @@
   <div class="vitals">
     <div v-if="showBpModal" class="modal-overlay">
       <div class="modal-content">
-        <h3>{{ bpEditId ? 'Edit Blood Pressure' : 'Add Blood Pressure' }}</h3>
+        <h3>{{ bpEditId ? "Edit Blood Pressure" : "Add Blood Pressure" }}</h3>
         <form @submit.prevent="submitBpForm">
           <div class="form-group">
             <label>Timestamp:</label>
@@ -68,12 +68,12 @@
 
     <h2>Vitals & Blood Pressure</h2>
 
-    <div style="margin-bottom: 20px;">
+    <div style="margin-bottom: 20px">
       <button class="button" @click="toggleChart">
-        {{ showChart ? 'Hide Progress Chart' : 'Show Progress Chart' }}
+        {{ showChart ? "Hide Progress Chart" : "Show Progress Chart" }}
       </button>
-      <button class="button" @click="toggleAverageByDay" v-if="showChart" style="margin-left: 10px;">
-        {{ averageByDay ? 'Show Raw Data' : 'Average by Day' }}
+      <button class="button" @click="toggleAverageByDay" v-if="showChart" style="margin-left: 10px">
+        {{ averageByDay ? "Show Raw Data" : "Average by Day" }}
       </button>
     </div>
 
@@ -104,7 +104,7 @@
         </thead>
         <tbody>
           <tr>
-            <td colspan="11" style="text-align: center;">
+            <td colspan="11" style="text-align: center">
               <button class="button" @click="openBpAddModal">Log Blood Pressure</button>
             </td>
           </tr>
@@ -127,41 +127,40 @@
             <td>{{ (log.hoursSinceLastCaffeine || 0) < 24 ? log.lastCaffeineAmountMg : "-" }}</td>
             <td>{{ log.symptoms }}</td>
             <td>
-              <button class="button" @click="openBpEditModal(log)" style="margin-right: 5px;">Edit</button>
+              <button class="button" @click="openBpEditModal(log)" style="margin-right: 5px">Edit</button>
               <button class="button delete-btn" @click="deleteBp(log.id)">Delete</button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick, computed } from 'vue';
-import { Chart, registerables } from 'chart.js';
-import zoomPlugin from 'chartjs-plugin-zoom';
+import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
+import { Chart, registerables } from "chart.js";
+import zoomPlugin from "chartjs-plugin-zoom";
 import BloodPressureService from "@/services/blood-pressure/bloodPressure.service.ts";
-import type { BloodPressureLog, CreateBloodPressureLog } from '@/types/bloodPressureType';
-import { roundTo } from '@/utility/math';
+import type { BloodPressureLog, CreateBloodPressureLog } from "@/types/bloodPressureType";
+import { roundTo } from "@/utility/math";
 import { toLocalDateTimeString, formatDateTime, getDateString } from "@/utility/date";
 
 Chart.register(...registerables, zoomPlugin);
-Chart.defaults.color = '#e0e0e0';
-Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+Chart.defaults.color = "#e0e0e0";
+Chart.defaults.borderColor = "rgba(255, 255, 255, 0.1)";
 
-const CHART_VISIBILITY_STORAGE_KEY = 'bloodPressureChartVisibility';
+const CHART_VISIBILITY_STORAGE_KEY = "bloodPressureChartVisibility";
 const bpForm = ref<CreateBloodPressureLog>({
   timestamp: toLocalDateTimeString(),
   minutesAfterPositionChange: 0,
   systolic: 120,
   diastolic: 80,
   pulse: 60,
-  position: 'Sitting',
-  context: 'Routine',
-  arm: '',
-  symptoms: ''
+  position: "Sitting",
+  context: "Routine",
+  arm: "",
+  symptoms: "",
 });
 
 const showBpModal = ref(false);
@@ -205,7 +204,7 @@ const loadChartVisibilityState = () => {
       smoothedPulse: parsed.smoothedPulse ?? true,
     };
   } catch (error) {
-    console.error('Failed to load blood pressure chart visibility state', error);
+    console.error("Failed to load blood pressure chart visibility state", error);
   }
 };
 
@@ -230,24 +229,43 @@ const syncChartVisibilityFromInstance = () => {
 
 const isSeriesVisible = (label: string) => {
   switch (label) {
-    case 'Systolic': return chartToggles.value.systolic;
-    case 'Smoothed Systolic': return chartToggles.value.smoothedSystolic;
-    case 'Diastolic': return chartToggles.value.diastolic;
-    case 'Smoothed Diastolic': return chartToggles.value.smoothedDiastolic;
-    case 'Pulse': return chartToggles.value.pulse;
-    case 'Smoothed Pulse': return chartToggles.value.smoothedPulse;
-    default: return true;
+    case "Systolic":
+      return chartToggles.value.systolic;
+    case "Smoothed Systolic":
+      return chartToggles.value.smoothedSystolic;
+    case "Diastolic":
+      return chartToggles.value.diastolic;
+    case "Smoothed Diastolic":
+      return chartToggles.value.smoothedDiastolic;
+    case "Pulse":
+      return chartToggles.value.pulse;
+    case "Smoothed Pulse":
+      return chartToggles.value.smoothedPulse;
+    default:
+      return true;
   }
 };
 
 const setSeriesVisible = (label: string, visible: boolean) => {
   switch (label) {
-    case 'Systolic': chartToggles.value.systolic = visible; break;
-    case 'Smoothed Systolic': chartToggles.value.smoothedSystolic = visible; break;
-    case 'Diastolic': chartToggles.value.diastolic = visible; break;
-    case 'Smoothed Diastolic': chartToggles.value.smoothedDiastolic = visible; break;
-    case 'Pulse': chartToggles.value.pulse = visible; break;
-    case 'Smoothed Pulse': chartToggles.value.smoothedPulse = visible; break;
+    case "Systolic":
+      chartToggles.value.systolic = visible;
+      break;
+    case "Smoothed Systolic":
+      chartToggles.value.smoothedSystolic = visible;
+      break;
+    case "Diastolic":
+      chartToggles.value.diastolic = visible;
+      break;
+    case "Smoothed Diastolic":
+      chartToggles.value.smoothedDiastolic = visible;
+      break;
+    case "Pulse":
+      chartToggles.value.pulse = visible;
+      break;
+    case "Smoothed Pulse":
+      chartToggles.value.smoothedPulse = visible;
+      break;
   }
   saveChartVisibilityState();
 };
@@ -289,7 +307,7 @@ const createChart = () => {
   if (averageByDay.value) {
     const dailyMap = new Map<string, { count: number; systolic: number; diastolic: number; pulse: number; time: string }>();
     for (const log of logs) {
-      const date = new Date(log.timestamp).toISOString().split('T')[0];
+      const date = new Date(log.timestamp).toISOString().split("T")[0];
       if (!dailyMap.has(date)) {
         dailyMap.set(date, { count: 0, systolic: 0, diastolic: 0, pulse: 0, time: date });
       }
@@ -300,7 +318,7 @@ const createChart = () => {
       dayData.pulse += log.pulse || 0;
     }
 
-    logs = Array.from(dailyMap.values()).map(d => ({
+    logs = Array.from(dailyMap.values()).map((d) => ({
       timestamp: new Date(d.time).toISOString(),
       systolic: d.systolic / d.count,
       diastolic: d.diastolic / d.count,
@@ -308,10 +326,10 @@ const createChart = () => {
     }));
   }
 
-  const labels = logs.map(l => averageByDay.value ? getDateString(new Date(l.timestamp)) : formatDateTime(l.timestamp));
-  const dataSys = logs.map(l => l.systolic);
-  const dataDia = logs.map(l => l.diastolic);
-  const dataPulse = logs.map(l => l.pulse || null);
+  const labels = logs.map((l) => (averageByDay.value ? getDateString(new Date(l.timestamp)) : formatDateTime(l.timestamp)));
+  const dataSys = logs.map((l) => l.systolic);
+  const dataDia = logs.map((l) => l.diastolic);
+  const dataPulse = logs.map((l) => l.pulse || null);
 
   const smooth = (data: (number | null)[], windowSize: number = 7) => {
     return data.map((val, idx, arr) => {
@@ -335,17 +353,71 @@ const createChart = () => {
 
   const datasets = [];
 
-  datasets.push({ label: 'Systolic', data: dataSys, hidden: !isSeriesVisible('Systolic'), borderColor: '#ffb3ba', backgroundColor: '#ffb3ba', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
-  datasets.push({ label: 'Smoothed Systolic', data: smoothSys, hidden: !isSeriesVisible('Smoothed Systolic'), borderColor: '#ff4d4d', backgroundColor: '#ff4d4d', tension: 0.4, borderWidth: 2, pointRadius: 0 });
+  datasets.push({
+    label: "Systolic",
+    data: dataSys,
+    hidden: !isSeriesVisible("Systolic"),
+    borderColor: "#ffb3ba",
+    backgroundColor: "#ffb3ba",
+    tension: 0.1,
+    borderDash: [5, 5],
+    borderWidth: 1,
+  });
+  datasets.push({
+    label: "Smoothed Systolic",
+    data: smoothSys,
+    hidden: !isSeriesVisible("Smoothed Systolic"),
+    borderColor: "#ff4d4d",
+    backgroundColor: "#ff4d4d",
+    tension: 0.4,
+    borderWidth: 2,
+    pointRadius: 0,
+  });
 
-  datasets.push({ label: 'Diastolic', data: dataDia, hidden: !isSeriesVisible('Diastolic'), borderColor: '#bae1ff', backgroundColor: '#bae1ff', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
-  datasets.push({ label: 'Smoothed Diastolic', data: smoothDia, hidden: !isSeriesVisible('Smoothed Diastolic'), borderColor: '#007bff', backgroundColor: '#007bff', tension: 0.4, borderWidth: 2, pointRadius: 0 });
+  datasets.push({
+    label: "Diastolic",
+    data: dataDia,
+    hidden: !isSeriesVisible("Diastolic"),
+    borderColor: "#bae1ff",
+    backgroundColor: "#bae1ff",
+    tension: 0.1,
+    borderDash: [5, 5],
+    borderWidth: 1,
+  });
+  datasets.push({
+    label: "Smoothed Diastolic",
+    data: smoothDia,
+    hidden: !isSeriesVisible("Smoothed Diastolic"),
+    borderColor: "#007bff",
+    backgroundColor: "#007bff",
+    tension: 0.4,
+    borderWidth: 2,
+    pointRadius: 0,
+  });
 
-  datasets.push({ label: 'Pulse', data: dataPulse, hidden: !isSeriesVisible('Pulse'), borderColor: '#baffc9', backgroundColor: '#baffc9', tension: 0.1, borderDash: [5, 5], borderWidth: 1 });
-  datasets.push({ label: 'Smoothed Pulse', data: smoothPulse, hidden: !isSeriesVisible('Smoothed Pulse'), borderColor: '#28a745', backgroundColor: '#28a745', tension: 0.4, borderWidth: 2, pointRadius: 0 });
+  datasets.push({
+    label: "Pulse",
+    data: dataPulse,
+    hidden: !isSeriesVisible("Pulse"),
+    borderColor: "#baffc9",
+    backgroundColor: "#baffc9",
+    tension: 0.1,
+    borderDash: [5, 5],
+    borderWidth: 1,
+  });
+  datasets.push({
+    label: "Smoothed Pulse",
+    data: smoothPulse,
+    hidden: !isSeriesVisible("Smoothed Pulse"),
+    borderColor: "#28a745",
+    backgroundColor: "#28a745",
+    tension: 0.4,
+    borderWidth: 2,
+    pointRadius: 0,
+  });
 
   bpChart = new Chart(bpChartCanvas.value, {
-    type: 'line',
+    type: "line",
     data: { labels, datasets },
     options: {
       responsive: true,
@@ -364,16 +436,16 @@ const createChart = () => {
           },
         },
         zoom: {
-          zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag : { enabled: true }, mode: 'x' },
-          pan: { enabled: true, mode: 'x' }
-        }
+          zoom: { wheel: { enabled: true }, pinch: { enabled: true }, drag: { enabled: true }, mode: "x" },
+          pan: { enabled: true, mode: "x" },
+        },
       },
-      maintainAspectRatio: false
-    }
+      maintainAspectRatio: false,
+    },
   });
 
   syncChartVisibilityFromInstance();
-}
+};
 
 const openBpAddModal = () => {
   bpEditId.value = null;
@@ -383,10 +455,10 @@ const openBpAddModal = () => {
     systolic: 120,
     diastolic: 80,
     pulse: 60,
-    position: 'Sitting',
-    context: 'Routine',
-    arm: '',
-    symptoms: ''
+    position: "Sitting",
+    context: "Routine",
+    arm: "",
+    symptoms: "",
   };
   showBpModal.value = true;
 };
@@ -405,7 +477,7 @@ const openBpEditModal = (log: BloodPressureLog) => {
     symptoms: log.symptoms,
     hoursSinceLastCaffeine: log.hoursSinceLastCaffeine,
     lastCaffeineAmountMg: log.lastCaffeineAmountMg,
-    trainingId: log.trainingId,
+    workoutId: log.workoutId,
   };
   showBpModal.value = true;
 };
@@ -414,7 +486,7 @@ const submitBpForm = async () => {
   try {
     const data: CreateBloodPressureLog = {
       ...bpForm.value,
-      timestamp: new Date(bpForm.value.timestamp).toISOString()
+      timestamp: new Date(bpForm.value.timestamp).toISOString(),
     };
     if (bpEditId.value) {
       await BloodPressureService.updateBloodPressureLog(bpEditId.value, data);
@@ -435,7 +507,6 @@ const deleteBp = async (id: string) => {
   }
 };
 
-
 onMounted(() => {
   loadChartVisibilityState();
   loadBpLogs();
@@ -449,7 +520,9 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.form-group { margin-bottom: 1rem; }
+.form-group {
+  margin-bottom: 1rem;
+}
 .blood-pressure-chart-container {
   margin: 20px 0;
   width: 100%;
@@ -474,7 +547,8 @@ onUnmounted(() => {
   background: var(--bg-surface);
   text-align: center;
 }
-.bp-table th, .bp-table td {
+.bp-table th,
+.bp-table td {
   padding: 8px;
   border: 1px solid var(--border, #ccc);
 }

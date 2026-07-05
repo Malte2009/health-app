@@ -2,42 +2,52 @@ export default [
   {
     path: "/daily-tracking",
     name: "daily-tracking",
-    component: () => import("@/views/Daily/DailyTrackingView.vue")
+    component: () => import("@/views/Daily/DailyTrackingView.vue"),
   },
   {
     path: "/sleep-tracker",
     name: "sleep-tracker",
-    component: () => import("@/views/Sleep/SleepTrackerView.vue")
+    component: () => import("@/views/Sleep/SleepTrackerView.vue"),
   },
   {
     path: "/vitals",
     name: "vitals",
-    component: () => import("@/views/Vitals/VitalsView.vue")
+    component: () => import("@/views/Vitals/VitalsView.vue"),
   },
   {
     path: "/symptoms",
     name: "symptoms",
-    component: () => import("@/views/Symptoms/SymptomsView.vue")
+    component: () => import("@/views/Symptoms/SymptomsView.vue"),
   },
   {
     path: "/hrv",
     name: "hrv",
-    component: () => import("../views/HRV/HrvView.vue")
+    component: () => import("../views/HRV/HrvView.vue"),
   },
   {
     path: "/hrv/:id",
     name: "hrvDetails",
-    component: () => import("../views/HRV/HrvDetailsView.vue")
+    component: () => import("../views/HRV/HrvDetailsView.vue"),
+  },
+  {
+    path: "/hrv/:id/windows",
+    name: "hrvWindows",
+    component: () => import("../views/HRV/HrvWindowsView.vue"),
   },
   {
     path: "/calendar",
     name: "diagnostic-calendar",
-    component: () => import("@/views/Diagnostic/DiagnosticCalendarView.vue")
+    component: () => import("@/views/Diagnostic/DiagnosticCalendarView.vue"),
+  },
+  {
+    path: "/charts",
+    name: "charts",
+    component: () => import("@/views/Diagnostic/ChartExplorerView.vue"),
   },
   {
     path: "/day/:date",
     name: "day-details",
     component: () => import("@/views/Daily/DayDetailsView.vue"),
-    props: true
-  }
+    props: true,
+  },
 ];
